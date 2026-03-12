@@ -274,6 +274,7 @@ tr:hover td { background: #fafbfc; }
 
 /* ── Google Doc Export ── */
 .btn-gdoc { background: #1a73e8; color: #fff; }
+.btn-pdf  { background: #c0392b; color: #fff; }
 .gdoc-intro {
   background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;
   padding: 14px 16px; margin-bottom: 16px;
@@ -334,6 +335,7 @@ tr:hover td { background: #fafbfc; }
     <button class="btn btn-white" onclick="openImportModal()" title="Import catalog from file">📥 Import</button>
     <a href="index.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
     <button class="btn btn-gdoc" onclick="openGDocModal()">📄 → Google Doc</button>
+    <button class="btn btn-pdf" onclick="downloadCatalogPDF()">📕 → PDF</button>
     <button class="btn btn-gold" onclick="openExportModal()">⬇ Export &amp; Save</button>
     <a href="setup.html" class="btn btn-white btn-sm" title="School Settings">⚙</a>
   </div>
@@ -851,6 +853,7 @@ tr:hover td { background: #fafbfc; }
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script src="school-config.js"></script>
 <script src="importer.js"></script>
 <script>
@@ -1761,7 +1764,7 @@ function createCourseCatalog() {
       var cIsApex = /apex/i.test(cname) || agApexNames.indexOf(cname) >= 0;
       agLines.push(cIsApex ? cname + '  [APEX]' : cname);
     }
-    var agP = body.appendParagraph(agLines.join('\n'));
+    var agP = body.appendParagraph(agLines.join('\\n'));
     agP.setSpacingBefore(0).setSpacingAfter(6);
     agP.setIndentStart(14);
     agP.editAsText().setForegroundColor('#374151').setFontSize(10);
@@ -1903,6 +1906,301 @@ function styleHeader_(row, numCols) {
   }
 }
 `;
+}
+
+/* ═══════════════════════════════════════════════════
+   PDF EXPORT (jsPDF)
+═══════════════════════════════════════════════════ */
+function downloadCatalogPDF() {
+  if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
+    toast('PDF library still loading — please try again in a moment.', 'warn');
+    return;
+  }
+
+  const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
+  const schoolName = _sc.schoolName || 'Your School';
+  const schoolYear = _sc.schoolYear || '';
+  const motto      = _sc.motto || '';
+  const mascot     = _sc.mascot || '';
+  const mascotEmoji = _sc.mascotEmoji || '';
+  const primaryHex = (_sc.colors && _sc.colors.primary) || '#1a3a5c';
+  const secondHex  = (_sc.colors && _sc.colors.secondary) || '#c8a227';
+
+  function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)];
+  }
+  const pri = hexToRgb(primaryHex);
+  const sec = hexToRgb(secondHex);
+
+  const doc = new jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+  const W = doc.internal.pageSize.getWidth();   // 612
+  const H = doc.internal.pageSize.getHeight();  // 792
+  const ML = 50, MR = 50, MT = 50, MB = 60;
+  const CW = W - ML - MR;                       // content width
+  let y = MT;
+
+  // ── Helpers ────────────────────────────────────────
+  function checkPage(need) {
+    if (y + need > H - MB) { doc.addPage(); y = MT; return true; }
+    return false;
+  }
+
+  function drawText(txt, x, yPos, opts) {
+    opts = opts || {};
+    doc.setFontSize(opts.size || 10);
+    doc.setFont('helvetica', opts.style || 'normal');
+    doc.setTextColor.apply(doc, opts.color || [55, 65, 81]);
+    if (opts.maxWidth) {
+      var lines = doc.splitTextToSize(txt, opts.maxWidth);
+      doc.text(lines, x, yPos);
+      return lines.length * (opts.size || 10) * 1.25;
+    }
+    doc.text(txt, x, yPos, opts.align ? { align: opts.align } : undefined);
+    return (opts.size || 10) * 1.25;
+  }
+
+  function sectionHeading(title) {
+    checkPage(40);
+    y += 10;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor.apply(doc, pri);
+    doc.text(title, ML, y);
+    y += 4;
+    doc.setDrawColor.apply(doc, sec);
+    doc.setLineWidth(1.5);
+    doc.line(ML, y, W - MR, y);
+    y += 14;
+  }
+
+  function subHeading(title) {
+    checkPage(30);
+    y += 6;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor.apply(doc, pri);
+    doc.text(title, ML, y);
+    y += 14;
+  }
+
+  // Simple table helper
+  function drawTable(headers, rows, colWidths) {
+    var cellPad = 5;
+    var rowH = 18;
+    var fontSize = 8;
+
+    // Header row
+    checkPage(rowH * 2);
+    doc.setFillColor.apply(doc, pri);
+    doc.rect(ML, y - 12, CW, rowH, 'F');
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    var cx = ML;
+    for (var h = 0; h < headers.length; h++) {
+      doc.text(headers[h], cx + cellPad, y);
+      cx += colWidths[h];
+    }
+    y += rowH - 12;
+
+    // Data rows
+    doc.setFont('helvetica', 'normal');
+    for (var r = 0; r < rows.length; r++) {
+      // Estimate row height based on wrapped text
+      doc.setFontSize(fontSize);
+      var maxLines = 1;
+      for (var c = 0; c < rows[r].length; c++) {
+        var cellLines = doc.splitTextToSize(String(rows[r][c] || ''), colWidths[c] - cellPad * 2);
+        if (cellLines.length > maxLines) maxLines = cellLines.length;
+      }
+      var thisRowH = Math.max(rowH, maxLines * fontSize * 1.4 + cellPad * 2);
+
+      checkPage(thisRowH);
+      if (r % 2 === 0) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(ML, y - 12, CW, thisRowH, 'F');
+      }
+      doc.setTextColor(55, 65, 81);
+      cx = ML;
+      for (var c2 = 0; c2 < rows[r].length; c2++) {
+        var cellText = String(rows[r][c2] || '');
+        var wrapped = doc.splitTextToSize(cellText, colWidths[c2] - cellPad * 2);
+        doc.text(wrapped, cx + cellPad, y);
+        cx += colWidths[c2];
+      }
+      y += thisRowH - 12;
+    }
+    y += 8;
+  }
+
+  // ══════════════════════════════════════════════════
+  //   COVER PAGE
+  // ══════════════════════════════════════════════════
+  y = H * 0.32;
+  drawText(schoolName.toUpperCase(), W / 2, y, { size: 28, style: 'bold', color: pri, align: 'center' });
+  y += 40;
+  drawText('Course Catalog ' + schoolYear, W / 2, y, { size: 18, style: 'italic', color: sec, align: 'center' });
+  if (motto) { y += 30; drawText(motto, W / 2, y, { size: 12, style: 'italic', color: [107,114,128], align: 'center' }); }
+  if (mascot) { y += 30; drawText((mascotEmoji ? mascotEmoji + ' ' : '') + 'Go ' + mascot + '!', W / 2, y, { size: 14, style: 'bold', color: pri, align: 'center' }); }
+
+  // Decorative line
+  y += 40;
+  doc.setDrawColor.apply(doc, sec);
+  doc.setLineWidth(2);
+  doc.line(W * 0.3, y, W * 0.7, y);
+
+  // ══════════════════════════════════════════════════
+  //   GRADUATION REQUIREMENTS
+  // ══════════════════════════════════════════════════
+  doc.addPage();
+  y = MT;
+  sectionHeading('Graduation Requirements');
+
+  var gradReqs = infoData.gradReqs || INFO_SEED.gradReqs;
+  var gradHeaders = ['a-g', 'Subject Area', 'JUHSD Diploma', 'CSU/UC Eligibility'];
+  var gradRows = gradReqs.map(function(r) { return [r.area, r.subject, r.juhsd, r.ucCsu]; });
+  gradRows.push(['\u2014', 'TOTAL', 'Min. ' + (infoData.overview ? infoData.overview.diplomaCredits : 225) + ' credits', '']);
+  drawTable(gradHeaders, gradRows, [35, CW * 0.35, CW * 0.3, CW * 0.35 - 35]);
+
+  // ══════════════════════════════════════════════════
+  //   a-g CERTIFIED COURSE LIST
+  // ══════════════════════════════════════════════════
+  doc.addPage();
+  y = MT;
+  sectionHeading('CSU/UC "a-g" Certified Course List ' + schoolYear);
+
+  drawText('Weighted (Honors) courses earn A=5, B=4, C=3. Maximum 8 honors points for CSU/UC GPA.', ML, y, { size: 8, style: 'italic', color: [107,114,128], maxWidth: CW });
+  y += 16;
+
+  var agList = infoData.agList || INFO_SEED.agList;
+  var AG_KEYS = ['a','b','c','d','e','f','g'];
+  var areaLabels = { a:'History / Social Science', b:'English', c:'Mathematics', d:'Laboratory Science', e:'Language Other Than English', f:'Visual & Performing Arts', g:'College Preparatory Electives' };
+  for (var ai = 0; ai < AG_KEYS.length; ai++) {
+    var ak = AG_KEYS[ai];
+    var area = agList[ak];
+    if (!area || !area.courses || !area.courses.length) continue;
+
+    subHeading(ak + '. ' + (area.label || areaLabels[ak]) + (area.required ? '  \u2014  ' + area.required : ''));
+
+    var apexNames = agList._apexCourses || [];
+    var courseLines = area.courses.map(function(c) {
+      var isApex = /apex/i.test(c) || apexNames.indexOf(c) >= 0;
+      return isApex ? c + '  [APEX]' : c;
+    });
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    for (var cl = 0; cl < courseLines.length; cl++) {
+      checkPage(14);
+      doc.text('\u2022  ' + courseLines[cl], ML + 14, y);
+      y += 12;
+    }
+    y += 6;
+  }
+
+  // ══════════════════════════════════════════════════
+  //   COURSES BY DEPARTMENT
+  // ══════════════════════════════════════════════════
+  var DEPT_ORDER = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
+  var DEPT_LABELS = {
+    'social-science':'Social Science', 'english':'English Language Arts', 'mathematics':'Mathematics',
+    'science':'Science', 'lote':'Languages Other Than English', 'vpa':'Visual & Performing Arts',
+    'cte':'Career Technical Education', 'pe':'Physical Education & Health',
+    'electives':'Interdisciplinary Electives', 'special-ed':'Special Education'
+  };
+  var TYPE_FULL = { ap:'AP', cp:'CP', eld:'ELD', sp:'SpEd' };
+
+  for (var di = 0; di < DEPT_ORDER.length; di++) {
+    var dept = DEPT_ORDER[di];
+    var deptCourses = courses.filter(function(c) { return c.dept === dept; });
+    if (!deptCourses.length) continue;
+
+    doc.addPage();
+    y = MT;
+    sectionHeading(DEPT_LABELS[dept] || dept);
+
+    for (var ci = 0; ci < deptCourses.length; ci++) {
+      var c = deptCourses[ci];
+
+      // Course name
+      checkPage(60);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 36, 40);
+      doc.text(c.name, ML, y);
+      y += 14;
+
+      // Metadata line
+      var meta = [];
+      if (c.grade) meta.push('Grade ' + c.grade);
+      if (c.credits) meta.push(c.credits + ' Credits');
+      if (c.ag) meta.push('a-g: ' + c.ag.toUpperCase());
+      if (c.type) meta.push(TYPE_FULL[c.type] || c.type.toUpperCase());
+      if (c.code) meta.push('ID: ' + c.code);
+      if (meta.length) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text(meta.join('  \u00b7  '), ML, y);
+        y += 12;
+      }
+
+      // Prerequisite
+      if (c.prereq && c.prereq.toLowerCase() !== 'none' && c.prereq.trim() !== '') {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(55, 65, 81);
+        doc.text('Prerequisite: ' + c.prereq, ML, y);
+        y += 12;
+      }
+
+      // Description
+      if (c.desc) {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(55, 65, 81);
+        var descLines = doc.splitTextToSize(c.desc, CW - 10);
+        for (var dl = 0; dl < descLines.length; dl++) {
+          checkPage(12);
+          doc.text(descLines[dl], ML + 10, y);
+          y += 11;
+        }
+      }
+      y += 8;
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  //   COUNSELING CONTACTS
+  // ══════════════════════════════════════════════════
+  doc.addPage();
+  y = MT;
+  sectionHeading('Counseling Contacts');
+
+  var counselors = infoData.counselors || INFO_SEED.counselors;
+  if (counselors && counselors.length) {
+    var conHeaders = ['Counselor', 'Caseload', 'Phone', 'Email'];
+    var conRows = counselors.map(function(c) { return [c.name, c.caseload, c.phone || '', c.email || '']; });
+    drawTable(conHeaders, conRows, [CW * 0.22, CW * 0.35, CW * 0.18, CW * 0.25]);
+  }
+
+  // ── Footer on every page ──
+  var totalPages = doc.internal.getNumberOfPages();
+  for (var p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(160, 160, 160);
+    doc.text(schoolName + ' \u2014 Course Catalog ' + schoolYear, ML, H - 25);
+    doc.text('Page ' + p + ' of ' + totalPages, W - MR, H - 25, { align: 'right' });
+  }
+
+  // ── Download ──
+  var filename = schoolName.replace(/[^a-zA-Z0-9]+/g, '_') + '_Course_Catalog_' + schoolYear.replace(/[^0-9\-]/g, '') + '.pdf';
+  doc.save(filename);
+  toast('PDF downloaded!', 'success');
 }
 
 /* ═══════════════════════════════════════════════════
