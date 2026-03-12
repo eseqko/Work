@@ -506,7 +506,7 @@ main {
     <span></span><span></span><span></span>
   </button>
   <div class="header-brand">
-    <span class="paw">🐾</span>
+    <span class="paw" data-school-emoji>🐾</span>
     <div class="brand-text">
       <h1 data-school-name>Jefferson High School</h1>
       <p>Course Catalog <span data-school-year>2026–2027</span></p>
@@ -1135,6 +1135,7 @@ function resetFilters() {
    COURSE FILTER
 ═══════════════════════════════════════════════════ */
 function courseMatches(c) {
+  if (c.inactive) return false;
   if (currentDept !== 'all' && c.dept !== currentDept) return false;
   if (currentGrade !== 'all') {
     const parts = c.grade.replace(/ELL /,'').split('-');
@@ -1260,10 +1261,11 @@ document.getElementById('searchInput').addEventListener('input', function () {
 renderInfoPages();
 
 (function initCounts() {
-  document.getElementById('cnt-all').textContent = COURSES.length;
+  const activeCourses = COURSES.filter(c => !c.inactive);
+  document.getElementById('cnt-all').textContent = activeCourses.length;
   for (const dept of DEPT_ORDER) {
     const el = document.getElementById('cnt-' + dept);
-    if (el) el.textContent = COURSES.filter(c => c.dept === dept).length;
+    if (el) el.textContent = activeCourses.filter(c => c.dept === dept).length;
   }
 })();
 
