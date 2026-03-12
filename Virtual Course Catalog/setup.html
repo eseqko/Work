@@ -590,6 +590,7 @@ input[type="color"] {
   const TYPE_OPTIONS = [['cp','CP'],['ap','AP'],['eld','ELD/ELA'],['sp','Special']];
 
   function renderReviewTable(courses) {
+    window._setupParsed = courses;
     const tbody = document.getElementById('reviewBody');
     tbody.innerHTML = courses.map((c, i) => `
       <tr data-idx="${i}">
@@ -629,25 +630,39 @@ input[type="color"] {
     if (!rows.length) return;
 
     const courses = [];
-    rows.forEach((row, i) => {
+    rows.forEach((row) => {
       const get = f => (row.querySelector(`[data-field="${f}"]`).value || '').trim();
+      const idx = parseInt(row.getAttribute('data-idx'), 10);
+      const base = (window._setupParsed && window._setupParsed[idx]) || {};
       courses.push({
-        id: 'imp' + (i + 1),
+        id: 'imp' + (idx + 1),
         name: get('name'),
         dept: get('dept'),
         grade: get('grade'),
         credits: get('credits'),
         ag: get('ag'),
         type: get('type'),
-        code: '',
-        prereq: '',
-        desc: ''
+        code: base.code || '',
+        prereq: base.prereq || '',
+        desc: base.desc || ''
       });
     });
 
     // Save to localStorage (same key as editor)
     const LS_KEY = 'jhs_catalog_courses';
     localStorage.setItem(LS_KEY, JSON.stringify(courses));
+
+    // Also extract and save info pages (grad reqs, counselors, etc.)
+    const rawText = document.getElementById('extractedText').value;
+    if (rawText) {
+      const infoData = CatalogImporter.parseInfoPages(rawText);
+      if (infoData) {
+        const INFO_KEY = 'jhs_catalog_info';
+        const existing = JSON.parse(localStorage.getItem(INFO_KEY) || 'null');
+        localStorage.setItem(INFO_KEY, JSON.stringify(Object.assign({}, existing || {}, infoData)));
+      }
+    }
+
     showStatus('Imported ' + courses.length + ' courses successfully!', 'success');
     document.getElementById('reviewSection').style.display = 'none';
   };
