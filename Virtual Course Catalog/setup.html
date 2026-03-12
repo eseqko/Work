@@ -291,11 +291,34 @@ input[type="color"] {
       <!-- Status -->
       <div class="import-status info" id="importStatus" style="display:none;"></div>
 
+      <!-- AI API Key config -->
+      <div id="aiConfigSection" style="margin-bottom:16px; padding:14px 16px; background:#fafbfc; border:1px solid var(--border); border-radius:var(--r);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <label style="font-size:0.82rem; font-weight:600; color:var(--text);">AI-Assisted Parsing (Claude API)</label>
+          <span id="aiKeyStatus" style="font-size:0.75rem; padding:2px 8px; border-radius:10px; font-weight:600;"></span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:flex-end;">
+          <div style="flex:1;">
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:0.82rem; font-family:monospace;">
+          </div>
+          <select id="aiModelSelect" style="padding:7px 8px; border:1px solid var(--border); border-radius:6px; font-size:0.8rem;">
+            <option value="claude-sonnet-4-6">Sonnet 4.6 (fast)</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5 (cheapest)</option>
+            <option value="claude-opus-4-6">Opus 4.6 (best)</option>
+          </select>
+          <button class="btn btn-navy btn-sm" onclick="saveApiKey()">Save Key</button>
+        </div>
+        <p style="font-size:0.72rem; color:var(--muted); margin-top:6px;">Your key is stored in your browser only and sent directly to the Anthropic API. Optional — you can also parse without AI.</p>
+      </div>
+
       <!-- Extracted text preview -->
       <div id="extractedSection" style="display:none;">
         <h3>Extracted Text</h3>
         <textarea class="text-preview" id="extractedText" readonly></textarea>
-        <button class="btn btn-gold btn-sm" onclick="parseCourses()">Parse Courses</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" onclick="parseCourses()">Parse Courses (Heuristic)</button>
+          <button class="btn btn-navy btn-sm" id="aiParseBtn" onclick="parseCoursesAI()">Parse with Claude AI</button>
+        </div>
       </div>
 
       <!-- Review table -->
@@ -486,6 +509,77 @@ input[type="color"] {
     renderReviewTable(courses);
     document.getElementById('reviewSection').style.display = 'block';
   };
+
+  /* ── AI Parse ── */
+  window.parseCoursesAI = async function () {
+    const text = document.getElementById('extractedText').value;
+    if (!text.trim()) return;
+    if (!CatalogImporter.getApiKey()) {
+      showStatus('Please save your Anthropic API key first (above).', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('aiParseBtn');
+    btn.disabled = true;
+    btn.textContent = 'Parsing...';
+
+    try {
+      const courses = await CatalogImporter.aiParse(text, msg => showStatus(msg, 'info'));
+      if (!courses.length) {
+        showStatus('AI could not extract any courses. Try the heuristic parser or add courses manually.', 'error');
+        return;
+      }
+      showStatus('AI found ' + courses.length + ' courses. Review below and edit as needed.', 'success');
+      document.getElementById('parsedCount').textContent = '(' + courses.length + ' found via AI)';
+      renderReviewTable(courses);
+      document.getElementById('reviewSection').style.display = 'block';
+    } catch (err) {
+      showStatus('AI parsing failed: ' + err.message, 'error');
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Parse with Claude AI';
+    }
+  };
+
+  /* ── API Key management ── */
+  const MASK = '\u2022'.repeat(16);
+
+  window.saveApiKey = function () {
+    const raw = document.getElementById('apiKeyInput').value.trim();
+    // Don't save the mask or empty value over a real key
+    if (raw && raw !== MASK && !raw.includes('\u2022')) {
+      CatalogImporter.setApiKey(raw);
+    }
+    const model = document.getElementById('aiModelSelect').value;
+    CatalogImporter.setApiModel(model);
+    updateAiKeyStatus();
+  };
+
+  function updateAiKeyStatus() {
+    const status = document.getElementById('aiKeyStatus');
+    const hasKey = !!CatalogImporter.getApiKey();
+    status.textContent = hasKey ? 'Key saved' : 'No key';
+    status.style.background = hasKey ? '#dcfce7' : '#fee2e2';
+    status.style.color = hasKey ? '#166534' : '#991b1b';
+    document.getElementById('aiParseBtn').style.display = hasKey ? 'inline-flex' : 'none';
+
+    // Show mask if key exists
+    const input = document.getElementById('apiKeyInput');
+    if (hasKey && (!input.value || input.value === MASK)) input.value = MASK;
+    const savedModel = CatalogImporter.getApiModel();
+    document.getElementById('aiModelSelect').value = savedModel;
+  }
+
+  // Clear mask on focus so user can type a new key
+  document.getElementById('apiKeyInput').addEventListener('focus', function () {
+    if (this.value === MASK) this.value = '';
+  });
+  document.getElementById('apiKeyInput').addEventListener('blur', function () {
+    if (!this.value && CatalogImporter.getApiKey()) this.value = MASK;
+  });
+
+  updateAiKeyStatus();
 
   /* ── Review table ── */
   const DEPT_OPTIONS = [

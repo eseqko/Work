@@ -378,6 +378,11 @@ tr:hover td { background: #fafbfc; }
       <option value="eld">ELD/ELA</option>
       <option value="sp">Special Ed</option>
     </select>
+    <select class="filter-sel" id="filterStatus" onchange="renderTable()">
+      <option value="">All Status</option>
+      <option value="active">Active Only</option>
+      <option value="inactive">Inactive Only</option>
+    </select>
     <div class="toolbar-right">
       <button class="btn btn-success" onclick="openAddModal()">＋ Add Course</button>
     </div>
@@ -664,6 +669,7 @@ tr:hover td { background: #fafbfc; }
             <div class="check-row"><input type="checkbox" id="fCollege"><label for="fCollege">College Credit Eligible (AP exam)</label></div>
             <div class="check-row"><input type="checkbox" id="fDual"><label for="fDual">Dual Enrollment with College</label></div>
             <div class="check-row"><input type="checkbox" id="fFullYear"><label for="fFullYear">Full-Year Course (2 semesters)</label></div>
+            <div class="check-row"><input type="checkbox" id="fInactive"><label for="fInactive" style="color:var(--warn);">Inactive (not offered this year)</label></div>
           </div>
         </div>
       </div>
@@ -807,11 +813,31 @@ tr:hover td { background: #fafbfc; }
         <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">.docx, .pdf, .md, .txt</div>
         <input type="file" id="editorFileInput" accept=".docx,.pdf,.md,.txt,.text" style="display:none;">
       </div>
+      <!-- AI config inline -->
+      <div style="margin-bottom:14px;padding:10px 14px;background:#fafbfc;border:1px solid var(--border);border-radius:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label style="font-size:0.78rem;font-weight:600;">AI Parsing (Claude API)</label>
+          <span id="editorAiKeyStatus" style="font-size:0.7rem;padding:2px 7px;border-radius:10px;font-weight:600;"></span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="password" id="editorApiKeyInput" placeholder="sk-ant-api03-..." style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.78rem;font-family:monospace;">
+          <select id="editorAiModelSelect" style="padding:5px 6px;border:1px solid var(--border);border-radius:5px;font-size:0.76rem;">
+            <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+            <option value="claude-opus-4-6">Opus 4.6</option>
+          </select>
+          <button class="btn btn-primary btn-sm" style="padding:5px 10px;" onclick="editorSaveApiKey()">Save</button>
+        </div>
+        <p style="font-size:0.68rem;color:var(--muted);margin-top:4px;">Key stored locally, sent directly to Anthropic API only.</p>
+      </div>
       <div id="editorImportStatus" style="display:none;padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;"></div>
       <div id="editorExtracted" style="display:none;">
         <label style="font-size:0.8rem;font-weight:600;color:var(--muted);">Extracted Text</label>
         <textarea id="editorExtractedText" readonly style="width:100%;min-height:100px;max-height:160px;font-family:monospace;font-size:0.78rem;padding:8px;border:1px solid var(--border);border-radius:6px;background:#fafbfc;margin:4px 0 10px;resize:vertical;"></textarea>
-        <button class="btn btn-gold btn-sm" onclick="editorParseCourses()">Parse Courses</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" onclick="editorParseCourses()">Parse (Heuristic)</button>
+          <button class="btn btn-primary btn-sm" id="editorAiParseBtn" onclick="editorParseCoursesAI()">Parse with Claude AI</button>
+        </div>
       </div>
       <div id="editorReview" style="display:none;margin-top:14px;">
         <div style="font-size:0.85rem;font-weight:600;margin-bottom:6px;">Parsed Courses <span id="editorParsedCount" style="font-weight:400;color:var(--muted);"></span></div>
@@ -1001,18 +1027,24 @@ const DEPT_LABELS = {
 };
 
 function getFiltered() {
-  const q    = document.getElementById('editorSearch').value.trim().toLowerCase();
-  const dept = document.getElementById('filterDept').value;
-  const type = document.getElementById('filterType').value;
-  return courses.filter(c => {
+  const q      = document.getElementById('editorSearch').value.trim().toLowerCase();
+  const dept   = document.getElementById('filterDept').value;
+  const type   = document.getElementById('filterType').value;
+  const status = document.getElementById('filterStatus').value;
+  const filtered = courses.filter(c => {
     if (dept && c.dept !== dept) return false;
     if (type && c.type !== type) return false;
+    if (status === 'active'   && c.inactive) return false;
+    if (status === 'inactive' && !c.inactive) return false;
     if (q) {
       const hay = (c.name+' '+c.desc+' '+c.code+' '+(c.prereq||'')).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
+  // Sort: active courses first, inactive at bottom
+  filtered.sort((a, b) => (a.inactive ? 1 : 0) - (b.inactive ? 1 : 0));
+  return filtered;
 }
 
 function typeBadge(t) {
@@ -1030,9 +1062,9 @@ function renderTable() {
     return;
   }
   tbody.innerHTML = filtered.map(c => `
-    <tr>
+    <tr style="${c.inactive ? 'opacity:0.45;' : ''}">
       <td class="td-name">
-        ${c.name}
+        ${c.name}${c.inactive ? ' <span style="font-size:0.7rem;color:var(--warn);font-weight:600;">INACTIVE</span>' : ''}
         <div class="course-code">${c.code || '—'}</div>
       </td>
       <td>${DEPT_LABELS[c.dept] || c.dept}</td>
@@ -1042,6 +1074,7 @@ function renderTable() {
       <td>${c.ag ? '<span class="badge-sm b-ag">'+c.ag+'</span>' : '—'}</td>
       <td>
         <div class="actions-cell">
+          <button class="btn ${c.inactive ? 'btn-success' : 'btn-white'} btn-sm btn-icon" title="${c.inactive ? 'Activate' : 'Deactivate'}" onclick="toggleActive('${c.id}')" style="${c.inactive ? '' : 'border:1px solid var(--border);color:var(--warn);'}">${c.inactive ? '✅' : '💤'}</button>
           <button class="btn btn-primary btn-sm btn-icon" title="Edit" onclick="openEditModal('${c.id}')">✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" title="Delete" onclick="openDeleteConfirm('${c.id}')">🗑</button>
         </div>
@@ -1051,16 +1084,18 @@ function renderTable() {
 }
 
 function renderStats() {
-  const total = courses.length;
-  const apCount  = courses.filter(c=>c.type==='ap').length;
-  const cpCount  = courses.filter(c=>c.type==='cp').length;
-  const eldCount = courses.filter(c=>c.type==='eld').length;
+  const active   = courses.filter(c=>!c.inactive);
+  const inactive = courses.filter(c=>c.inactive);
+  const apCount  = active.filter(c=>c.type==='ap').length;
+  const cpCount  = active.filter(c=>c.type==='cp').length;
+  const eldCount = active.filter(c=>c.type==='eld').length;
   document.getElementById('statsBar').innerHTML = `
-    <div class="stat-chip"><strong>${total}</strong> Total Courses</div>
+    <div class="stat-chip"><strong>${active.length}</strong> Active Courses</div>
+    ${inactive.length ? '<div class="stat-chip" style="color:var(--warn);"><strong>' + inactive.length + '</strong> Inactive</div>' : ''}
     <div class="stat-chip"><strong>${apCount}</strong> AP</div>
     <div class="stat-chip"><strong>${cpCount}</strong> CP</div>
     <div class="stat-chip"><strong>${eldCount}</strong> ELD/ELA</div>
-    <div class="stat-chip"><strong>${courses.filter(c=>c.ag).length}</strong> a-g Certified</div>
+    <div class="stat-chip"><strong>${active.filter(c=>c.ag).length}</strong> a-g Certified</div>
     <div class="stat-chip" style="margin-left:auto;">
       <button onclick="resetToSeed()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--warn);">↺ Reset to original</button>
     </div>
@@ -1091,6 +1126,14 @@ function confirmDelete() {
   showToast('🗑 Course deleted');
 }
 
+function toggleActive(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+  if (c.inactive) { delete c.inactive; showToast('✅ ' + c.name + ' activated'); }
+  else { c.inactive = true; showToast('💤 ' + c.name + ' deactivated'); }
+  saveCourses(); renderAll();
+}
+
 /* ═══════════════════════════════════════════════════
    ADD / EDIT FORM
 ═══════════════════════════════════════════════════ */
@@ -1108,6 +1151,7 @@ function clearForm() {
   document.getElementById('fCollege').checked = false;
   document.getElementById('fDual').checked = false;
   document.getElementById('fFullYear').checked = false;
+  document.getElementById('fInactive').checked = false;
 }
 
 function openAddModal() {
@@ -1134,6 +1178,7 @@ function openEditModal(id) {
   document.getElementById('fCollege').checked   = !!c.collegeCredit;
   document.getElementById('fDual').checked      = !!c.dualEnroll;
   document.getElementById('fFullYear').checked  = !!c.fullYear;
+  document.getElementById('fInactive').checked  = !!c.inactive;
   document.getElementById('editModal').classList.add('open');
 }
 
@@ -1157,9 +1202,10 @@ function saveCourse() {
     prereq:       document.getElementById('fPrereq').value.trim() || 'None',
     desc,
   };
-  if (document.getElementById('fCollege').checked) obj.collegeCredit = true;
-  if (document.getElementById('fDual').checked)    obj.dualEnroll    = true;
-  if (document.getElementById('fFullYear').checked) obj.fullYear     = true;
+  if (document.getElementById('fCollege').checked)  obj.collegeCredit = true;
+  if (document.getElementById('fDual').checked)     obj.dualEnroll    = true;
+  if (document.getElementById('fFullYear').checked) obj.fullYear      = true;
+  if (document.getElementById('fInactive').checked) obj.inactive      = true;
 
   const existing = courses.findIndex(c => c.id === obj.id);
   if (existing >= 0) {
@@ -1971,6 +2017,84 @@ function editorDoImport() {
 }
 
 /* ═══════════════════════════════════════════════════
+   EDITOR AI PARSING
+═══════════════════════════════════════════════════ */
+var _edMask = '\u2022'.repeat(16);
+
+function editorSaveApiKey() {
+  const raw = document.getElementById('editorApiKeyInput').value.trim();
+  if (raw && raw !== _edMask && !raw.includes('\u2022')) {
+    CatalogImporter.setApiKey(raw);
+  }
+  const model = document.getElementById('editorAiModelSelect').value;
+  CatalogImporter.setApiModel(model);
+  updateEditorAiStatus();
+}
+
+function updateEditorAiStatus() {
+  if (typeof CatalogImporter === 'undefined') return;
+  const status = document.getElementById('editorAiKeyStatus');
+  const hasKey = !!CatalogImporter.getApiKey();
+  status.textContent = hasKey ? 'Key saved' : 'No key';
+  status.style.background = hasKey ? '#dcfce7' : '#fee2e2';
+  status.style.color = hasKey ? '#166534' : '#991b1b';
+  document.getElementById('editorAiParseBtn').style.display = hasKey ? 'inline-flex' : 'none';
+  var inp = document.getElementById('editorApiKeyInput');
+  if (hasKey && (!inp.value || inp.value === _edMask)) inp.value = _edMask;
+  document.getElementById('editorAiModelSelect').value = CatalogImporter.getApiModel();
+}
+
+(function () {
+  var inp = document.getElementById('editorApiKeyInput');
+  inp.addEventListener('focus', function () { if (this.value === _edMask) this.value = ''; });
+  inp.addEventListener('blur', function () { if (!this.value && CatalogImporter.getApiKey()) this.value = _edMask; });
+})();
+
+async function editorParseCoursesAI() {
+  const text = document.getElementById('editorExtractedText').value;
+  if (!text.trim()) return;
+  if (!CatalogImporter.getApiKey()) { editorShowStatus('Save your API key first.', 'error'); return; }
+
+  const btn = document.getElementById('editorAiParseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Parsing...';
+
+  try {
+    const parsed = await CatalogImporter.aiParse(text, msg => editorShowStatus(msg, 'info'));
+    if (!parsed.length) { editorShowStatus('AI found no courses.', 'error'); return; }
+    editorShowStatus(parsed.length + ' courses found via AI. Review below.', 'success');
+    document.getElementById('editorParsedCount').textContent = '(' + parsed.length + ' via AI)';
+
+    // Reuse the same review table builder from editorParseCourses
+    const DEPT_OPTS = [['social-science','Social Science'],['english','English'],['mathematics','Math'],
+      ['science','Science'],['lote','LOTE'],['vpa','VPA'],['cte','CTE'],['pe','PE'],['electives','Electives'],['special-ed','SpEd']];
+    const TYPE_OPTS = [['cp','CP'],['ap','AP'],['eld','ELD'],['sp','Sp']];
+    const wrap = document.getElementById('editorReviewWrap');
+    wrap.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;">Name</th>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:100px;">Dept</th>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:50px;">Grade</th>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:50px;">Type</th>' +
+      '</tr></thead><tbody>' +
+      parsed.map((c, i) => '<tr data-idx="' + i + '">' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><input value="' + esc(c.name) + '" data-f="name" style="width:100%;border:none;font-size:0.8rem;padding:2px;"></td>' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><select data-f="dept" style="font-size:0.78rem;">' + DEPT_OPTS.map(([v,l]) => '<option value="'+v+'"'+(c.dept===v?' selected':'')+'>'+l+'</option>').join('') + '</select></td>' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><input value="' + esc(c.grade) + '" data-f="grade" style="width:40px;border:none;font-size:0.8rem;"></td>' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><select data-f="type" style="font-size:0.78rem;">' + TYPE_OPTS.map(([v,l]) => '<option value="'+v+'"'+(c.type===v?' selected':'')+'>'+l+'</option>').join('') + '</select></td>' +
+      '</tr>').join('') +
+      '</tbody></table>';
+    document.getElementById('editorReview').style.display = 'block';
+    document.getElementById('editorImportBtn').style.display = 'inline-flex';
+    window._editorParsed = parsed;
+  } catch (err) {
+    editorShowStatus('AI error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Parse with Claude AI';
+  }
+}
+
+/* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 loadCourses();
@@ -1978,6 +2102,7 @@ renderAll();
 loadInfo();
 renderInfoEditor();
 if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
+updateEditorAiStatus();
 </script>
 </body>
 </html>
