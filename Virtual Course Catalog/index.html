@@ -508,8 +508,8 @@ main {
   <div class="header-brand">
     <span class="paw">🐾</span>
     <div class="brand-text">
-      <h1>Jefferson High School</h1>
-      <p>Course Catalog 2026–2027</p>
+      <h1 data-school-name>Jefferson High School</h1>
+      <p>Course Catalog <span data-school-year>2026–2027</span></p>
     </div>
   </div>
   <div class="header-search-wrap">
@@ -527,7 +527,7 @@ main {
   <!-- ── SIDEBAR ── -->
   <aside id="sidebar">
     <div class="sidebar-top">
-      <div class="sidebar-top-title">🐾 Go Grizzlies!</div>
+      <div class="sidebar-top-title" data-school-mascot>🐾 Go Grizzlies!</div>
     </div>
 
     <div class="sidebar-label">Information</div>
@@ -639,7 +639,15 @@ main {
   </button>
 </nav>
 
+<script src="school-config.js"></script>
 <script>
+/* ── Boot check: redirect to setup if not configured ── */
+if (typeof SchoolConfig !== 'undefined') {
+  SchoolConfig.requireSetup();
+  SchoolConfig.applyTheme();
+}
+const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
+
 /* ═══════════════════════════════════════════════════
    INFO PAGE DATA  (edit via editor.html → Info Pages tab)
 ═══════════════════════════════════════════════════ */
@@ -752,8 +760,8 @@ function renderInfoPages() {
   document.getElementById('infoPages').innerHTML = `
     <div class="info-page active" id="page-home">
       <div class="info-card">
-        <h2>🎓 Welcome to Jefferson HS Course Catalog 2026–2027</h2>
-        <p><em>"${esc(I.overview.tagline)}"</em> — Jefferson High School offers a full range of college-preparatory courses designed to prepare every Grizzly for success in college and beyond.</p>
+        <h2>🎓 Welcome to ${esc(_sc.schoolName || 'Your School')} Course Catalog ${esc(_sc.schoolYear || '')}</h2>
+        <p><em>"${esc(I.overview.tagline)}"</em> — ${esc(_sc.schoolName || 'Our school')} offers a full range of college-preparatory courses designed to prepare every ${esc(_sc.mascot ? _sc.mascot.replace(/s$/,'y') : 'student')} for success in college and beyond.</p>
         <h3>Diploma Requirements</h3>
         <ul>
           <li>Earn a minimum of <strong>${esc(I.overview.diplomaCredits)} credits</strong></li>
@@ -792,7 +800,7 @@ function renderInfoPages() {
     <div class="info-page" id="page-ag">
       <div class="info-card">
         <h2>✅ UC/CSU "a-g" Certified Course List 2026–2027</h2>
-        <p style="color:var(--muted);font-size:0.9em;margin-bottom:8px;">Official UC-approved list for Jefferson High School. Weighted (honors) courses earn A=5, B=4, C=3. Maximum 8 honors points toward CSU/UC GPA.</p>
+        <p style="color:var(--muted);font-size:0.9em;margin-bottom:8px;">Official UC-approved list for ${esc(_sc.schoolName || 'your school')}. Weighted (honors) courses earn A=5, B=4, C=3. Maximum 8 honors points toward CSU/UC GPA.</p>
         <p style="font-size:0.88em;margin-bottom:16px;display:flex;align-items:center;gap:6px;"><span class="apex-tag">APEX</span> <span style="color:var(--muted);">= Online course — completed outside of the regular school day through an online platform.</span></p>
         ${Object.entries(I.agList).filter(([k])=>k!=='_apexCourses').map(([key,area]) => {
           const apexList = I.agList._apexCourses || [];
@@ -1258,6 +1266,9 @@ renderInfoPages();
     if (el) el.textContent = COURSES.filter(c => c.dept === dept).length;
   }
 })();
+
+/* ── Apply school identity to data-* elements ── */
+if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
 </script>
 </body>
 </html>
