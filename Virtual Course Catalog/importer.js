@@ -383,21 +383,56 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || '';
+
+    // Debug: log entire response structure
+    console.log('AI response structure:', {
+      stop_reason: data.stop_reason,
+      content_blocks: data.content?.length,
+      types: data.content?.map(b => b.type),
+      usage: data.usage
+    });
+
+    // Try all text content blocks, not just the first
+    let content = '';
+    if (Array.isArray(data.content)) {
+      content = data.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n');
+    }
     const stopReason = data.stop_reason;
 
-    if (onProgress) onProgress('Parsing response...');
+    if (!content) {
+      console.error('AI response had no text content. Full response:', JSON.stringify(data).substring(0, 2000));
+      throw new Error('AI returned an empty response (stop_reason: ' + stopReason +
+        '). This may mean the input was too large or the model refused. Try a smaller file.');
+    }
 
-    // Extract JSON array from response (handle potential markdown fences)
+    if (onProgress) onProgress('Parsing ' + content.length + ' chars of response (stop: ' + stopReason + ')...');
+
+    // Extract JSON array from response
     let jsonStr = content.trim();
-    const fenceMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (fenceMatch) jsonStr = fenceMatch[1].trim();
 
-    // Find the array start
-    const arrStart = jsonStr.indexOf('[');
+    // Strip markdown fences — try multiple patterns
+    // Pattern 1: standard ```json ... ``` block
+    let fenceMatch = jsonStr.match(/```(?:json)?\s*\n([\s\S]+)\n\s*```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1].trim();
+    } else {
+      // Pattern 2: fences without trailing newline (e.g. ```json[...]```)
+      fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]+?)```/);
+      if (fenceMatch) jsonStr = fenceMatch[1].trim();
+    }
+
+    // Find the JSON array
+    let arrStart = jsonStr.indexOf('[');
     if (arrStart === -1) {
-      throw new Error('AI response did not contain a JSON array. Response preview: ' +
-        content.substring(0, 200) + (content.length > 200 ? '...' : ''));
+      // Log full response for debugging
+      console.error('AI response (no JSON array found):', content);
+      throw new Error('AI response did not contain a JSON array (' + content.length +
+        ' chars received, stop_reason: ' + stopReason +
+        '). Check browser console for full response. Preview: "' +
+        content.substring(0, 300).replace(/\n/g, ' ') + '"');
     }
 
     let arrEnd = jsonStr.lastIndexOf(']');
