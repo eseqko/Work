@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Catalog — School Setup</title>
+<style>
+:root {
+  --navy: #1a3a5c; --navy-dark: #122844;
+  --gold: #c8a227; --gold-light: #f5e9c0;
+  --bg: #f4f6f9; --white: #fff; --border: #dde1e7;
+  --text: #1e2428; --muted: #6b7280;
+  --r: 8px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --danger: #dc2626; --success: #16a34a;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+}
+header {
+  background: var(--navy); color: #fff;
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.hdr-title { font-size: 1.1rem; font-weight: 700; }
+.hdr-sub { font-size: 0.7rem; color: var(--gold); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+
+.container { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+
+/* ── Steps indicator ── */
+.steps { display: flex; gap: 0; margin-bottom: 32px; }
+.step-tab {
+  flex: 1; text-align: center; padding: 12px 8px;
+  font-size: 0.85rem; font-weight: 600;
+  border-bottom: 3px solid var(--border); color: var(--muted);
+  cursor: default; transition: all 0.2s;
+}
+.step-tab.active { border-color: var(--navy); color: var(--navy); }
+.step-tab.done { border-color: var(--success); color: var(--success); }
+
+/* ── Card ── */
+.card {
+  background: var(--white); border-radius: var(--r);
+  box-shadow: var(--shadow); padding: 28px 24px; margin-bottom: 20px;
+}
+.card h2 { font-size: 1.2rem; margin-bottom: 16px; color: var(--navy); }
+.card h3 { font-size: 0.95rem; margin: 18px 0 10px; color: var(--navy); }
+
+/* ── Form ── */
+.form-row { display: flex; gap: 16px; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; flex: 1; }
+.form-group label { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.form-group input, .form-group select {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 0.9rem; font-family: inherit; color: var(--text);
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--navy); box-shadow: 0 0 0 2px rgba(26,58,92,0.15);
+}
+input[type="color"] {
+  width: 48px; height: 38px; padding: 2px; border: 1px solid var(--border);
+  border-radius: 6px; cursor: pointer; background: var(--white);
+}
+.color-pair { display: flex; align-items: flex-end; gap: 12px; }
+.color-pair .form-group { flex: 0 0 auto; }
+.color-hex { width: 100px !important; font-family: monospace; }
+
+/* ── Preview ── */
+.preview-box { border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); margin-top: 16px; }
+.preview-header {
+  background: var(--navy); color: #fff; padding: 12px 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.preview-header h3 { font-size: 0.95rem; margin: 0; color: #fff; }
+.preview-header small { color: var(--gold); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
+.preview-body { padding: 16px 18px; background: var(--bg); }
+.preview-card {
+  background: var(--white); border-radius: 6px; padding: 12px 14px;
+  border-left: 4px solid var(--gold); box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.preview-card .name { font-weight: 700; font-size: 0.9rem; }
+.preview-card .meta { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.preview-sidebar-label {
+  font-size: 0.78rem; font-weight: 600; color: var(--gold);
+  margin-bottom: 8px;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 22px; border-radius: 6px; font-size: 0.88rem;
+  font-weight: 600; cursor: pointer; border: none;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.98); }
+.btn-navy { background: var(--navy); color: #fff; }
+.btn-gold { background: var(--gold); color: #1a1a1a; }
+.btn-outline { background: transparent; color: var(--navy); border: 2px solid var(--border); }
+.btn-sm { padding: 7px 14px; font-size: 0.8rem; }
+.actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+/* ── Drop zone ── */
+.drop-zone {
+  border: 2px dashed var(--border); border-radius: var(--r);
+  padding: 40px 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 16px;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--navy); background: rgba(26,58,92,0.04);
+}
+.drop-zone .icon { font-size: 2.2rem; margin-bottom: 8px; }
+.drop-zone .label { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.drop-zone .hint { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.drop-zone input[type="file"] { display: none; }
+
+/* ── Import review ── */
+.import-status { padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 0.85rem; }
+.import-status.info { background: #e0f2fe; color: #0c4a6e; }
+.import-status.success { background: #dcfce7; color: #166534; }
+.import-status.error { background: #fee2e2; color: #991b1b; }
+
+.review-table-wrap { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+.review-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.review-table th {
+  position: sticky; top: 0; background: var(--navy); color: #fff;
+  padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.78rem;
+}
+.review-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.review-table tr:hover td { background: rgba(26,58,92,0.03); }
+.review-table td input, .review-table td select {
+  width: 100%; padding: 3px 6px; border: 1px solid transparent; border-radius: 4px;
+  font-size: 0.8rem; font-family: inherit; background: transparent;
+}
+.review-table td input:focus, .review-table td select:focus {
+  border-color: var(--navy); background: var(--white); outline: none;
+}
+.review-table .del-btn {
+  background: none; border: none; color: var(--danger); cursor: pointer;
+  font-size: 1rem; padding: 2px 6px; border-radius: 4px;
+}
+.review-table .del-btn:hover { background: #fee2e2; }
+
+.text-preview {
+  width: 100%; min-height: 120px; max-height: 200px; overflow-y: auto;
+  font-family: monospace; font-size: 0.78rem; padding: 10px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: #fafbfc; color: var(--text); resize: vertical;
+  margin-bottom: 12px;
+}
+
+/* ── Step visibility ── */
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .form-row { flex-direction: column; gap: 10px; }
+  .container { padding: 16px 12px 40px; }
+  .card { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="hdr-title" id="hdrTitle">Course Catalog Setup</div>
+    <div class="hdr-sub">Configure your school</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Step tabs -->
+  <div class="steps">
+    <div class="step-tab active" id="stepTab1">1. School Identity</div>
+    <div class="step-tab" id="stepTab2">2. Import Catalog</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       STEP 1: School Identity
+  ═══════════════════════════════════════ -->
+  <div class="step-panel active" id="step1">
+    <div class="card">
+      <h2>School Information</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>School Name *</label>
+          <input type="text" id="schoolName" placeholder="e.g. Lincoln High School" required>
+        </div>
+        <div class="form-group" style="flex:0 0 120px;">
+          <label>Short Name</label>
+          <input type="text" id="shortName" placeholder="e.g. LHS" maxlength="8">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mascot</label>
+          <input type="text" id="mascot" placeholder="e.g. Lions">
+        </div>
+        <div class="form-group" style="flex:0 0 100px;">
+          <label>Mascot Emoji</label>
+          <input type="text" id="mascotEmoji" placeholder="e.g. 🦁" maxlength="4">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Motto / Tagline</label>
+          <input type="text" id="motto" placeholder="e.g. Excellence Through Equity">
+        </div>
+        <div class="form-group" style="flex:0 0 160px;">
+          <label>School Year</label>
+          <input type="text" id="schoolYear" placeholder="e.g. 2026–2027">
+        </div>
+      </div>
+
+      <h3>School Colors</h3>
+      <div class="form-row">
+        <div class="color-pair">
+          <div class="form-group">
+            <label>Primary</label>
+            <input type="color" id="colorPrimary" value="#1a3a5c">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <input type="text" class="color-hex" id="colorPrimaryHex" value="#1a3a5c" maxlength="7">
+          </div>
+        </div>
+        <div class="color-pair">
+          <div class="form-group">
+            <label>Secondary</label>
+            <input type="color" id="colorSecondary" value="#c8a227">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <input type="text" class="color-hex" id="colorSecondaryHex" value="#c8a227" maxlength="7">
+          </div>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <h3>Preview</h3>
+      <div class="preview-box" id="livePreview">
+        <div class="preview-header" id="previewHeader">
+          <span id="previewEmoji"></span>
+          <div>
+            <h3 id="previewName">Your School</h3>
+            <small id="previewSub">Course Catalog</small>
+          </div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-sidebar-label" id="previewMascot"></div>
+          <div class="preview-card">
+            <div class="name">Sample Course CP</div>
+            <div class="meta">Grade 9-12 · 10 credits · a-g area: b</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-navy" onclick="goToStep2()">Next: Import Catalog &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       STEP 2: Import Catalog
+  ═══════════════════════════════════════ -->
+  <div class="step-panel" id="step2">
+    <div class="card">
+      <h2>Import Course Catalog</h2>
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px;">
+        Upload a catalog document to automatically extract courses. You can also skip this step and add courses manually in the editor.
+      </p>
+
+      <!-- Drop zone -->
+      <div class="drop-zone" id="dropZone">
+        <div class="icon">📄</div>
+        <div class="label">Drop a file here or click to browse</div>
+        <div class="hint">Accepts .docx, .pdf, .md, .txt</div>
+        <input type="file" id="fileInput" accept=".docx,.pdf,.md,.txt,.text">
+      </div>
+
+      <!-- Status -->
+      <div class="import-status info" id="importStatus" style="display:none;"></div>
+
+      <!-- Extracted text preview -->
+      <div id="extractedSection" style="display:none;">
+        <h3>Extracted Text</h3>
+        <textarea class="text-preview" id="extractedText" readonly></textarea>
+        <button class="btn btn-gold btn-sm" onclick="parseCourses()">Parse Courses</button>
+      </div>
+
+      <!-- Review table -->
+      <div id="reviewSection" style="display:none;">
+        <h3>Parsed Courses <span id="parsedCount" style="font-weight:400;color:var(--muted);font-size:0.85rem;"></span></h3>
+        <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;">Review and edit before importing. Click any cell to edit.</p>
+        <div class="review-table-wrap">
+          <table class="review-table" id="reviewTable">
+            <thead>
+              <tr>
+                <th style="width:28px;"></th>
+                <th>Course Name</th>
+                <th style="width:110px;">Department</th>
+                <th style="width:60px;">Grade</th>
+                <th style="width:60px;">Credits</th>
+                <th style="width:50px;">a-g</th>
+                <th style="width:60px;">Type</th>
+              </tr>
+            </thead>
+            <tbody id="reviewBody"></tbody>
+          </table>
+        </div>
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn btn-outline btn-sm" onclick="clearImport()">Clear</button>
+          <button class="btn btn-gold btn-sm" onclick="importCourses()">Import All Courses</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-outline" onclick="goToStep1()">&larr; Back</button>
+      <button class="btn btn-outline" onclick="finishSetup()">Skip &amp; Go to Editor</button>
+      <button class="btn btn-navy" onclick="finishSetup()" id="finishBtn">Finish Setup</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- CDN libs for file extraction (loaded lazily) -->
+<script src="school-config.js"></script>
+<script src="importer.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  /* ── Prefill if returning to edit settings ── */
+  const cfg = SchoolConfig.load();
+  if (cfg.setupComplete) {
+    document.getElementById('schoolName').value = cfg.schoolName || '';
+    document.getElementById('shortName').value = cfg.shortName || '';
+    document.getElementById('mascot').value = cfg.mascot || '';
+    document.getElementById('mascotEmoji').value = cfg.mascotEmoji || '';
+    document.getElementById('motto').value = cfg.motto || '';
+    document.getElementById('schoolYear').value = cfg.schoolYear || '';
+    document.getElementById('colorPrimary').value = cfg.colors.primary;
+    document.getElementById('colorPrimaryHex').value = cfg.colors.primary;
+    document.getElementById('colorSecondary').value = cfg.colors.secondary;
+    document.getElementById('colorSecondaryHex').value = cfg.colors.secondary;
+  }
+
+  /* ── Color sync ── */
+  const cp = document.getElementById('colorPrimary');
+  const cs = document.getElementById('colorSecondary');
+  const cpH = document.getElementById('colorPrimaryHex');
+  const csH = document.getElementById('colorSecondaryHex');
+
+  cp.addEventListener('input', () => { cpH.value = cp.value; updatePreview(); });
+  cs.addEventListener('input', () => { csH.value = cs.value; updatePreview(); });
+  cpH.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(cpH.value)) { cp.value = cpH.value; updatePreview(); } });
+  csH.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(csH.value)) { cs.value = csH.value; updatePreview(); } });
+
+  /* ── Live preview ── */
+  ['schoolName','shortName','mascot','mascotEmoji','motto','schoolYear'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreview);
+  });
+
+  function updatePreview() {
+    const name = document.getElementById('schoolName').value || 'Your School';
+    const emoji = document.getElementById('mascotEmoji').value;
+    const mascot = document.getElementById('mascot').value;
+    const year = document.getElementById('schoolYear').value;
+    const primary = cp.value;
+    const secondary = cs.value;
+
+    document.getElementById('previewHeader').style.background = primary;
+    document.getElementById('previewName').textContent = name;
+    document.getElementById('previewSub').textContent = 'Course Catalog' + (year ? ' ' + year : '');
+    document.getElementById('previewSub').style.color = secondary;
+    document.getElementById('previewEmoji').textContent = emoji;
+    document.getElementById('previewMascot').textContent =
+      (emoji ? emoji + ' ' : '') + (mascot ? 'Go ' + mascot + '!' : '');
+    document.getElementById('previewMascot').style.color = secondary;
+    document.querySelector('.preview-card').style.borderLeftColor = secondary;
+
+    // Update page theme too
+    document.documentElement.style.setProperty('--navy', primary);
+    document.documentElement.style.setProperty('--gold', secondary);
+  }
+  updatePreview();
+
+  /* ── Step navigation ── */
+  window.goToStep2 = function () {
+    if (!document.getElementById('schoolName').value.trim()) {
+      document.getElementById('schoolName').focus();
+      return;
+    }
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('stepTab1').classList.remove('active');
+    document.getElementById('stepTab1').classList.add('done');
+    document.getElementById('stepTab2').classList.add('active');
+  };
+
+  window.goToStep1 = function () {
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('stepTab2').classList.remove('active');
+    document.getElementById('stepTab1').classList.remove('done');
+    document.getElementById('stepTab1').classList.add('active');
+  };
+
+  /* ── Drop zone ── */
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  /* ── File handling ── */
+  function showStatus(msg, type) {
+    const el = document.getElementById('importStatus');
+    el.textContent = msg;
+    el.className = 'import-status ' + type;
+    el.style.display = 'block';
+  }
+
+  async function handleFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const allowed = ['docx', 'pdf', 'md', 'txt', 'text'];
+    if (!allowed.includes(ext)) {
+      showStatus('Unsupported file type: .' + ext + '. Please use .docx, .pdf, .md, or .txt.', 'error');
+      return;
+    }
+
+    showStatus('Extracting text from ' + file.name + '...', 'info');
+    document.getElementById('extractedSection').style.display = 'none';
+    document.getElementById('reviewSection').style.display = 'none';
+
+    try {
+      const text = await CatalogImporter.extractText(file);
+      if (!text || !text.trim()) {
+        showStatus('No text could be extracted from this file.', 'error');
+        return;
+      }
+      showStatus('Extracted ' + text.length.toLocaleString() + ' characters from ' + file.name, 'success');
+      document.getElementById('extractedText').value = text;
+      document.getElementById('extractedSection').style.display = 'block';
+    } catch (err) {
+      showStatus('Error reading file: ' + err.message, 'error');
+      console.error(err);
+    }
+  }
+
+  /* ── Parse courses ── */
+  window.parseCourses = function () {
+    const text = document.getElementById('extractedText').value;
+    if (!text.trim()) return;
+
+    showStatus('Parsing courses...', 'info');
+    const courses = CatalogImporter.heuristicParse(text);
+
+    if (!courses.length) {
+      showStatus('No courses could be automatically detected. You can add them manually in the editor.', 'error');
+      return;
+    }
+
+    showStatus('Found ' + courses.length + ' courses. Review below and edit as needed.', 'success');
+    document.getElementById('parsedCount').textContent = '(' + courses.length + ' found)';
+    renderReviewTable(courses);
+    document.getElementById('reviewSection').style.display = 'block';
+  };
+
+  /* ── Review table ── */
+  const DEPT_OPTIONS = [
+    ['social-science','Social Science'],['english','English'],['mathematics','Mathematics'],
+    ['science','Science'],['lote','LOTE'],['vpa','Visual & Performing Arts'],
+    ['cte','CTE'],['pe','PE & Health'],['electives','Electives'],['special-ed','Special Education']
+  ];
+  const TYPE_OPTIONS = [['cp','CP'],['ap','AP'],['eld','ELD/ELA'],['sp','Special']];
+
+  function renderReviewTable(courses) {
+    const tbody = document.getElementById('reviewBody');
+    tbody.innerHTML = courses.map((c, i) => `
+      <tr data-idx="${i}">
+        <td><button class="del-btn" onclick="removeReviewRow(this)" title="Remove">&times;</button></td>
+        <td><input value="${esc(c.name)}" data-field="name"></td>
+        <td><select data-field="dept">${DEPT_OPTIONS.map(([v,l]) =>
+          `<option value="${v}"${c.dept===v?' selected':''}>${l}</option>`).join('')}
+        </select></td>
+        <td><input value="${esc(c.grade)}" data-field="grade" style="width:50px;"></td>
+        <td><input value="${esc(c.credits)}" data-field="credits" style="width:50px;"></td>
+        <td><input value="${esc(c.ag||'')}" data-field="ag" style="width:40px;"></td>
+        <td><select data-field="type">${TYPE_OPTIONS.map(([v,l]) =>
+          `<option value="${v}"${c.type===v?' selected':''}>${l}</option>`).join('')}
+        </select></td>
+      </tr>
+    `).join('');
+  }
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  window.removeReviewRow = function (btn) {
+    btn.closest('tr').remove();
+    const count = document.querySelectorAll('#reviewBody tr').length;
+    document.getElementById('parsedCount').textContent = '(' + count + ' remaining)';
+  };
+
+  window.clearImport = function () {
+    document.getElementById('reviewSection').style.display = 'none';
+    document.getElementById('extractedSection').style.display = 'none';
+    document.getElementById('importStatus').style.display = 'none';
+    fileInput.value = '';
+  };
+
+  /* ── Import courses to localStorage ── */
+  window.importCourses = function () {
+    const rows = document.querySelectorAll('#reviewBody tr');
+    if (!rows.length) return;
+
+    const courses = [];
+    rows.forEach((row, i) => {
+      const get = f => (row.querySelector(`[data-field="${f}"]`).value || '').trim();
+      courses.push({
+        id: 'imp' + (i + 1),
+        name: get('name'),
+        dept: get('dept'),
+        grade: get('grade'),
+        credits: get('credits'),
+        ag: get('ag'),
+        type: get('type'),
+        code: '',
+        prereq: '',
+        desc: ''
+      });
+    });
+
+    // Save to localStorage (same key as editor)
+    const LS_KEY = 'jhs_catalog_courses';
+    localStorage.setItem(LS_KEY, JSON.stringify(courses));
+    showStatus('Imported ' + courses.length + ' courses successfully!', 'success');
+    document.getElementById('reviewSection').style.display = 'none';
+  };
+
+  /* ── Finish setup ── */
+  window.finishSetup = function () {
+    const name = document.getElementById('schoolName').value.trim();
+    if (!name) {
+      goToStep1();
+      document.getElementById('schoolName').focus();
+      return;
+    }
+
+    SchoolConfig.save({
+      schoolName: name,
+      shortName: document.getElementById('shortName').value.trim(),
+      mascot: document.getElementById('mascot').value.trim(),
+      mascotEmoji: document.getElementById('mascotEmoji').value.trim(),
+      motto: document.getElementById('motto').value.trim(),
+      schoolYear: document.getElementById('schoolYear').value.trim(),
+      colors: {
+        primary: cp.value,
+        secondary: cs.value
+      },
+      setupComplete: true
+    });
+
+    window.location.href = 'editor.html';
+  };
+})();
+</script>
+</body>
+</html>
