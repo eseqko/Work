@@ -109,11 +109,38 @@
   function heuristicParse(text) {
     // Try table-marker format first (like catalog_raw.txt)
     let courses = parseTableMarkerFormat(text);
-    if (courses.length > 0) return courses;
+    if (courses.length > 0) {
+      // Cross-reference with brief course listing to fill in missing codes
+      const codeLookup = buildCodeLookup(text);
+      for (const c of courses) {
+        if (!c.code && codeLookup[c.name.toUpperCase()]) {
+          c.code = codeLookup[c.name.toUpperCase()];
+        }
+      }
+      return courses;
+    }
 
     // Fallback: try generic line-by-line parsing
     courses = parseGenericFormat(text);
     return courses;
+  }
+
+  /** Build a name→code lookup from brief course listings like "20011\tAmerican Government CP" */
+  function buildCodeLookup(text) {
+    const lookup = {};
+    const lines = text.split('\n');
+    for (const line of lines) {
+      // Match patterns like: 20011\tAmerican Government CP  or  21000/21001  English 9 CP
+      const m = line.match(/^\s*([\d\/]+)\s+(.+?)$/);
+      if (m) {
+        const code = m[1].trim();
+        const name = m[2].replace(/\s+/g, ' ').trim().toUpperCase();
+        if (/^\d{4,}/.test(code) && name.length > 3) {
+          lookup[name] = code;
+        }
+      }
+    }
+    return lookup;
   }
 
   /* ── Parser: TABLE marker format ──
@@ -179,11 +206,22 @@
     // Department detection from name keywords
     course.dept = guessDepartment(course.name, fullText);
 
-    // Description: grab the last long block of text
-    const descLines = lines.filter(l =>
-      !l.includes('|') && l.length > 60 && !/^(Grade|Credits?|Course\s*ID|Prerequisites?)/i.test(l)
-    );
-    if (descLines.length) course.desc = descLines.join(' ').trim();
+    // Description: look for long text in the block
+    // In pipe-delimited formats, the description is often the last line, repeated across columns
+    const descCandidates = [];
+    for (const l of lines) {
+      // Skip structured field lines
+      if (/^(Grade|Credits?|Course\s*ID|Prerequisites?)/i.test(l)) continue;
+      // Skip the title line (first line)
+      if (l === lines[0]) continue;
+      // For pipe-delimited lines, take the first column
+      const col = l.includes('|') ? l.split('|')[0].trim() : l.trim();
+      // Accept lines that look like descriptions (long enough, not a field label)
+      if (col.length > 80 && !/^(Grade|Credits?|Course\s*ID|Prerequisites?|Meets\s|May\s|Course\s*(Page|Slide))/i.test(col)) {
+        descCandidates.push(col);
+      }
+    }
+    if (descCandidates.length) course.desc = descCandidates.join(' ').trim();
 
     return course;
   }
@@ -305,7 +343,13 @@ Return ONLY a JSON array (no markdown fences, no explanation). Each object must 
 - "type": string — one of: ap, cp, eld, sp
 - "code": string — course ID/code if found, or ""
 - "prereq": string — prerequisites text, or "None"
-- "desc": string — brief course description (1-2 sentences)
+- "desc": string — course description (2-4 sentences). IMPORTANT: extract the FULL description from the text, do not abbreviate or summarize.
+
+IMPORTANT extraction priorities:
+1. Look for detailed course description sections (often in tables or repeated columns). These contain Course IDs, grade levels, credits, a-g areas, prerequisites, AND full descriptions. ALWAYS prefer these detailed sections over brief course listings.
+2. Course codes/IDs are numeric identifiers like "20011", "21000/21001", "23100/23101". They are NOT optional — extract them when present.
+3. Descriptions are the paragraph-length text explaining what students learn in the course. They are usually the longest text block for each course entry. Extract the FULL description, not just the first sentence.
+4. If the same course appears in both a brief listing and a detailed description section, merge the data — use the code from the listing and the description from the detailed section.
 
 Department mapping guide:
 - social-science: history, government, economics, psychology, sociology
