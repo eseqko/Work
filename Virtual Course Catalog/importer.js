@@ -289,18 +289,142 @@
   }
 
   /* ═══════════════════════════════════════
-     PLUGGABLE AI PARSER SLOT
-     For future Claude API integration
+     AI PARSER — Claude API integration
   ═══════════════════════════════════════ */
-  let aiParserFn = null;
+  const API_KEY_LS = 'catalog_ai_api_key';
+  const API_MODEL_LS = 'catalog_ai_model';
 
-  function setAIParser(fn) {
-    aiParserFn = fn;
+  const COURSE_SCHEMA_PROMPT = `You are a course catalog parser. Extract structured course data from the provided text.
+
+Return ONLY a JSON array (no markdown fences, no explanation). Each object must have these fields:
+- "name": string — course title in Title Case
+- "dept": string — one of: social-science, english, mathematics, science, lote, vpa, cte, pe, electives, special-ed
+- "grade": string — grade levels (e.g. "9-12", "10", "11-12")
+- "credits": string — total credits (e.g. "10", "5")
+- "ag": string — UC/CSU a-g area letter (a-g) or "" if none
+- "type": string — one of: ap, cp, eld, sp
+- "code": string — course ID/code if found, or ""
+- "prereq": string — prerequisites text, or "None"
+- "desc": string — brief course description (1-2 sentences)
+
+Department mapping guide:
+- social-science: history, government, economics, psychology, sociology
+- english: English, literature, writing, journalism, ELD/ESL
+- mathematics: math, algebra, geometry, calculus, statistics
+- science: biology, chemistry, physics, anatomy, environmental science
+- lote: Spanish, French, Filipino, Mandarin, other world languages
+- vpa: art, music, band, choir, drama, theater, dance, ceramics
+- cte: career/technical education, business, engineering, culinary, computer science
+- pe: physical education, health, fitness, sports
+- electives: interdisciplinary electives, film studies, robotics, data science
+- special-ed: special education, IEP-based courses, study skills, tutorials
+
+Type mapping: AP courses = "ap", ELD/ELA courses = "eld", Special Ed = "sp", everything else = "cp"
+
+Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
+
+  function getApiKey() {
+    return localStorage.getItem(API_KEY_LS) || '';
   }
 
-  async function aiParse(text) {
-    if (!aiParserFn) throw new Error('No AI parser configured');
-    return await aiParserFn(text);
+  function setApiKey(key) {
+    if (key) localStorage.setItem(API_KEY_LS, key);
+    else localStorage.removeItem(API_KEY_LS);
+  }
+
+  function getApiModel() {
+    return localStorage.getItem(API_MODEL_LS) || 'claude-sonnet-4-6';
+  }
+
+  function setApiModel(model) {
+    localStorage.setItem(API_MODEL_LS, model);
+  }
+
+  async function aiParse(text, onProgress) {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('No API key configured. Add your Anthropic API key first.');
+
+    const model = getApiModel();
+
+    // Truncate very long texts to stay within token limits
+    // ~4 chars per token, aim for ~100k tokens max input
+    const maxChars = 400000;
+    let inputText = text;
+    if (inputText.length > maxChars) {
+      inputText = inputText.substring(0, maxChars);
+      if (onProgress) onProgress('Text truncated to ' + maxChars.toLocaleString() + ' chars for API limits.');
+    }
+
+    if (onProgress) onProgress('Sending to Claude (' + model + ')...');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: model,
+        max_tokens: 16000,
+        messages: [{
+          role: 'user',
+          content: COURSE_SCHEMA_PROMPT + '\n\n--- BEGIN CATALOG TEXT ---\n' + inputText + '\n--- END CATALOG TEXT ---'
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (response.status === 401) throw new Error('Invalid API key. Check your Anthropic API key.');
+      if (response.status === 429) throw new Error('Rate limited. Wait a moment and try again.');
+      throw new Error('API error (' + response.status + '): ' + (err.error?.message || 'Unknown error'));
+    }
+
+    const data = await response.json();
+    const content = data.content?.[0]?.text || '';
+
+    if (onProgress) onProgress('Parsing response...');
+
+    // Extract JSON array from response (handle potential markdown fences)
+    let jsonStr = content.trim();
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (fenceMatch) jsonStr = fenceMatch[1].trim();
+
+    // Find the array bounds
+    const arrStart = jsonStr.indexOf('[');
+    const arrEnd = jsonStr.lastIndexOf(']');
+    if (arrStart === -1 || arrEnd === -1) {
+      throw new Error('AI response did not contain a valid JSON array. Try again.');
+    }
+    jsonStr = jsonStr.substring(arrStart, arrEnd + 1);
+
+    let courses;
+    try {
+      courses = JSON.parse(jsonStr);
+    } catch (e) {
+      throw new Error('Failed to parse AI response as JSON: ' + e.message);
+    }
+
+    if (!Array.isArray(courses)) throw new Error('AI response was not an array.');
+
+    // Validate and normalize each course
+    const validDepts = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
+    const validTypes = ['ap','cp','eld','sp'];
+
+    return courses.map((c, i) => ({
+      id: 'ai' + (i + 1),
+      name: String(c.name || '').trim(),
+      dept: validDepts.includes(c.dept) ? c.dept : guessDepartment(c.name || '', c.desc || ''),
+      grade: String(c.grade || '').trim(),
+      credits: String(c.credits || '10').trim(),
+      ag: String(c.ag || '').trim().toLowerCase(),
+      type: validTypes.includes(c.type) ? c.type : 'cp',
+      code: String(c.code || '').trim(),
+      prereq: String(c.prereq || 'None').trim(),
+      desc: String(c.desc || '').trim()
+    })).filter(c => c.name);
   }
 
   /* ═══════════════════════════════════════
@@ -309,8 +433,11 @@
   window.CatalogImporter = {
     extractText,
     heuristicParse,
-    setAIParser,
     aiParse,
+    getApiKey,
+    setApiKey,
+    getApiModel,
+    setApiModel,
     // Expose sub-parsers for testing
     _parseTableMarkerFormat: parseTableMarkerFormat,
     _parseGenericFormat: parseGenericFormat
