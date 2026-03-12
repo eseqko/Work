@@ -1998,11 +1998,12 @@ function editorDoImport() {
   const rows = document.querySelectorAll('#editorReviewWrap tbody tr');
   if (!rows.length) return;
   const newCourses = [];
-  rows.forEach((row, i) => {
+  rows.forEach((row) => {
     const g = f => (row.querySelector('[data-f="'+f+'"]').value || '').trim();
-    const base = window._editorParsed && window._editorParsed[i] ? window._editorParsed[i] : {};
+    const idx = parseInt(row.getAttribute('data-idx'), 10);
+    const base = window._editorParsed && window._editorParsed[idx] ? window._editorParsed[idx] : {};
     newCourses.push({
-      id: 'imp' + Date.now() + '_' + i,
+      id: 'imp' + Date.now() + '_' + idx,
       name: g('name'), dept: g('dept'), grade: g('grade'), type: g('type'),
       credits: base.credits || '10', ag: base.ag || '', code: base.code || '',
       prereq: base.prereq || '', desc: base.desc || ''

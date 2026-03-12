@@ -152,6 +152,8 @@
 
     while ((match = tableRegex.exec(text)) !== null) {
       const block = match[2].trim();
+      // Skip informational tables (no Grade/Credits/Course ID = not a course)
+      if (!/Grade:|Credits?:|Course\s*ID:/i.test(block)) continue;
       const course = parseTableBlock(block);
       if (course && course.name) {
         course.id = 'tbl' + match[1];
@@ -198,9 +200,9 @@
     const preMatch = fullText.match(/Prerequisites?:\s*([^\n|]+)/i);
     if (preMatch) course.prereq = preMatch[1].trim();
 
-    // a-g area
-    const agMatch = fullText.match(/(?:requirement|requirements|area)\s*"?([a-g])"?/i) ||
-                    fullText.match(/Area\s*"([a-g])"/i);
+    // a-g area (handle smart/curly quotes: \u201c \u201d and straight quotes)
+    const agMatch = fullText.match(/(?:requirement|requirements|area)\s*["\u201c\u201d]?([a-g])["\u201c\u201d]?/i) ||
+                    fullText.match(/Area\s*["\u201c\u201d]([a-g])["\u201c\u201d]/i);
     if (agMatch) course.ag = agMatch[1].toLowerCase();
 
     // Department detection from name keywords

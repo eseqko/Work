@@ -590,6 +590,7 @@ input[type="color"] {
   const TYPE_OPTIONS = [['cp','CP'],['ap','AP'],['eld','ELD/ELA'],['sp','Special']];
 
   function renderReviewTable(courses) {
+    window._setupParsed = courses;
     const tbody = document.getElementById('reviewBody');
     tbody.innerHTML = courses.map((c, i) => `
       <tr data-idx="${i}">
@@ -629,19 +630,21 @@ input[type="color"] {
     if (!rows.length) return;
 
     const courses = [];
-    rows.forEach((row, i) => {
+    rows.forEach((row) => {
       const get = f => (row.querySelector(`[data-field="${f}"]`).value || '').trim();
+      const idx = parseInt(row.getAttribute('data-idx'), 10);
+      const base = (window._setupParsed && window._setupParsed[idx]) || {};
       courses.push({
-        id: 'imp' + (i + 1),
+        id: 'imp' + (idx + 1),
         name: get('name'),
         dept: get('dept'),
         grade: get('grade'),
         credits: get('credits'),
         ag: get('ag'),
         type: get('type'),
-        code: '',
-        prereq: '',
-        desc: ''
+        code: base.code || '',
+        prereq: base.prereq || '',
+        desc: base.desc || ''
       });
     });
 
