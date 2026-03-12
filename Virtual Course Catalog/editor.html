@@ -324,16 +324,18 @@ tr:hover td { background: #fafbfc; }
 
 <header>
   <div class="hdr-left">
-    <span style="font-size:24px;">🐾</span>
+    <span style="font-size:24px;" data-school-emoji>🐾</span>
     <div>
       <div class="hdr-title">Course Catalog Editor</div>
-      <div class="hdr-sub">Jefferson High School 2026–2027</div>
+      <div class="hdr-sub"><span data-school-name>Jefferson High School</span> <span data-school-year>2026–2027</span></div>
     </div>
   </div>
   <div class="hdr-actions">
+    <button class="btn btn-white" onclick="openImportModal()" title="Import catalog from file">📥 Import</button>
     <a href="index.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
     <button class="btn btn-gdoc" onclick="openGDocModal()">📄 → Google Doc</button>
     <button class="btn btn-gold" onclick="openExportModal()">⬇ Export &amp; Save</button>
+    <a href="setup.html" class="btn btn-white btn-sm" title="School Settings">⚙</a>
   </div>
 </header>
 
@@ -732,7 +734,7 @@ tr:hover td { background: #fafbfc; }
         <li><span class="step-num">2</span><span>Click <strong>Open Apps Script ↗</strong> → you'll land at <code>script.google.com</code>. Click <strong>New Project</strong>.</span></li>
         <li><span class="step-num">3</span><span>Select all the starter code (Ctrl+A / ⌘A) and <strong>paste</strong> your copied script.</span></li>
         <li><span class="step-num">4</span><span>In the toolbar, make sure the function dropdown (left of ▶) says <strong>myFunction</strong>. Then click <strong>▶ Run</strong>. Google will ask for permissions — click <strong>Review Permissions → Allow</strong>.</span></li>
-        <li><span class="step-num">5</span><span>Wait ~2–5 minutes (127 courses takes time). Then open <strong>Google Drive</strong> — your new doc titled <em>"Jefferson High School — Course Catalog 2026–2027"</em> will be there.</span></li>
+        <li><span class="step-num">5</span><span>Wait ~2–5 minutes (many courses takes time). Then open <strong>Google Drive</strong> — your new doc will be there.</span></li>
       </ol>
       <div class="code-wrap">
         <div class="code-toolbar">
@@ -790,6 +792,48 @@ tr:hover td { background: #fafbfc; }
 <!-- ══ TOAST ══ -->
 <div class="toast" id="toast"></div>
 
+<!-- ══ IMPORT MODAL ══ -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-header">
+      <h2>Import Catalog</h2>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;">Upload a catalog document to extract courses. Supports .docx, .pdf, .md, .txt</p>
+      <div id="editorDropZone" style="border:2px dashed var(--border);border-radius:8px;padding:30px 20px;text-align:center;cursor:pointer;margin-bottom:14px;transition:border-color 0.2s;" onclick="document.getElementById('editorFileInput').click()">
+        <div style="font-size:1.8rem;margin-bottom:6px;">📄</div>
+        <div style="font-size:0.88rem;font-weight:600;">Drop a file here or click to browse</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">.docx, .pdf, .md, .txt</div>
+        <input type="file" id="editorFileInput" accept=".docx,.pdf,.md,.txt,.text" style="display:none;">
+      </div>
+      <div id="editorImportStatus" style="display:none;padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;"></div>
+      <div id="editorExtracted" style="display:none;">
+        <label style="font-size:0.8rem;font-weight:600;color:var(--muted);">Extracted Text</label>
+        <textarea id="editorExtractedText" readonly style="width:100%;min-height:100px;max-height:160px;font-family:monospace;font-size:0.78rem;padding:8px;border:1px solid var(--border);border-radius:6px;background:#fafbfc;margin:4px 0 10px;resize:vertical;"></textarea>
+        <button class="btn btn-gold btn-sm" onclick="editorParseCourses()">Parse Courses</button>
+      </div>
+      <div id="editorReview" style="display:none;margin-top:14px;">
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:6px;">Parsed Courses <span id="editorParsedCount" style="font-weight:400;color:var(--muted);"></span></div>
+        <div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;" id="editorReviewWrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" id="editorImportBtn" style="display:none;" onclick="editorDoImport()">Import Courses</button>
+    </div>
+  </div>
+</div>
+
+<script src="school-config.js"></script>
+<script src="importer.js"></script>
+<script>
+/* ── Boot check ── */
+if (typeof SchoolConfig !== 'undefined') {
+  SchoolConfig.requireSetup();
+  SchoolConfig.applyTheme();
+}
+</script>
 <script>
 /* ═══════════════════════════════════════════════════
    SEED DATA — loaded from catalog
@@ -1548,8 +1592,17 @@ function generateGDocsScript() {
   const ts   = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
   const data = JSON.stringify(courses, null, 2);
 
+  const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
+  const _sn = _sc.schoolName || 'Your School';
+  const _sy = _sc.schoolYear || '';
+  const _sm = _sc.mascot || '';
+  const _smot = _sc.motto || '';
+  const _sme = _sc.mascotEmoji || '';
+  const _cp = (_sc.colors && _sc.colors.primary) || '#1a3a5c';
+  const _cs = (_sc.colors && _sc.colors.secondary) || '#c8a227';
+
   return `// ================================================================
-// JEFFERSON HIGH SCHOOL — Course Catalog Generator
+// ${_sn.toUpperCase()} — Course Catalog Generator
 // Generated: ${ts}  |  Total courses: ${courses.length}
 //
 // INSTRUCTIONS
@@ -1575,38 +1628,38 @@ function myFunction() {
 // \u2500\u2500 Main builder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function createCourseCatalog() {
 
-  var doc  = DocumentApp.create('Jefferson High School \u2014 Course Catalog 2026\u20132027');
+  var doc  = DocumentApp.create('${_sn} \u2014 Course Catalog ${_sy}');
   var body = doc.getBody();
   body.setMarginTop(36).setMarginBottom(36).setMarginLeft(54).setMarginRight(54);
 
   // \u2500\u2500 Cover Page \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  var h1 = body.appendParagraph('JEFFERSON HIGH SCHOOL');
+  var h1 = body.appendParagraph('${_sn.toUpperCase()}');
   h1.setHeading(DocumentApp.ParagraphHeading.HEADING1);
   h1.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
   h1.setSpacingBefore(72).setSpacingAfter(10);
-  h1.editAsText().setForegroundColor('#1a3a5c').setFontSize(26).setBold(true);
+  h1.editAsText().setForegroundColor('${_cp}').setFontSize(26).setBold(true);
 
-  var h2 = body.appendParagraph('Course Catalog 2026\u20132027');
+  var h2 = body.appendParagraph('Course Catalog ${_sy}');
   h2.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
   h2.setSpacingBefore(0).setSpacingAfter(22);
-  h2.editAsText().setForegroundColor('#c8a227').setFontSize(17).setItalic(true).setBold(false);
+  h2.editAsText().setForegroundColor('${_cs}').setFontSize(17).setItalic(true).setBold(false);
 
-  var mot = body.appendParagraph('Knowledge  \u00b7  Service  \u00b7  Achievement');
+  var mot = body.appendParagraph('${_smot || ''}');
   mot.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
   mot.setSpacingBefore(0).setSpacingAfter(10);
   mot.editAsText().setForegroundColor('#6b7280').setFontSize(11).setItalic(true);
 
-  var paw = body.appendParagraph('Go Grizzlies!');
+  var paw = body.appendParagraph('${_sm ? (_sme ? _sme + " " : "") + "Go " + _sm + "!" : ""}');
   paw.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
   paw.setSpacingBefore(10).setSpacingAfter(72);
-  paw.editAsText().setForegroundColor('#1a3a5c').setFontSize(14).setBold(true);
+  paw.editAsText().setForegroundColor('${_cp}').setFontSize(14).setBold(true);
 
   body.appendPageBreak();
 
   // \u2500\u2500 Graduation Requirements \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   var grH = body.appendParagraph('Graduation Requirements');
   grH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  grH.editAsText().setForegroundColor('#1a3a5c');
+  grH.editAsText().setForegroundColor('${_cp}');
   grH.setSpacingAfter(10);
 
   var grRows = [['a-g', 'Subject Area', 'JUHSD Diploma Requirements', 'Notes', 'CSU/UC Eligibility']];
@@ -1635,7 +1688,7 @@ function createCourseCatalog() {
   // \u2500\u2500 a-g Certified Course List \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   var agH = body.appendParagraph('CSU/UC "a-g" Certified Course List 2026\u20132027');
   agH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  agH.editAsText().setForegroundColor('#1a3a5c');
+  agH.editAsText().setForegroundColor('${_cp}');
   agH.setSpacingAfter(4);
 
   var agNote = body.appendParagraph('Weighted (Honors) courses earn A=5, B=4, C=3. Maximum 8 honors points for CSU/UC GPA. This list is updated yearly.');
@@ -1653,7 +1706,7 @@ function createCourseCatalog() {
     if (!agArea || !agArea.courses || !agArea.courses.length) continue;
     var agAreaH = body.appendParagraph(ak + '. ' + agArea.label + '  \u2014  ' + agArea.required);
     agAreaH.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-    agAreaH.editAsText().setForegroundColor('#1a3a5c').setFontSize(11);
+    agAreaH.editAsText().setForegroundColor('${_cp}').setFontSize(11);
     agAreaH.setSpacingBefore(12).setSpacingAfter(3);
     var agApexNames = AG_LIST._apexCourses || [];
     var agLines = [];
@@ -1702,7 +1755,7 @@ function createCourseCatalog() {
     // Department heading
     var dH = body.appendParagraph(DEPT_LABELS[dept] || dept);
     dH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
-    dH.editAsText().setForegroundColor('#1a3a5c');
+    dH.editAsText().setForegroundColor('${_cp}');
     dH.setSpacingBefore(18).setSpacingAfter(6);
 
     for (var ci = 0; ci < courses_.length; ci++) {
@@ -1761,7 +1814,7 @@ function createCourseCatalog() {
   body.appendPageBreak();
   var conH = body.appendParagraph('Counseling Contacts');
   conH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  conH.editAsText().setForegroundColor('#1a3a5c');
+  conH.editAsText().setForegroundColor('${_cp}');
   conH.setSpacingAfter(10);
 
   var conRows = [['Counselor', 'Caseload', 'Phone', 'Email']];
@@ -1798,7 +1851,7 @@ function createCourseCatalog() {
 function styleHeader_(row, numCols) {
   for (var i = 0; i < numCols; i++) {
     try {
-      row.getCell(i).setBackgroundColor('#1a3a5c');
+      row.getCell(i).setBackgroundColor('${_cp}');
       row.getCell(i).editAsText().setForegroundColor('#ffffff').setBold(true).setFontSize(10);
     } catch(e) {}
   }
@@ -1819,12 +1872,112 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 });
 
 /* ═══════════════════════════════════════════════════
+   IMPORT MODAL (uses CatalogImporter from importer.js)
+═══════════════════════════════════════════════════ */
+function openImportModal() {
+  document.getElementById('importModal').classList.add('open');
+}
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('open');
+}
+
+(function () {
+  const dz = document.getElementById('editorDropZone');
+  const fi = document.getElementById('editorFileInput');
+
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--navy)'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor = 'var(--border)'; });
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.style.borderColor = 'var(--border)';
+    if (e.dataTransfer.files.length) editorHandleFile(e.dataTransfer.files[0]);
+  });
+  fi.addEventListener('change', () => { if (fi.files.length) editorHandleFile(fi.files[0]); });
+})();
+
+function editorShowStatus(msg, type) {
+  const el = document.getElementById('editorImportStatus');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type === 'error' ? '#fee2e2' : type === 'success' ? '#dcfce7' : '#e0f2fe';
+  el.style.color = type === 'error' ? '#991b1b' : type === 'success' ? '#166534' : '#0c4a6e';
+}
+
+async function editorHandleFile(file) {
+  if (typeof CatalogImporter === 'undefined') { editorShowStatus('Importer not loaded', 'error'); return; }
+  editorShowStatus('Extracting text...', 'info');
+  document.getElementById('editorExtracted').style.display = 'none';
+  document.getElementById('editorReview').style.display = 'none';
+  document.getElementById('editorImportBtn').style.display = 'none';
+  try {
+    const text = await CatalogImporter.extractText(file);
+    if (!text || !text.trim()) { editorShowStatus('No text extracted.', 'error'); return; }
+    editorShowStatus('Extracted ' + text.length.toLocaleString() + ' chars', 'success');
+    document.getElementById('editorExtractedText').value = text;
+    document.getElementById('editorExtracted').style.display = 'block';
+  } catch (err) { editorShowStatus('Error: ' + err.message, 'error'); }
+}
+
+function editorParseCourses() {
+  const text = document.getElementById('editorExtractedText').value;
+  if (!text.trim()) return;
+  const parsed = CatalogImporter.heuristicParse(text);
+  if (!parsed.length) { editorShowStatus('No courses detected.', 'error'); return; }
+  editorShowStatus(parsed.length + ' courses found. Review below.', 'success');
+  document.getElementById('editorParsedCount').textContent = '(' + parsed.length + ')';
+
+  const DEPT_OPTS = [['social-science','Social Science'],['english','English'],['mathematics','Math'],
+    ['science','Science'],['lote','LOTE'],['vpa','VPA'],['cte','CTE'],['pe','PE'],['electives','Electives'],['special-ed','SpEd']];
+  const TYPE_OPTS = [['cp','CP'],['ap','AP'],['eld','ELD'],['sp','Sp']];
+
+  const wrap = document.getElementById('editorReviewWrap');
+  wrap.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr>' +
+    '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;">Name</th>' +
+    '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:100px;">Dept</th>' +
+    '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:50px;">Grade</th>' +
+    '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:50px;">Type</th>' +
+    '</tr></thead><tbody>' +
+    parsed.map((c, i) => '<tr data-idx="' + i + '">' +
+      '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><input value="' + esc(c.name) + '" data-f="name" style="width:100%;border:none;font-size:0.8rem;padding:2px;"></td>' +
+      '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><select data-f="dept" style="font-size:0.78rem;">' + DEPT_OPTS.map(([v,l]) => '<option value="'+v+'"'+(c.dept===v?' selected':'')+'>'+l+'</option>').join('') + '</select></td>' +
+      '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><input value="' + esc(c.grade) + '" data-f="grade" style="width:40px;border:none;font-size:0.8rem;"></td>' +
+      '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><select data-f="type" style="font-size:0.78rem;">' + TYPE_OPTS.map(([v,l]) => '<option value="'+v+'"'+(c.type===v?' selected':'')+'>'+l+'</option>').join('') + '</select></td>' +
+    '</tr>').join('') +
+    '</tbody></table>';
+  document.getElementById('editorReview').style.display = 'block';
+  document.getElementById('editorImportBtn').style.display = 'inline-flex';
+  window._editorParsed = parsed;
+}
+
+function editorDoImport() {
+  const rows = document.querySelectorAll('#editorReviewWrap tbody tr');
+  if (!rows.length) return;
+  const newCourses = [];
+  rows.forEach((row, i) => {
+    const g = f => (row.querySelector('[data-f="'+f+'"]').value || '').trim();
+    const base = window._editorParsed && window._editorParsed[i] ? window._editorParsed[i] : {};
+    newCourses.push({
+      id: 'imp' + Date.now() + '_' + i,
+      name: g('name'), dept: g('dept'), grade: g('grade'), type: g('type'),
+      credits: base.credits || '10', ag: base.ag || '', code: base.code || '',
+      prereq: base.prereq || '', desc: base.desc || ''
+    });
+  });
+  // Merge with existing courses
+  courses = courses.concat(newCourses);
+  saveCourses();
+  renderAll();
+  closeImportModal();
+  toast(newCourses.length + ' courses imported!');
+}
+
+/* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 loadCourses();
 renderAll();
 loadInfo();
 renderInfoEditor();
+if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
 </script>
 </body>
 </html>
