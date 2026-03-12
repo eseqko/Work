@@ -328,8 +328,9 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
   }
 
   function setApiKey(key) {
-    if (key) localStorage.setItem(API_KEY_LS, key);
-    else localStorage.removeItem(API_KEY_LS);
+    // Reject masked/non-ASCII values to prevent fetch header errors
+    if (key && /^[\x20-\x7E]+$/.test(key)) localStorage.setItem(API_KEY_LS, key);
+    else if (!key) localStorage.removeItem(API_KEY_LS);
   }
 
   function getApiModel() {

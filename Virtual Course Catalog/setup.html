@@ -543,9 +543,14 @@ input[type="color"] {
   };
 
   /* ── API Key management ── */
+  const MASK = '\u2022'.repeat(16);
+
   window.saveApiKey = function () {
-    const key = document.getElementById('apiKeyInput').value.trim();
-    CatalogImporter.setApiKey(key);
+    const raw = document.getElementById('apiKeyInput').value.trim();
+    // Don't save the mask or empty value over a real key
+    if (raw && raw !== MASK && !raw.includes('\u2022')) {
+      CatalogImporter.setApiKey(raw);
+    }
     const model = document.getElementById('aiModelSelect').value;
     CatalogImporter.setApiModel(model);
     updateAiKeyStatus();
@@ -559,11 +564,21 @@ input[type="color"] {
     status.style.color = hasKey ? '#166534' : '#991b1b';
     document.getElementById('aiParseBtn').style.display = hasKey ? 'inline-flex' : 'none';
 
-    // Prefill
-    if (hasKey) document.getElementById('apiKeyInput').value = '••••••••••••••••';
+    // Show mask if key exists
+    const input = document.getElementById('apiKeyInput');
+    if (hasKey && (!input.value || input.value === MASK)) input.value = MASK;
     const savedModel = CatalogImporter.getApiModel();
     document.getElementById('aiModelSelect').value = savedModel;
   }
+
+  // Clear mask on focus so user can type a new key
+  document.getElementById('apiKeyInput').addEventListener('focus', function () {
+    if (this.value === MASK) this.value = '';
+  });
+  document.getElementById('apiKeyInput').addEventListener('blur', function () {
+    if (!this.value && CatalogImporter.getApiKey()) this.value = MASK;
+  });
+
   updateAiKeyStatus();
 
   /* ── Review table ── */
