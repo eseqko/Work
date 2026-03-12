@@ -1761,7 +1761,7 @@ function createCourseCatalog() {
       var cIsApex = /apex/i.test(cname) || agApexNames.indexOf(cname) >= 0;
       agLines.push(cIsApex ? cname + '  [APEX]' : cname);
     }
-    var agP = body.appendParagraph(agLines.join('\n'));
+    var agP = body.appendParagraph(agLines.join('\\n'));
     agP.setSpacingBefore(0).setSpacingAfter(6);
     agP.setIndentStart(14);
     agP.editAsText().setForegroundColor('#374151').setFontSize(10);
