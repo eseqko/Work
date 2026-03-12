@@ -813,11 +813,31 @@ tr:hover td { background: #fafbfc; }
         <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">.docx, .pdf, .md, .txt</div>
         <input type="file" id="editorFileInput" accept=".docx,.pdf,.md,.txt,.text" style="display:none;">
       </div>
+      <!-- AI config inline -->
+      <div style="margin-bottom:14px;padding:10px 14px;background:#fafbfc;border:1px solid var(--border);border-radius:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label style="font-size:0.78rem;font-weight:600;">AI Parsing (Claude API)</label>
+          <span id="editorAiKeyStatus" style="font-size:0.7rem;padding:2px 7px;border-radius:10px;font-weight:600;"></span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="password" id="editorApiKeyInput" placeholder="sk-ant-api03-..." style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.78rem;font-family:monospace;">
+          <select id="editorAiModelSelect" style="padding:5px 6px;border:1px solid var(--border);border-radius:5px;font-size:0.76rem;">
+            <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+            <option value="claude-haiku-4-5-20251001">Haiku 4.5</option>
+            <option value="claude-opus-4-6">Opus 4.6</option>
+          </select>
+          <button class="btn btn-primary btn-sm" style="padding:5px 10px;" onclick="editorSaveApiKey()">Save</button>
+        </div>
+        <p style="font-size:0.68rem;color:var(--muted);margin-top:4px;">Key stored locally, sent directly to Anthropic API only.</p>
+      </div>
       <div id="editorImportStatus" style="display:none;padding:10px;border-radius:6px;margin-bottom:12px;font-size:0.85rem;"></div>
       <div id="editorExtracted" style="display:none;">
         <label style="font-size:0.8rem;font-weight:600;color:var(--muted);">Extracted Text</label>
         <textarea id="editorExtractedText" readonly style="width:100%;min-height:100px;max-height:160px;font-family:monospace;font-size:0.78rem;padding:8px;border:1px solid var(--border);border-radius:6px;background:#fafbfc;margin:4px 0 10px;resize:vertical;"></textarea>
-        <button class="btn btn-gold btn-sm" onclick="editorParseCourses()">Parse Courses</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" onclick="editorParseCourses()">Parse (Heuristic)</button>
+          <button class="btn btn-primary btn-sm" id="editorAiParseBtn" onclick="editorParseCoursesAI()">Parse with Claude AI</button>
+        </div>
       </div>
       <div id="editorReview" style="display:none;margin-top:14px;">
         <div style="font-size:0.85rem;font-weight:600;margin-bottom:6px;">Parsed Courses <span id="editorParsedCount" style="font-weight:400;color:var(--muted);"></span></div>
@@ -1997,6 +2017,73 @@ function editorDoImport() {
 }
 
 /* ═══════════════════════════════════════════════════
+   EDITOR AI PARSING
+═══════════════════════════════════════════════════ */
+function editorSaveApiKey() {
+  const key = document.getElementById('editorApiKeyInput').value.trim();
+  if (key && !key.startsWith('••')) CatalogImporter.setApiKey(key);
+  const model = document.getElementById('editorAiModelSelect').value;
+  CatalogImporter.setApiModel(model);
+  updateEditorAiStatus();
+}
+
+function updateEditorAiStatus() {
+  if (typeof CatalogImporter === 'undefined') return;
+  const status = document.getElementById('editorAiKeyStatus');
+  const hasKey = !!CatalogImporter.getApiKey();
+  status.textContent = hasKey ? 'Key saved' : 'No key';
+  status.style.background = hasKey ? '#dcfce7' : '#fee2e2';
+  status.style.color = hasKey ? '#166534' : '#991b1b';
+  document.getElementById('editorAiParseBtn').style.display = hasKey ? 'inline-flex' : 'none';
+  if (hasKey) document.getElementById('editorApiKeyInput').value = '••••••••••••••••';
+  document.getElementById('editorAiModelSelect').value = CatalogImporter.getApiModel();
+}
+
+async function editorParseCoursesAI() {
+  const text = document.getElementById('editorExtractedText').value;
+  if (!text.trim()) return;
+  if (!CatalogImporter.getApiKey()) { editorShowStatus('Save your API key first.', 'error'); return; }
+
+  const btn = document.getElementById('editorAiParseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Parsing...';
+
+  try {
+    const parsed = await CatalogImporter.aiParse(text, msg => editorShowStatus(msg, 'info'));
+    if (!parsed.length) { editorShowStatus('AI found no courses.', 'error'); return; }
+    editorShowStatus(parsed.length + ' courses found via AI. Review below.', 'success');
+    document.getElementById('editorParsedCount').textContent = '(' + parsed.length + ' via AI)';
+
+    // Reuse the same review table builder from editorParseCourses
+    const DEPT_OPTS = [['social-science','Social Science'],['english','English'],['mathematics','Math'],
+      ['science','Science'],['lote','LOTE'],['vpa','VPA'],['cte','CTE'],['pe','PE'],['electives','Electives'],['special-ed','SpEd']];
+    const TYPE_OPTS = [['cp','CP'],['ap','AP'],['eld','ELD'],['sp','Sp']];
+    const wrap = document.getElementById('editorReviewWrap');
+    wrap.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;">Name</th>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:100px;">Dept</th>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:50px;">Grade</th>' +
+      '<th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:left;position:sticky;top:0;width:50px;">Type</th>' +
+      '</tr></thead><tbody>' +
+      parsed.map((c, i) => '<tr data-idx="' + i + '">' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><input value="' + esc(c.name) + '" data-f="name" style="width:100%;border:none;font-size:0.8rem;padding:2px;"></td>' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><select data-f="dept" style="font-size:0.78rem;">' + DEPT_OPTS.map(([v,l]) => '<option value="'+v+'"'+(c.dept===v?' selected':'')+'>'+l+'</option>').join('') + '</select></td>' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><input value="' + esc(c.grade) + '" data-f="grade" style="width:40px;border:none;font-size:0.8rem;"></td>' +
+        '<td style="padding:4px 8px;border-bottom:1px solid var(--border);"><select data-f="type" style="font-size:0.78rem;">' + TYPE_OPTS.map(([v,l]) => '<option value="'+v+'"'+(c.type===v?' selected':'')+'>'+l+'</option>').join('') + '</select></td>' +
+      '</tr>').join('') +
+      '</tbody></table>';
+    document.getElementById('editorReview').style.display = 'block';
+    document.getElementById('editorImportBtn').style.display = 'inline-flex';
+    window._editorParsed = parsed;
+  } catch (err) {
+    editorShowStatus('AI error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Parse with Claude AI';
+  }
+}
+
+/* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 loadCourses();
@@ -2004,6 +2091,7 @@ renderAll();
 loadInfo();
 renderInfoEditor();
 if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
+updateEditorAiStatus();
 </script>
 </body>
 </html>
