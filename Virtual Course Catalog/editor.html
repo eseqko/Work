@@ -2019,9 +2019,13 @@ function editorDoImport() {
 /* ═══════════════════════════════════════════════════
    EDITOR AI PARSING
 ═══════════════════════════════════════════════════ */
+var _edMask = '\u2022'.repeat(16);
+
 function editorSaveApiKey() {
-  const key = document.getElementById('editorApiKeyInput').value.trim();
-  if (key && !key.startsWith('••')) CatalogImporter.setApiKey(key);
+  const raw = document.getElementById('editorApiKeyInput').value.trim();
+  if (raw && raw !== _edMask && !raw.includes('\u2022')) {
+    CatalogImporter.setApiKey(raw);
+  }
   const model = document.getElementById('editorAiModelSelect').value;
   CatalogImporter.setApiModel(model);
   updateEditorAiStatus();
@@ -2035,9 +2039,16 @@ function updateEditorAiStatus() {
   status.style.background = hasKey ? '#dcfce7' : '#fee2e2';
   status.style.color = hasKey ? '#166534' : '#991b1b';
   document.getElementById('editorAiParseBtn').style.display = hasKey ? 'inline-flex' : 'none';
-  if (hasKey) document.getElementById('editorApiKeyInput').value = '••••••••••••••••';
+  var inp = document.getElementById('editorApiKeyInput');
+  if (hasKey && (!inp.value || inp.value === _edMask)) inp.value = _edMask;
   document.getElementById('editorAiModelSelect').value = CatalogImporter.getApiModel();
 }
+
+(function () {
+  var inp = document.getElementById('editorApiKeyInput');
+  inp.addEventListener('focus', function () { if (this.value === _edMask) this.value = ''; });
+  inp.addEventListener('blur', function () { if (!this.value && CatalogImporter.getApiKey()) this.value = _edMask; });
+})();
 
 async function editorParseCoursesAI() {
   const text = document.getElementById('editorExtractedText').value;
