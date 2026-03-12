@@ -543,11 +543,295 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
   }
 
   /* ═══════════════════════════════════════
+     INFO PAGE PARSER
+     Extracts graduation requirements,
+     four-year plan, a-g list, counselors,
+     post-secondary, NCAA, scheduling
+  ═══════════════════════════════════════ */
+  function parseInfoPages(text) {
+    const info = {};
+    const tableRegex = /---\s*TABLE\s+(\d+)\s*---\s*\n([\s\S]*?)---\s*END\s+TABLE\s+\1\s*---/gi;
+    let match;
+
+    // Collect all non-course TABLE blocks (ones without Grade:/Credits:/Course ID:)
+    const infoBlocks = [];
+    while ((match = tableRegex.exec(text)) !== null) {
+      const block = match[2].trim();
+      if (!/Grade:|Credits?:|Course\s*ID:/i.test(block)) {
+        infoBlocks.push({ num: parseInt(match[1]), block });
+      }
+    }
+
+    // Classify and parse each info block
+    for (const { block } of infoBlocks) {
+      const firstLine = block.split('\n')[0].trim();
+
+      // Graduation requirements table: starts with "a-g" header row
+      if (/[""\u201c]?a-g[""\u201d]?/i.test(firstLine) && /Subject/i.test(firstLine)) {
+        info.gradReqs = parseGradReqsBlock(block);
+      }
+      // Four-year plan: starts with "9th Grade"
+      else if (/^9th\s*Grade/i.test(firstLine)) {
+        info.fourYear = parseFourYearBlock(block);
+      }
+      // a-g list: starts with "History/Social Science" and has a-g area headers
+      else if (/History.*Social\s*Science/i.test(firstLine) && /\b[b-g]\.\s/m.test(block)) {
+        info.agList = parseAgListBlock(block);
+      }
+      // Counselors: lines with phone numbers and emails
+      else if (/@/.test(block) && /\(\d{3}\)\s*\d{3}[\-\s]\d{4}|\d{3}-\d{3}-\d{4}/.test(block)) {
+        info.counselors = parseCounselorsBlock(block);
+      }
+    }
+
+    // Parse non-table text sections
+    const postSec = parsePostSecondary(text);
+    if (postSec.length) info.postSecondary = postSec;
+
+    const ncaa = parseNCAA(text);
+    if (ncaa) info.ncaa = ncaa;
+
+    const sched = parseScheduling(text);
+    if (sched) info.scheduling = sched;
+
+    // Overview from header
+    const overview = parseOverview(text);
+    if (overview) info.overview = overview;
+
+    return Object.keys(info).length > 0 ? info : null;
+  }
+
+  function parseGradReqsBlock(block) {
+    const reqs = [];
+    const lines = block.split('\n').slice(1); // skip header row
+    for (const line of lines) {
+      // Format: "a. | History/Social Science | 30 credits..." or "| Health Education | 5 credits | N/A"
+      const parts = line.split('|').map(s => s.trim());
+      if (parts.length < 3) continue;
+      const areaRaw = parts[0].replace(/\./g, '').trim();
+      const area = /^[a-g]$/i.test(areaRaw) ? areaRaw.toLowerCase() : '\u2014';
+      const subject = parts[1];
+      if (!subject || subject.length < 3) continue;
+      const juhsd = parts[2] || '';
+      const ucCsu = parts[3] || '';
+      reqs.push({ area, subject, juhsd, note: '', ucCsu });
+    }
+    return reqs.length > 0 ? reqs : undefined;
+  }
+
+  function parseFourYearBlock(block) {
+    const plan = { grade9: [], grade10: [], grade11: [], grade12: [] };
+    let current = null;
+    for (const line of block.split('\n')) {
+      const t = line.trim();
+      if (/^9th\s*Grade/i.test(t)) current = 'grade9';
+      else if (/^10th\s*Grade/i.test(t)) current = 'grade10';
+      else if (/^11th\s*Grade/i.test(t)) current = 'grade11';
+      else if (/^12th\s*Grade/i.test(t)) current = 'grade12';
+      else if (current && /^\d+\.\s*(.+)/.test(t)) {
+        plan[current].push(t.replace(/^\d+\.\s*/, '').trim());
+      }
+    }
+    return plan;
+  }
+
+  function parseAgListBlock(block) {
+    const agList = {};
+    const areaLabels = {
+      a: 'History / Social Science', b: 'English', c: 'Mathematics',
+      d: 'Laboratory Science', e: 'Language Other Than English',
+      f: 'Visual & Performing Arts', g: 'College Preparatory Electives'
+    };
+    let currentArea = null;
+    let courses = [];
+
+    const lines = block.split(/[\n|]/).map(s => s.trim()).filter(Boolean);
+    for (const line of lines) {
+      // Check for area header like "b. English" or "c.\tMathematics" (must have letter-dot prefix)
+      // Also match standalone headers like "History/Social Science" (short lines, no CP/AP suffix)
+      const letterArea = line.match(/^([a-g])[\.\s]+\s*(.+)/i);
+      const labelArea = !letterArea && line.length < 40 &&
+                        !/\b(CP|AP|ELD)\b/i.test(line) &&
+                        line.match(/^(History.*Social\s*Science|English|Mathematics|Laboratory\s*Science|Language.*Other.*English|Visual.*Performing\s*Arts|College.*Prep.*Elective)/i);
+      if (letterArea || labelArea) {
+        // Save previous area
+        if (currentArea && courses.length) {
+          agList[currentArea] = { label: areaLabels[currentArea] || '', required: '', courses: [...courses] };
+        }
+        if (letterArea && /^[a-g]$/i.test(letterArea[1])) {
+          currentArea = letterArea[1].toLowerCase();
+        } else {
+          const label = (labelArea ? labelArea[1] : (letterArea ? letterArea[2] : line)).toLowerCase();
+          if (/history|social/i.test(label)) currentArea = 'a';
+          else if (/^english$/i.test(label)) currentArea = 'b';
+          else if (/math/i.test(label)) currentArea = 'c';
+          else if (/lab|science/i.test(label)) currentArea = 'd';
+          else if (/language|other/i.test(label)) currentArea = 'e';
+          else if (/visual|performing/i.test(label)) currentArea = 'f';
+          else if (/elective|prep/i.test(label)) currentArea = 'g';
+        }
+        courses = [];
+        continue;
+      }
+      // Course line: text that looks like a course name
+      if (currentArea && line.length > 3 && !/^\*|^Courses in|^This course|^Students may/i.test(line)) {
+        courses.push(line);
+      }
+    }
+    // Save last area
+    if (currentArea && courses.length) {
+      agList[currentArea] = { label: areaLabels[currentArea] || '', required: '', courses: [...courses] };
+    }
+    return Object.keys(agList).length > 0 ? agList : undefined;
+  }
+
+  function parseCounselorsBlock(block) {
+    const counselors = [];
+    const lines = block.split('\n').map(s => s.trim()).filter(Boolean);
+    let i = 0;
+    while (i < lines.length) {
+      // Pattern: Name, then caseload (Last Names:...), phone, email
+      const name = lines[i];
+      if (!name || /^---/.test(name)) { i++; continue; }
+      const caseload = (i + 1 < lines.length) ? lines[i + 1] : '';
+      const phoneLine = (i + 2 < lines.length) ? lines[i + 2] : '';
+      const emailLine = (i + 3 < lines.length) ? lines[i + 3] : '';
+
+      const phoneMatch = phoneLine.match(/\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{4}/);
+      const emailMatch = emailLine.match(/[\w.]+@[\w.]+/);
+
+      if (phoneMatch || emailMatch) {
+        counselors.push({
+          name: name,
+          caseload: caseload.replace(/^Last\s*Names?:\s*/i, 'Last Names: '),
+          phone: phoneMatch ? phoneMatch[0] : '',
+          email: emailMatch ? emailMatch[0] : ''
+        });
+        i += 4;
+      } else {
+        i++;
+      }
+    }
+    return counselors.length > 0 ? counselors : undefined;
+  }
+
+  function parsePostSecondary(text) {
+    // Find the Post Secondary section (the one followed by actual UC/CSU content, not table of contents)
+    const sectionMatch = text.match(/Post\s*Secondary\s*Opportunities\s*\n\s*\n\s*(University of California[\s\S]*?)(?=\n\n(?:2\d{3}-\d{4}|Tentative|Course Offerings|STUDENT ATHLETES|---\s*TABLE))/i);
+    if (!sectionMatch) return [];
+
+    const section = sectionMatch[1];
+    const entries = [];
+    const patterns = [
+      { re: /University of California \(UC\)\s*\n([\s\S]*?)(?=\nCalifornia State University)/i, title: 'University of California (UC)' },
+      { re: /California State University \(CSU\)\s*\n([\s\S]*?)(?=\nPrivate Colleges)/i, title: 'California State University (CSU)' },
+      { re: /Private Colleges\s*\n([\s\S]*?)(?=\nCommunity Colleges)/i, title: 'Private Colleges' },
+      { re: /Community Colleges\s*\n([\s\S]*?)(?=\nTechnical)/i, title: 'Community Colleges' },
+      { re: /Technical, Trade,?\s*(?:and|&)\s*Business Schools\s*\n([\s\S]*?)(?=\nApprenticeship)/i, title: 'Technical, Trade & Business Schools' },
+      { re: /Apprenticeship Programs\s*\n([\s\S]*?)$/i, title: 'Apprenticeship Programs' },
+    ];
+    for (const { re, title } of patterns) {
+      const m = section.match(re);
+      if (m) {
+        const body = m[1].trim().split('\n').filter(l => l.trim()).join(' ').trim();
+        if (body.length > 20) entries.push({ title, text: body });
+      }
+    }
+    return entries;
+  }
+
+  function parseNCAA(text) {
+    const d1Match = text.match(/DIVISION I\s*\n([\s\S]*?)(?=DIVISION II)/i);
+    const d2Match = text.match(/DIVISION II\s*\n([\s\S]*?)(?=\n\n\n|\n(?:Jefferson|Scheduling|Counseling|---|\n\n))/i);
+    if (!d1Match) return null;
+
+    function parseDivision(block) {
+      const reqs = [];
+      const lines = block.split('\n');
+      let gpa = '', notes = '';
+      for (const line of lines) {
+        const t = line.trim();
+        const yrMatch = t.match(/^(\d+)\s*years?\s+(?:of\s+)?(.+)/i);
+        if (yrMatch) reqs.push({ years: yrMatch[1], subject: yrMatch[2].trim() });
+        const gpaMatch = t.match(/GPA[\-\s]*Earn at least a\s*([\d.]+)/i);
+        if (gpaMatch) gpa = gpaMatch[1];
+        if (/^(Complete|Test Scores)/i.test(t)) notes += (notes ? ' ' : '') + t;
+      }
+      return { reqs, gpa, notes };
+    }
+
+    const d1 = parseDivision(d1Match[1]);
+    const d2 = d2Match ? parseDivision(d2Match[1]) : { reqs: [], gpa: '', notes: '' };
+    return {
+      d1GPA: d1.gpa, d1Notes: d1.notes, d1: d1.reqs,
+      d2GPA: d2.gpa, d2Notes: d2.notes, d2: d2.reqs
+    };
+  }
+
+  function parseScheduling(text) {
+    const schedMatch = text.match(/Scheduling Procedures\s*\n\s*\nClass Changes\s*\n([\s\S]*?)(?=Advanced Placement|Counseling Contacts|Websites of Interest|---)/i);
+    const apMatch = text.match(/Advanced Placement Commitment\s*\n([\s\S]*?)(?=\n\n\n|Counseling Contacts|Websites|---)/i);
+    if (!schedMatch) return null;
+
+    const block = schedMatch[1];
+    // Extract deadline info
+    const fallMatch = block.match(/within the (first[^,]+fall\s+semester)/i);
+    const springMatch = block.match(/(?:and\s+)?(first[^.]+spring\s+semester)/i);
+    const deadlineFall = fallMatch ? fallMatch[1].trim() : '';
+    const deadlineSpring = springMatch ? springMatch[1].trim() : '';
+    const reasonsMatch = block.match(/based on the following reasons?:\s*([^.]+)/i);
+    const allowedReasons = reasonsMatch ? reasonsMatch[1].trim() : '';
+
+    // Extract numbered steps — handle multi-line steps with tab/space indentation
+    const steps = [];
+    const stepRegex = /\t(\d+)\.\s*([\s\S]*?)(?=\t\d+\.|$)/g;
+    let stepMatch;
+    while ((stepMatch = stepRegex.exec(block)) !== null) {
+      steps.push(stepMatch[2].replace(/\s+/g, ' ').trim());
+    }
+
+    const apPolicy = apMatch ? apMatch[1].replace(/\s+/g, ' ').trim() : '';
+
+    return { deadlineFall, deadlineSpring, allowedReasons, conflictSteps: steps, apPolicy };
+  }
+
+  function parseOverview(text) {
+    // Extract motto/tagline from header area
+    const mottoMatch = text.match(/^(.+)\n\n-Go\s+/m);
+    const tagline = mottoMatch ? mottoMatch[1].trim() : '';
+
+    // Diploma credits
+    const credMatch = text.match(/minimum of\s+(\d+)\s+credits/i);
+    const diplomaCredits = credMatch ? parseInt(credMatch[1]) : 0;
+
+    // a-g requirements
+    const agMinMatch = text.match(/minimum of\s+(\d+)\s+[""\u201c]?a-g/i);
+    const agMin = agMinMatch ? parseInt(agMinMatch[1]) : 0;
+
+    const juniorMatch = text.match(/(\d+)\s+courses?\s+need\s+to\s+be\s+completed\s+by\s+the\s+end\s+of\s+junior/i);
+    const agByJunior = juniorMatch ? parseInt(juniorMatch[1]) : 0;
+
+    const ucGpaMatch = text.match(/Minimum GPA required for UC[\-:\s]*(\d+\.?\d*)/i);
+    const csuGpaMatch = text.match(/Minimum GPA required for CSU[\-:\s]*(\d+\.?\d*)/i);
+
+    if (!tagline && !diplomaCredits) return null;
+    return {
+      tagline: tagline || '',
+      diplomaCredits: diplomaCredits || 225,
+      agMin: agMin || 15,
+      agByJunior: agByJunior || 11,
+      ucGPA: ucGpaMatch ? ucGpaMatch[1] : '3.0',
+      csuGPA: csuGpaMatch ? csuGpaMatch[1] : '2.5'
+    };
+  }
+
+  /* ═══════════════════════════════════════
      PUBLIC API
   ═══════════════════════════════════════ */
   window.CatalogImporter = {
     extractText,
     heuristicParse,
+    parseInfoPages,
     aiParse,
     getApiKey,
     setApiKey,

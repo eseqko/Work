@@ -651,6 +651,18 @@ input[type="color"] {
     // Save to localStorage (same key as editor)
     const LS_KEY = 'jhs_catalog_courses';
     localStorage.setItem(LS_KEY, JSON.stringify(courses));
+
+    // Also extract and save info pages (grad reqs, counselors, etc.)
+    const rawText = document.getElementById('extractedText').value;
+    if (rawText) {
+      const infoData = CatalogImporter.parseInfoPages(rawText);
+      if (infoData) {
+        const INFO_KEY = 'jhs_catalog_info';
+        const existing = JSON.parse(localStorage.getItem(INFO_KEY) || 'null');
+        localStorage.setItem(INFO_KEY, JSON.stringify(Object.assign({}, existing || {}, infoData)));
+      }
+    }
+
     showStatus('Imported ' + courses.length + ' courses successfully!', 'success');
     document.getElementById('reviewSection').style.display = 'none';
   };
