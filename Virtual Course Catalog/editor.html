@@ -713,7 +713,7 @@ tr:hover td { background: #fafbfc; }
       </div>
       <ol class="export-steps">
         <li>Click <strong>Download index.html</strong> below.</li>
-        <li>Go to your project folder: <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">C:\Users\jvillalobos\MakeBelieve\</code></li>
+        <li>Go to your project folder (where the catalog files live).</li>
         <li>Replace the existing <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">index.html</code> with the downloaded file.</li>
         <li>Re-embed in Google Sites if needed.</li>
       </ol>
@@ -1913,7 +1913,7 @@ function styleHeader_(row, numCols) {
 ═══════════════════════════════════════════════════ */
 function downloadCatalogPDF() {
   if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-    toast('PDF library still loading — please try again in a moment.', 'warn');
+    showToast('PDF library still loading — please try again in a moment.', 'warn');
     return;
   }
 
@@ -2200,7 +2200,7 @@ function downloadCatalogPDF() {
   // ── Download ──
   var filename = schoolName.replace(/[^a-zA-Z0-9]+/g, '_') + '_Course_Catalog_' + schoolYear.replace(/[^0-9\-]/g, '') + '.pdf';
   doc.save(filename);
-  toast('PDF downloaded!', 'success');
+  showToast('PDF downloaded!', 'success');
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2324,7 +2324,7 @@ function editorDoImport() {
 
   renderAll();
   closeImportModal();
-  toast(newCourses.length + ' courses imported!');
+  showToast(newCourses.length + ' courses imported!', 'success');
 }
 
 /* ═══════════════════════════════════════════════════
