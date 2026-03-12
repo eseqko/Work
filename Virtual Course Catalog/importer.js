@@ -348,7 +348,6 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
     const model = getApiModel();
 
     // Truncate very long texts to stay within token limits
-    // ~4 chars per token, aim for ~100k tokens max input
     const maxChars = 400000;
     let inputText = text;
     if (inputText.length > maxChars) {
@@ -356,7 +355,7 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
       if (onProgress) onProgress('Text truncated to ' + maxChars.toLocaleString() + ' chars for API limits.');
     }
 
-    if (onProgress) onProgress('Sending to Claude (' + model + ')...');
+    if (onProgress) onProgress('Sending to Claude (' + model + ')... this may take 30-60 seconds for large catalogs.');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -368,7 +367,7 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
       },
       body: JSON.stringify({
         model: model,
-        max_tokens: 16000,
+        max_tokens: 64000,
         messages: [{
           role: 'user',
           content: COURSE_SCHEMA_PROMPT + '\n\n--- BEGIN CATALOG TEXT ---\n' + inputText + '\n--- END CATALOG TEXT ---'
@@ -384,31 +383,100 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || '';
 
-    if (onProgress) onProgress('Parsing response...');
+    // Debug: log entire response structure
+    console.log('AI response structure:', {
+      stop_reason: data.stop_reason,
+      content_blocks: data.content?.length,
+      types: data.content?.map(b => b.type),
+      usage: data.usage
+    });
 
-    // Extract JSON array from response (handle potential markdown fences)
-    let jsonStr = content.trim();
-    const fenceMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-    if (fenceMatch) jsonStr = fenceMatch[1].trim();
-
-    // Find the array bounds
-    const arrStart = jsonStr.indexOf('[');
-    const arrEnd = jsonStr.lastIndexOf(']');
-    if (arrStart === -1 || arrEnd === -1) {
-      throw new Error('AI response did not contain a valid JSON array. Try again.');
+    // Try all text content blocks, not just the first
+    let content = '';
+    if (Array.isArray(data.content)) {
+      content = data.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('\n');
     }
-    jsonStr = jsonStr.substring(arrStart, arrEnd + 1);
+    const stopReason = data.stop_reason;
+
+    if (!content) {
+      console.error('AI response had no text content. Full response:', JSON.stringify(data).substring(0, 2000));
+      throw new Error('AI returned an empty response (stop_reason: ' + stopReason +
+        '). This may mean the input was too large or the model refused. Try a smaller file.');
+    }
+
+    if (onProgress) onProgress('Parsing ' + content.length + ' chars of response (stop: ' + stopReason + ')...');
+
+    // Extract JSON array from response
+    let jsonStr = content.trim();
+
+    // Strip markdown fences — try multiple patterns
+    // Pattern 1: standard ```json ... ``` block
+    let fenceMatch = jsonStr.match(/```(?:json)?\s*\n([\s\S]+)\n\s*```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1].trim();
+    } else {
+      // Pattern 2: fences without trailing newline (e.g. ```json[...]```)
+      fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]+?)```/);
+      if (fenceMatch) jsonStr = fenceMatch[1].trim();
+    }
+
+    // Find the JSON array
+    let arrStart = jsonStr.indexOf('[');
+    if (arrStart === -1) {
+      // Log full response for debugging
+      console.error('AI response (no JSON array found):', content);
+      throw new Error('AI response did not contain a JSON array (' + content.length +
+        ' chars received, stop_reason: ' + stopReason +
+        '). Check browser console for full response. Preview: "' +
+        content.substring(0, 300).replace(/\n/g, ' ') + '"');
+    }
+
+    let arrEnd = jsonStr.lastIndexOf(']');
+    let truncated = false;
+
+    // If response was truncated (hit max_tokens), the JSON is incomplete
+    if (arrEnd === -1 || (stopReason === 'max_tokens' && arrEnd < jsonStr.length - 5)) {
+      truncated = true;
+      // Try to recover: find the last complete object by finding the last "},"
+      const lastComplete = jsonStr.lastIndexOf('},');
+      if (lastComplete > arrStart) {
+        jsonStr = jsonStr.substring(arrStart, lastComplete + 1) + ']';
+      } else {
+        const lastObj = jsonStr.lastIndexOf('}');
+        if (lastObj > arrStart) {
+          jsonStr = jsonStr.substring(arrStart, lastObj + 1) + ']';
+        } else {
+          throw new Error('AI response was truncated and could not be recovered. Try a smaller catalog or use Heuristic parsing.');
+        }
+      }
+    } else {
+      jsonStr = jsonStr.substring(arrStart, arrEnd + 1);
+    }
 
     let courses;
     try {
       courses = JSON.parse(jsonStr);
     } catch (e) {
-      throw new Error('Failed to parse AI response as JSON: ' + e.message);
+      // One more attempt: try to fix common trailing issues
+      try {
+        // Remove trailing comma before ]
+        const fixed = jsonStr.replace(/,\s*\]$/, ']');
+        courses = JSON.parse(fixed);
+      } catch {
+        throw new Error('Failed to parse AI response as JSON. ' +
+          (truncated ? 'Response was truncated — try a smaller file or Heuristic parsing.' : e.message));
+      }
     }
 
     if (!Array.isArray(courses)) throw new Error('AI response was not an array.');
+
+    if (truncated && onProgress) {
+      onProgress('Note: Response was truncated. Recovered ' + courses.length + ' courses — some may be missing.');
+    }
 
     // Validate and normalize each course
     const validDepts = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
