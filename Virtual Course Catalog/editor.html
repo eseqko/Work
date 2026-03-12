@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jefferson HS Catalog — Editor</title>
+<style>
+:root {
+  --navy: #1a3a5c; --gold: #c8a227; --gold-light: #f5e9c0;
+  --bg: #f4f6f9; --white: #fff; --border: #dde1e7;
+  --text: #1e2428; --muted: #6b7280;
+  --r: 8px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --danger: #dc2626; --success: #16a34a; --warn: #d97706;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: var(--navy); color: #fff;
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+.hdr-left { display: flex; align-items: center; gap: 12px; }
+.hdr-title { font-size: 1rem; font-weight: 700; }
+.hdr-sub { font-size: 0.7rem; color: var(--gold); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.hdr-actions { display: flex; gap: 10px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 6px; font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; border: none;
+  transition: opacity 0.15s, transform 0.1s; text-decoration: none;
+}
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.98); }
+.btn-gold   { background: var(--gold); color: #1a1a1a; }
+.btn-white  { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
+.btn-primary{ background: var(--navy); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-success{ background: var(--success); color: #fff; }
+.btn-sm     { padding: 4px 11px; font-size: 0.75rem; }
+.btn-icon   { padding: 5px 8px; }
+
+/* ── Layout ── */
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+
+/* ── Toolbar ── */
+.toolbar {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px 16px; margin-bottom: 20px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  box-shadow: var(--shadow);
+}
+.toolbar-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 6px 12px; flex: 1; min-width: 200px;
+}
+.toolbar-search input {
+  border: none; background: none; outline: none;
+  font-size: 0.85rem; width: 100%; color: var(--text);
+}
+select.filter-sel {
+  padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 0.82rem; background: var(--bg); color: var(--text);
+  cursor: pointer; outline: none;
+}
+.toolbar-right { margin-left: auto; display: flex; gap: 8px; }
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.stat-chip {
+  background: #fff; border: 1px solid var(--border); border-radius: 20px;
+  padding: 5px 14px; font-size: 0.78rem; color: var(--muted);
+  box-shadow: var(--shadow);
+}
+.stat-chip strong { color: var(--navy); }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; border-radius: var(--r); box-shadow: var(--shadow); }
+table {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border: 1px solid var(--border); font-size: 0.82rem;
+}
+thead { background: var(--navy); color: #fff; position: sticky; top: 0; z-index: 2; }
+th { padding: 11px 14px; text-align: left; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfc; }
+.td-name { font-weight: 600; color: var(--navy); max-width: 260px; }
+.td-name .course-code { font-size: 0.68rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+.badge-sm {
+  display: inline-block; font-size: 0.63rem; padding: 2px 7px;
+  border-radius: 10px; font-weight: 600; white-space: nowrap;
+}
+.b-ap   { background: #ede9fe; color: #7c3aed; }
+.b-cp   { background: #e0f2fe; color: #0369a1; }
+.b-eld  { background: #d1fae5; color: #065f46; }
+.b-sp   { background: #ffedd5; color: #9a3412; }
+.b-ag   { background: var(--gold-light); color: #78450f; }
+
+.actions-cell { display: flex; gap: 6px; white-space: nowrap; }
+.empty-row td { text-align: center; padding: 40px; color: var(--muted); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.48); z-index: 500;
+  align-items: flex-start; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 12px; width: 100%; max-width: 640px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22); margin: auto;
+  animation: popIn 0.18s ease;
+}
+@keyframes popIn { from { opacity:0; transform:scale(0.96) translateY(-8px); } to { opacity:1; } }
+.modal-header {
+  padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h2 { font-size: 1rem; font-weight: 700; color: var(--navy); }
+.modal-close {
+  background: var(--bg); border: none; border-radius: 50%;
+  width: 30px; height: 30px; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: var(--muted);
+}
+.modal-body  { padding: 20px 22px; }
+.modal-footer{ padding: 14px 22px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ── Form ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-full  { grid-column: 1 / -1; }
+.field label {
+  display: block; font-size: 0.75rem; font-weight: 700;
+  color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.field label .req { color: var(--danger); margin-left: 2px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 8px 11px; border: 1.5px solid var(--border);
+  border-radius: 6px; font-size: 0.85rem; color: var(--text);
+  background: var(--bg); outline: none; transition: border-color 0.15s;
+  font-family: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--navy); background: #fff;
+}
+.field textarea { resize: vertical; min-height: 90px; }
+.field-hint { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+/* ── Checkboxes ── */
+.check-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.check-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--navy); }
+.check-row label { font-size: 0.82rem; color: var(--text); cursor: pointer; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: var(--navy); color: #fff; border-radius: 8px;
+  padding: 12px 20px; font-size: 0.85rem; font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.28s cubic-bezier(.4,0,.2,1);
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.toast-success { background: var(--success); }
+.toast.toast-warn    { background: var(--warn); }
+
+/* ── Export modal ── */
+.export-box {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 14px; font-size: 0.78rem;
+  color: var(--muted); line-height: 1.7; margin-bottom: 14px;
+}
+.export-steps { counter-reset: steps; list-style: none; padding: 0; }
+.export-steps li {
+  counter-increment: steps; display: flex; gap: 10px;
+  margin-bottom: 10px; font-size: 0.82rem; color: #374151; align-items: flex-start;
+}
+.export-steps li::before {
+  content: counter(steps); display: flex; width: 22px; height: 22px;
+  background: var(--navy); color: #fff; border-radius: 50%;
+  align-items: center; justify-content: center; font-size: 0.7rem;
+  font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+
+/* ── Confirm dialog ── */
+.confirm-msg { font-size: 0.88rem; color: #374151; line-height: 1.6; }
+.confirm-name { font-weight: 700; color: var(--navy); }
+
+/* ── Tab Bar ── */
+.tab-bar {
+  background: var(--white); border-bottom: 2px solid var(--border);
+  display: flex; padding: 0 24px; box-shadow: var(--shadow);
+}
+.tab-btn {
+  padding: 12px 20px; border: none; background: none; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; color: var(--muted);
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+.tab-btn:hover:not(.active) { color: var(--text); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Info Editor ── */
+.info-section {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--r);
+  margin-bottom: 14px; box-shadow: var(--shadow); overflow: hidden;
+}
+.info-section-hdr {
+  padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.info-section-hdr:hover { background: #f8fafc; }
+.info-section-title { font-size: 0.92rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+.info-section-chevron { color: var(--muted); transition: transform 0.2s; font-size: 0.8rem; }
+.info-section.open .info-section-chevron { transform: rotate(180deg); }
+.info-section-body { display: none; padding: 18px 20px; border-top: 1px solid var(--border); }
+.info-section.open .info-section-body { display: block; }
+.info-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.info-row.single { grid-template-columns: 1fr; }
+.info-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+.info-input, .info-textarea {
+  width: 100%; padding: 8px 11px; border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 0.85rem; color: var(--text); background: var(--bg); outline: none;
+  font-family: inherit; transition: border-color 0.15s;
+}
+.info-input:focus, .info-textarea:focus { border-color: var(--navy); background: #fff; }
+.info-textarea { resize: vertical; min-height: 80px; }
+.info-hint { font-size: 0.68rem; color: var(--muted); margin-top: 3px; }
+.info-save-badge {
+  font-size: 0.68rem; color: var(--success); font-weight: 700;
+  opacity: 0; transition: opacity 0.3s; margin-left: 8px;
+}
+.info-save-badge.show { opacity: 1; }
+
+/* ── Grad Req Table ── */
+.gr-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 10px; }
+.gr-table th { background: var(--navy); color: #fff; padding: 8px 10px; text-align: left; font-size: 0.72rem; }
+.gr-table td { padding: 6px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.gr-table tr:last-child td { border-bottom: none; }
+.gr-table tr:hover td { background: #fafbfc; }
+.gr-input { width: 100%; padding: 4px 7px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 0.78rem; font-family: inherit; background: var(--bg); color: var(--text); outline: none; }
+.gr-input:focus { border-color: var(--navy); background: #fff; }
+
+/* ── Counselors CRUD ── */
+.con-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 10px; }
+.con-table th { background: var(--navy); color: #fff; padding: 8px 10px; font-size: 0.72rem; text-align: left; }
+.con-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.con-table tr:last-child td { border-bottom: none; }
+.con-table tr:hover td { background: #fafbfc; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  header { padding: 0 14px; }
+  .hdr-title { font-size: 0.88rem; }
+  .hdr-sub { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .container { padding: 14px 12px 60px; }
+  .tab-bar { padding: 0 10px; }
+  .tab-btn { padding: 10px 12px; font-size: 0.78rem; }
+}
+
+/* ── Google Doc Export ── */
+.btn-gdoc { background: #1a73e8; color: #fff; }
+.gdoc-intro {
+  background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;
+  padding: 14px 16px; margin-bottom: 16px;
+}
+.gdoc-intro p { font-size: 0.82rem; color: #0c4a6e; line-height: 1.65; margin-bottom: 4px; }
+.gdoc-intro strong { color: #075985; }
+.step-list { list-style: none; padding: 0; margin-bottom: 16px; }
+.step-list li {
+  display: flex; align-items: flex-start; gap: 12px;
+  font-size: 0.82rem; color: #374151; margin-bottom: 10px; line-height: 1.5;
+}
+.step-num {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  background: #1a3a5c; color: #fff; font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-list li code {
+  background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px;
+  padding: 1px 6px; font-size: 0.78rem; font-family: 'Courier New', monospace;
+}
+.code-wrap { border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+.code-toolbar {
+  background: #1e293b; color: #94a3b8;
+  padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.72rem; font-family: 'Courier New', monospace;
+}
+.code-block {
+  width: 100%; height: 220px; resize: none;
+  background: #0f172a; color: #e2e8f0; border: none;
+  padding: 12px 14px; font-family: 'Courier New', monospace;
+  font-size: 0.75rem; line-height: 1.55; outline: none; display: block;
+}
+.copy-script-btn {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #e2e8f0; border-radius: 5px; padding: 3px 12px;
+  font-size: 0.72rem; cursor: pointer; transition: background 0.15s;
+  font-family: inherit;
+}
+.copy-script-btn:hover { background: rgba(255,255,255,0.2); }
+.copy-script-btn.copied { background: #16a34a; border-color: #16a34a; color: #fff; }
+.gdoc-tip {
+  margin-top: 12px; font-size: 0.75rem; color: var(--muted);
+  display: flex; align-items: flex-start; gap: 6px; line-height: 1.55;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <span style="font-size:24px;">🐾</span>
+    <div>
+      <div class="hdr-title">Course Catalog Editor</div>
+      <div class="hdr-sub">Jefferson High School 2026–2027</div>
+    </div>
+  </div>
+  <div class="hdr-actions">
+    <a href="index.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
+    <button class="btn btn-gdoc" onclick="openGDocModal()">📄 → Google Doc</button>
+    <button class="btn btn-gold" onclick="openExportModal()">⬇ Export &amp; Save</button>
+  </div>
+</header>
+
+<!-- ══ TAB BAR ══ -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-courses" onclick="switchTab('courses')">📚 Courses</button>
+  <button class="tab-btn"        id="tab-info"    onclick="switchTab('info')">ℹ️ Info Pages</button>
+</div>
+
+<!-- ══ COURSES TAB ══ -->
+<div class="tab-panel active" id="panel-courses">
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-search">
+      <span>🔍</span>
+      <input type="text" id="editorSearch" placeholder="Search courses…" oninput="renderTable()">
+    </div>
+    <select class="filter-sel" id="filterDept" onchange="renderTable()">
+      <option value="">All Departments</option>
+      <option value="social-science">Social Science</option>
+      <option value="english">English</option>
+      <option value="mathematics">Mathematics</option>
+      <option value="science">Science</option>
+      <option value="lote">Languages (LOTE)</option>
+      <option value="vpa">Visual &amp; Performing Arts</option>
+      <option value="cte">Career Technical Ed</option>
+      <option value="pe">PE &amp; Health</option>
+      <option value="electives">Interdisciplinary Electives</option>
+      <option value="special-ed">Special Education</option>
+    </select>
+    <select class="filter-sel" id="filterType" onchange="renderTable()">
+      <option value="">All Types</option>
+      <option value="ap">AP</option>
+      <option value="cp">CP</option>
+      <option value="eld">ELD/ELA</option>
+      <option value="sp">Special Ed</option>
+    </select>
+    <div class="toolbar-right">
+      <button class="btn btn-success" onclick="openAddModal()">＋ Add Course</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="courseTable">
+      <thead>
+        <tr>
+          <th>Course Name</th>
+          <th>Dept</th>
+          <th>Type</th>
+          <th>Grade</th>
+          <th>Credits</th>
+          <th>a-g</th>
+          <th style="width:110px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+</div><!-- end #panel-courses -->
+
+<!-- ══ INFO PAGES TAB ══ -->
+<div class="tab-panel" id="panel-info">
+<div class="container">
+
+  <!-- ── Overview ── -->
+  <div class="info-section open" id="sec-overview">
+    <div class="info-section-hdr" onclick="toggleSection('sec-overview')">
+      <span class="info-section-title">🏠 Overview &amp; Planning</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <div class="info-row">
+        <div><div class="info-label">School Tagline / Motto</div><input class="info-input" id="ov-tagline" oninput="saveInfoField()"></div>
+        <div><div class="info-label">Min Diploma Credits</div><input class="info-input" id="ov-diplomaCredits" type="number" oninput="saveInfoField()"></div>
+        <div><div class="info-label">Min a-g Courses</div><input class="info-input" id="ov-agMin" type="number" oninput="saveInfoField()"></div>
+        <div><div class="info-label">a-g Courses by Junior Year</div><input class="info-input" id="ov-agByJunior" type="number" oninput="saveInfoField()"></div>
+        <div><div class="info-label">UC GPA Minimum</div><input class="info-input" id="ov-ucGPA" oninput="saveInfoField()"></div>
+        <div><div class="info-label">CSU GPA Minimum</div><input class="info-input" id="ov-csuGPA" oninput="saveInfoField()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Grad Requirements ── -->
+  <div class="info-section" id="sec-grad">
+    <div class="info-section-hdr" onclick="toggleSection('sec-grad')">
+      <span class="info-section-title">📋 Graduation Requirements</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <div class="table-wrap">
+        <table class="gr-table">
+          <thead><tr><th>Area</th><th>Subject</th><th>JUHSD Credits</th><th>Note (optional)</th><th>UC/CSU Req.</th><th style="width:36px;"></th></tr></thead>
+          <tbody id="gradReqBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="addGradRow()">＋ Add Row</button>
+    </div>
+  </div>
+
+  <!-- ── Four-Year Plan ── -->
+  <div class="info-section" id="sec-fouryear">
+    <div class="info-section-hdr" onclick="toggleSection('sec-fouryear')">
+      <span class="info-section-title">📅 Four-Year Plan</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">One course per line for each grade level.</p>
+      <div class="info-row">
+        <div>
+          <div class="info-label">🟢 9th Grade</div>
+          <textarea class="info-textarea" id="fy-grade9" rows="8" oninput="saveInfoField()"></textarea>
+        </div>
+        <div>
+          <div class="info-label">🔵 10th Grade</div>
+          <textarea class="info-textarea" id="fy-grade10" rows="8" oninput="saveInfoField()"></textarea>
+        </div>
+        <div>
+          <div class="info-label">🟠 11th Grade</div>
+          <textarea class="info-textarea" id="fy-grade11" rows="8" oninput="saveInfoField()"></textarea>
+        </div>
+        <div>
+          <div class="info-label">🔴 12th Grade</div>
+          <textarea class="info-textarea" id="fy-grade12" rows="8" oninput="saveInfoField()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Post-Secondary ── -->
+  <div class="info-section" id="sec-postsec">
+    <div class="info-section-hdr" onclick="toggleSection('sec-postsec')">
+      <span class="info-section-title">🎓 Post-Secondary Opportunities</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">Edit titles and descriptions for each institution type.</p>
+      <div id="postSecBody"></div>
+    </div>
+  </div>
+
+  <!-- ── NCAA ── -->
+  <div class="info-section" id="sec-ncaa">
+    <div class="info-section-hdr" onclick="toggleSection('sec-ncaa')">
+      <span class="info-section-title">🏈 NCAA Eligibility</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <div class="info-label" style="font-size:0.85rem;margin-bottom:8px;">Division I</div>
+          <div class="info-row">
+            <div><div class="info-label">Min GPA</div><input class="info-input" id="ncaa-d1GPA" oninput="saveInfoField()"></div>
+          </div>
+          <div class="info-label">Course Requirements (one per line: "years subject")</div>
+          <textarea class="info-textarea" id="ncaa-d1" rows="7" oninput="saveInfoField()" style="margin-top:4px;font-family:'Courier New',monospace;font-size:0.78rem;"></textarea>
+          <div class="info-label" style="margin-top:10px;">Notes / Test Score Info</div>
+          <textarea class="info-textarea" id="ncaa-d1Notes" rows="3" oninput="saveInfoField()" style="margin-top:4px;"></textarea>
+        </div>
+        <div>
+          <div class="info-label" style="font-size:0.85rem;margin-bottom:8px;">Division II</div>
+          <div class="info-row">
+            <div><div class="info-label">Min GPA</div><input class="info-input" id="ncaa-d2GPA" oninput="saveInfoField()"></div>
+          </div>
+          <div class="info-label">Course Requirements (one per line: "years subject")</div>
+          <textarea class="info-textarea" id="ncaa-d2" rows="7" oninput="saveInfoField()" style="margin-top:4px;font-family:'Courier New',monospace;font-size:0.78rem;"></textarea>
+          <div class="info-label" style="margin-top:10px;">Notes / Test Score Info</div>
+          <textarea class="info-textarea" id="ncaa-d2Notes" rows="3" oninput="saveInfoField()" style="margin-top:4px;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scheduling ── -->
+  <div class="info-section" id="sec-scheduling">
+    <div class="info-section-hdr" onclick="toggleSection('sec-scheduling')">
+      <span class="info-section-title">📆 Scheduling Procedures</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <div class="info-row">
+        <div><div class="info-label">Fall Semester Change Deadline</div><input class="info-input" id="sch-deadlineFall" oninput="saveInfoField()"></div>
+        <div><div class="info-label">Spring Semester Change Deadline</div><input class="info-input" id="sch-deadlineSpring" oninput="saveInfoField()"></div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="info-label">Allowed Reasons for Schedule Changes</div>
+        <textarea class="info-textarea" id="sch-allowedReasons" rows="2" oninput="saveInfoField()"></textarea>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="info-label">Conflict Resolution Steps (one per line)</div>
+        <textarea class="info-textarea" id="sch-conflictSteps" rows="4" oninput="saveInfoField()"></textarea>
+      </div>
+      <div>
+        <div class="info-label">AP Commitment Policy</div>
+        <textarea class="info-textarea" id="sch-apPolicy" rows="3" oninput="saveInfoField()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Counselors ── -->
+  <div class="info-section open" id="sec-counselors">
+    <div class="info-section-hdr" onclick="toggleSection('sec-counselors')">
+      <span class="info-section-title">👥 Counseling Contacts</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <div class="table-wrap">
+        <table class="con-table">
+          <thead><tr><th>Name</th><th>Caseload / Title</th><th>Phone</th><th>Email</th><th style="width:70px;"></th></tr></thead>
+          <tbody id="counselorBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="openCounselorModal()">＋ Add Counselor</button>
+    </div>
+  </div>
+
+  <!-- a-g Course List -->
+  <div class="info-section" id="sec-aglist">
+    <div class="info-section-hdr" onclick="toggleSection('sec-aglist')">
+      <span class="info-section-title">✅ a-g Certified Course List</span>
+      <span class="info-section-chevron">▼</span>
+    </div>
+    <div class="info-section-body">
+      <p class="info-hint">Official UC-approved courses by area. One course name per line. Courses marked <em>(Online)</em> are through external programs. Source: <a href="https://hs-articulation.ucop.edu/agcourselist/institution/2139" target="_blank">hs-articulation.ucop.edu</a></p>
+      <div style="display:grid;gap:14px;margin-top:8px;">
+        <div><div class="info-label">Area a — History / Social Science <small style="color:var(--muted)">(2 years required)</small></div><textarea class="info-textarea" id="ag-a" rows="6" oninput="saveInfoField()"></textarea></div>
+        <div><div class="info-label">Area b — English <small style="color:var(--muted)">(4 years required)</small></div><textarea class="info-textarea" id="ag-b" rows="7" oninput="saveInfoField()"></textarea></div>
+        <div><div class="info-label">Area c — Mathematics <small style="color:var(--muted)">(3 years required, 4 recommended)</small></div><textarea class="info-textarea" id="ag-c" rows="7" oninput="saveInfoField()"></textarea></div>
+        <div><div class="info-label">Area d — Laboratory Science <small style="color:var(--muted)">(2 years required, 3 recommended)</small></div><textarea class="info-textarea" id="ag-d" rows="7" oninput="saveInfoField()"></textarea></div>
+        <div><div class="info-label">Area e — Language Other Than English <small style="color:var(--muted)">(2 years required, 3 recommended)</small></div><textarea class="info-textarea" id="ag-e" rows="7" oninput="saveInfoField()"></textarea></div>
+        <div><div class="info-label">Area f — Visual & Performing Arts <small style="color:var(--muted)">(1 year required)</small></div><textarea class="info-textarea" id="ag-f" rows="9" oninput="saveInfoField()"></textarea></div>
+        <div><div class="info-label">Area g — College-Preparatory Electives <small style="color:var(--muted)">(1 year required)</small></div><textarea class="info-textarea" id="ag-g" rows="12" oninput="saveInfoField()"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset button -->
+  <div style="text-align:right;margin-top:4px;">
+    <button onclick="resetInfoToSeed()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--warn);">↺ Reset Info to original</button>
+  </div>
+
+</div>
+</div><!-- end #panel-info -->
+
+<!-- ══ ADD / EDIT MODAL ══ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Course</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fId">
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>Course Name <span class="req">*</span></label>
+          <input type="text" id="fName" placeholder="e.g. AP Biology" required>
+        </div>
+        <div class="field">
+          <label>Department <span class="req">*</span></label>
+          <select id="fDept">
+            <option value="social-science">Social Science</option>
+            <option value="english">English</option>
+            <option value="mathematics">Mathematics</option>
+            <option value="science">Science</option>
+            <option value="lote">Languages (LOTE)</option>
+            <option value="vpa">Visual &amp; Performing Arts</option>
+            <option value="cte">Career Technical Ed</option>
+            <option value="pe">PE &amp; Health</option>
+            <option value="electives">Interdisciplinary Electives</option>
+            <option value="special-ed">Special Education</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Course Type <span class="req">*</span></label>
+          <select id="fType">
+            <option value="cp">CP (College Prep)</option>
+            <option value="ap">AP (Advanced Placement)</option>
+            <option value="eld">ELD / ELA</option>
+            <option value="sp">Special Education</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Grade Level(s) <span class="req">*</span></label>
+          <input type="text" id="fGrade" placeholder="e.g. 9, 10-12, 11-12">
+          <div class="field-hint">Use a single number (9) or range (10-12)</div>
+        </div>
+        <div class="field">
+          <label>Credits</label>
+          <input type="text" id="fCredits" placeholder="e.g. 10 or 5">
+        </div>
+        <div class="field">
+          <label>Course ID / Code</label>
+          <input type="text" id="fCode" placeholder="e.g. 23100/23101">
+        </div>
+        <div class="field">
+          <label>a-g Area</label>
+          <select id="fAg">
+            <option value="">None / N/A</option>
+            <option value="a">a — History / Social Science</option>
+            <option value="b">b — English</option>
+            <option value="c">c — Mathematics</option>
+            <option value="d">d — Laboratory Science</option>
+            <option value="e">e — Language Other Than English</option>
+            <option value="f">f — Visual &amp; Performing Arts</option>
+            <option value="g">g — Electives</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Prerequisites</label>
+          <input type="text" id="fPrereq" placeholder="e.g. Biology with C or higher">
+        </div>
+        <div class="field form-full">
+          <label>Course Description <span class="req">*</span></label>
+          <textarea id="fDesc" placeholder="Describe what students will learn, major topics, skills, and outcomes…"></textarea>
+        </div>
+        <div class="field form-full">
+          <label>Special Flags</label>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:4px;">
+            <div class="check-row"><input type="checkbox" id="fCollege"><label for="fCollege">College Credit Eligible (AP exam)</label></div>
+            <div class="check-row"><input type="checkbox" id="fDual"><label for="fDual">Dual Enrollment with College</label></div>
+            <div class="check-row"><input type="checkbox" id="fFullYear"><label for="fFullYear">Full-Year Course (2 semesters)</label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCourse()">💾 Save Course</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE ══ -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2>Delete Course?</h2>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-msg">Are you sure you want to delete <span class="confirm-name" id="confirmName"></span>? This cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">🗑 Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPORT MODAL ══ -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h2>⬇ Export &amp; Save</h2>
+      <button class="modal-close" onclick="closeExport()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-box">
+        Your edits are saved in this browser tab. To make them permanent in the catalog, download the updated <strong>index.html</strong> file and replace the current one in your project folder.
+      </div>
+      <ol class="export-steps">
+        <li>Click <strong>Download index.html</strong> below.</li>
+        <li>Go to your project folder: <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">C:\Users\jvillalobos\MakeBelieve\</code></li>
+        <li>Replace the existing <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">index.html</code> with the downloaded file.</li>
+        <li>Re-embed in Google Sites if needed.</li>
+      </ol>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeExport()">Cancel</button>
+      <button class="btn btn-gold" onclick="downloadCatalog()">⬇ Download index.html</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GOOGLE DOC EXPORT MODAL ══ -->
+<div class="modal-overlay" id="gdocModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <h2>📄 Export to Google Doc</h2>
+      <button class="modal-close" onclick="closeGDocModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="gdoc-intro">
+        <p>This generates a <strong>Google Apps Script</strong> with all <span id="gdocCourseCount">0</span> of your current courses embedded. Copy it, paste it at <strong>script.google.com</strong>, click Run — and a complete, formatted Course Catalog appears in your <strong>Google Drive</strong> in about 30 seconds.</p>
+        <p>No API keys. No setup. Runs entirely inside Google's own tools.</p>
+      </div>
+      <ol class="step-list">
+        <li><span class="step-num">1</span><span>Click <strong>Copy Script</strong> below — the entire script is copied to your clipboard.</span></li>
+        <li><span class="step-num">2</span><span>Click <strong>Open Apps Script ↗</strong> → you'll land at <code>script.google.com</code>. Click <strong>New Project</strong>.</span></li>
+        <li><span class="step-num">3</span><span>Select all the starter code (Ctrl+A / ⌘A) and <strong>paste</strong> your copied script.</span></li>
+        <li><span class="step-num">4</span><span>In the toolbar, make sure the function dropdown (left of ▶) says <strong>myFunction</strong>. Then click <strong>▶ Run</strong>. Google will ask for permissions — click <strong>Review Permissions → Allow</strong>.</span></li>
+        <li><span class="step-num">5</span><span>Wait ~2–5 minutes (127 courses takes time). Then open <strong>Google Drive</strong> — your new doc titled <em>"Jefferson High School — Course Catalog 2026–2027"</em> will be there.</span></li>
+      </ol>
+      <div class="code-wrap">
+        <div class="code-toolbar">
+          <span>⚡ Google Apps Script &nbsp;·&nbsp; paste into script.google.com/home/start → New Project</span>
+          <button class="copy-script-btn" id="copyBtn" onclick="copyGDocScript()">📋 Copy Script</button>
+        </div>
+        <textarea class="code-block" id="gdocScript" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="gdoc-tip">
+        💡 <span>After it finishes, go to <strong>Google Drive → My Drive</strong> and look for the new doc. You can also grab the direct link from <strong>Apps Script → Execution Log</strong> after the run completes. Each run creates a <em>new</em> doc, so only run it once per update.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeGDocModal()">Close</button>
+      <a href="https://script.google.com/home/start" target="_blank" class="btn btn-gdoc">Open Apps Script ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COUNSELOR ADD/EDIT MODAL ══ -->
+<div class="modal-overlay" id="counselorModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2 id="conModalTitle">Add Counselor</h2>
+      <button class="modal-close" onclick="closeCounselorModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cIdx">
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="cName" placeholder="e.g. Jane Smith">
+        </div>
+        <div class="field form-full">
+          <label>Caseload / Title <span class="req">*</span></label>
+          <input type="text" id="cCaseload" placeholder="e.g. Last Names: A – M  or  ELD Students">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="text" id="cPhone" placeholder="e.g. (650) 555-1234">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="text" id="cEmail" placeholder="e.g. jsmith@school.net">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeCounselorModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCounselor()">💾 Save Counselor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   SEED DATA — loaded from catalog
+═══════════════════════════════════════════════════ */
+const SEED = [
+  {id:'ss1',  dept:'social-science', name:'World History, Cultures & Geography CP',  code:'20001/20002', grade:'10',    credits:'10', ag:'a', type:'cp',  prereq:'None', desc:'Focuses on modern history: democratic ideals, the Industrial Revolution, imperialism, WWI, totalitarianism, WWII, and the post-war world. Students analyze causes, consequences, and their global impact.'},
+  {id:'ss2',  dept:'social-science', name:'AP World History',                          code:'20908/20909', grade:'10',    credits:'10', ag:'a', type:'ap',  prereq:'None', collegeCredit:true, desc:'Equivalent to a two-semester introductory college world history course covering six historical periods from ~8000 B.C.E. to the present.'},
+  {id:'ss3',  dept:'social-science', name:'US History CP',                             code:'20007/20008', grade:'11',    credits:'10', ag:'a', type:'cp',  prereq:'None', desc:'Chronological study of American History focusing on the 20th century, integrating geography, economics, sociology, and government.'},
+  {id:'ss4',  dept:'social-science', name:'US History EL CP',                          code:'20009/20010', grade:'11',    credits:'10', ag:'a', type:'eld', prereq:'None', desc:'Designed for English Language Learners. Mirrors the regular US History course with language scaffolding.'},
+  {id:'ss5',  dept:'social-science', name:'AP United States History',                  code:'20902/20903', grade:'11',    credits:'10', ag:'a', type:'ap',  prereq:'"B" or above in World History preferred', collegeCredit:true, desc:'Chronological survey from Colonial America to the present. College-level critical thinking about U.S. History. Summer work may be required.'},
+  {id:'ss6',  dept:'social-science', name:'American Government CP',                    code:'20011',       grade:'12',    credits:'5',  ag:'a', type:'cp',  prereq:'None', desc:'Decision-making in America\'s governmental institutions. Taken in conjunction with Economics CP.'},
+  {id:'ss7',  dept:'social-science', name:'AP US Government & Politics',               code:'20904',       grade:'12',    credits:'5',  ag:'a', type:'ap',  prereq:'"B" or above in US History preferred', collegeCredit:true, desc:'U.S. Constitution concepts and U.S. political institutions. AP exam in May.'},
+  {id:'ss8',  dept:'social-science', name:'Economics CP',                              code:'20013',       grade:'12',    credits:'5',  ag:'g', type:'cp',  prereq:'None', desc:'Applied economics: money, banking, supply/demand, business organization. Taken with American Government CP.'},
+  {id:'ss9',  dept:'social-science', name:'AP Macroeconomics',                         code:'20905',       grade:'12',    credits:'5',  ag:'g', type:'ap',  prereq:'None', collegeCredit:true, desc:'Rigorous college-level course: financial markets, graphing, statistics, and economic decision making. AP exam in May.'},
+  {id:'ss10', dept:'social-science', name:'Psychology CP',                             code:'20100/20101', grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Introduction to psychological concepts and theories including perception, cognition, emotion, behavior, and mental health.'},
+  {id:'ss11', dept:'social-science', name:'Ethnic Studies CP',                         code:'20129/20130', grade:'9',     credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Explores histories, cultures, and contributions of diverse ethnic groups in the U.S.'},
+  {id:'ss12', dept:'social-science', name:'Leadership: Student Government',            code:'20108/20109', grade:'9-12',  credits:'10', ag:'',  type:'cp',  prereq:'Application/election', desc:'Students develop leadership skills by planning school events and representing the student body.'},
+  {id:'ss13', dept:'social-science', name:'Advanced Argument CP',                      code:'21226/21227', grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Advanced coursework in argumentation, rhetoric, and debate.'},
+  {id:'ss14', dept:'social-science', name:'Argument & Debate CP',                      code:'21228/21229', grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Introduction to formal debate techniques, logic, evidence evaluation, and oral argumentation.'},
+  {id:'ss15', dept:'social-science', name:'Controversial Issues in American Society CP',code:'20113/20114',grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Examines and debates contemporary controversial issues in American society.'},
+  {id:'en1',  dept:'english', name:'English 9 CP',                              code:'21000/21001', grade:'9',    credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Empowers students to analyze, evaluate, and elaborate on what they read through short stories, novels, poetry, and digital media.'},
+  {id:'en2',  dept:'english', name:'English 10 CP',                             code:'21004/21005', grade:'10',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Study of other cultures through literature. Develops reading, writing, speaking, research, and critical thinking.'},
+  {id:'en3',  dept:'english', name:'English 11 CP',                             code:'21008/21009', grade:'11',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Parallels US History through American literature. Explores American identity — freedom, equality, diversity, and the American Dream.'},
+  {id:'en4',  dept:'english', name:'AP English Language & Composition',         code:'21900/21901', grade:'11',   credits:'10', ag:'b', type:'ap',  prereq:'None', collegeCredit:true, desc:'College-level course developing skilled reading and sophisticated writing. Summer work may be required.'},
+  {id:'en5',  dept:'english', name:'Expository Reading/Writing CP (ERWC)',      code:'21024/21025', grade:'12',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'CSU-developed course building high-level literacy for college success through expository texts.'},
+  {id:'en6',  dept:'english', name:'Film as Literature CP',                     code:'21026/21027', grade:'12',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Senior English course using film as the major text alongside novels and poetry. Analyzes how filmmakers and authors create meaning.'},
+  {id:'en7',  dept:'english', name:'AP English Literature & Composition',       code:'21902/21903', grade:'12',   credits:'10', ag:'b', type:'ap',  prereq:'None', collegeCredit:true, desc:'Reads novels, plays, and poetry from the 16th–21st century. Summer work may be required.'},
+  {id:'en8',  dept:'english', name:'ELD 1', code:'21100/21101', grade:'9-12', credits:'10', ag:'', type:'eld', prereq:'ELPAC Scores', desc:'Designated ELD for emerging English learners at the emerging level of language acquisition.'},
+  {id:'en9',  dept:'english', name:'ELA 1', code:'21102/21103', grade:'9-12', credits:'10', ag:'', type:'eld', prereq:'ELPAC Scores', desc:'Integrated ELA for emerging English learners using Common Core ELA standards.'},
+  {id:'en10', dept:'english', name:'ELD 2', code:'21106/21107', grade:'9-12', credits:'10', ag:'', type:'eld', prereq:'ELD 1', desc:'Designated ELD at the expanding level of language acquisition.'},
+  {id:'en11', dept:'english', name:'ELA 2', code:'21108/21109', grade:'9-12', credits:'10', ag:'', type:'eld', prereq:'ELD 1', desc:'Integrated ELA at the expanding level.'},
+  {id:'en12', dept:'english', name:'ELD 3', code:'21110/21111', grade:'9-12', credits:'10', ag:'', type:'eld', prereq:'ELD 2', desc:'Designated ELD progressing from expanding to bridging stage.'},
+  {id:'en13', dept:'english', name:'ELA 3 CP', code:'21112/21113', grade:'9-12', credits:'10', ag:'b', type:'eld', prereq:'ELD 2', desc:'Integrated ELA progressing from expanding to bridging level. Meets a-g area "b".'},
+  {id:'ma1', dept:'mathematics', name:'Math for Newcomers',          code:'22014/22015', grade:'9-12',  credits:'10', ag:'',  type:'eld', prereq:'EL 9-10', desc:'For beginning English learners. Covers arithmetic, number sense, and introductory Math Course 1 concepts. Does NOT fulfill CSU/UC math requirement.'},
+  {id:'ma2', dept:'mathematics', name:'Math Course 1 CP',            code:'22000/22001', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'First in JUHSD\'s three-year college prep math sequence. Covers Number & Quantity, Algebra, Functions, Geometry, and Statistics.'},
+  {id:'ma3', dept:'mathematics', name:'Math Course 2 CP',            code:'22002/22003', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass at least one semester of Math Course 1 with D- or better', desc:'Second in the three-year sequence. Focuses on quadratic functions, geometry, and probability.'},
+  {id:'ma4', dept:'mathematics', name:'Math Course 3 CP',            code:'22004/22005', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass MC2 with C- or better', desc:'Third in the sequence. Covers exponential and trigonometric functions, probability, and statistics.'},
+  {id:'ma5', dept:'mathematics', name:'Statistics CP',               code:'22100/22101', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'Introduction to probability and statistics: analysis, interpretation, and presentation of data.'},
+  {id:'ma6', dept:'mathematics', name:'Trigonometry/Precalculus CP', code:'22102/22103', grade:'10-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'College-level Algebra and Trigonometry, preparing students for Calculus.'},
+  {id:'ma7', dept:'mathematics', name:'Intro to Calculus CP',        code:'22906/22907', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'Pass Trig/Precalculus with C- or better both semesters', desc:'Introduces calculus: limits, continuity, derivatives, optimization, and integration.'},
+  {id:'ma8', dept:'mathematics', name:'AP Calculus AB',              code:'22902/22903', grade:'11-12', credits:'10', ag:'c', type:'ap',  prereq:'Enrollment in Intro to Calculus; Precalculus C- or better', collegeCredit:true, fullYear:true, desc:'Full-year course extending calculus with Value Theorems, Accumulation, and Differential Equations.'},
+  {id:'ma9', dept:'mathematics', name:'Data Science CP',             code:'22106/22107', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'Introduces data science: correlation, modeling, analysis, and data-based arguments using Python tools.'},
+  {id:'sc1',  dept:'science', name:'Biology CP',              code:'23100/23101', grade:'9',     credits:'10', ag:'d', type:'cp',  prereq:'None', desc:'NGSS Living Earth. Inquiry-based: Ecology, Energy, Cells, Genetics, and Evolution. Fulfills lab science requirement.'},
+  {id:'sc2',  dept:'science', name:'Biology EL CP',           code:'23102/23103', grade:'9',     credits:'10', ag:'d', type:'eld', prereq:'ELPAC Scores', desc:'For English Language Learners. Mirrors Biology CP with language scaffolding.'},
+  {id:'sc3',  dept:'science', name:'Chemistry CP',            code:'23004/23005', grade:'10-11', credits:'10', ag:'d', type:'cp',  prereq:'Passing grade in Biology', desc:'NGSS Chemistry in the Earth System: atomic structure, chemical bonds, stoichiometry, gas laws, and solutions.'},
+  {id:'sc4',  dept:'science', name:'Environmental Science CP',code:'23122/23123', grade:'10-12', credits:'10', ag:'d', type:'cp',  prereq:'Biology (recommended)', desc:'Major ecological concepts and environmental problems: sustainability, pollution, climate change, and waste management.'},
+  {id:'sc5',  dept:'science', name:'Physics CP',              code:'23006/23007', grade:'10-12', credits:'10', ag:'d', type:'cp',  prereq:'None', desc:'Motion, forces, momentum, energy, heat, thermodynamics, waves, electricity, and magnetism.'},
+  {id:'sc6',  dept:'science', name:'Physiology CP',           code:'23104/23105', grade:'11-12', credits:'10', ag:'d', type:'cp',  prereq:'Biology and Chemistry with C or higher', desc:'Anatomy and physiology of the human body: cells, tissues, and all body systems.'},
+  {id:'sc7',  dept:'science', name:'Advanced Biology CP',     code:'23908/23909', grade:'11-12', credits:'10', ag:'d', type:'cp',  prereq:'Biology and Chemistry with C or higher', desc:'Required pre-requisite for AP Biology. Covers statistics in science, scientific writing, cell biology, and cell energy.'},
+  {id:'sc8',  dept:'science', name:'AP Biology',              code:'23902/23903', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'Biology and Chemistry with C or higher', collegeCredit:true, fullYear:true, desc:'Full-year course (Advanced Biology + AP Biology). College-level biology.'},
+  {id:'sc9',  dept:'science', name:'AP Chemistry',            code:'23900/23901', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'C- or better in Biology & Chemistry; C- or concurrent MC3', collegeCredit:true, desc:'College-level chemistry: hands-on labs covering reactions, energy, equilibrium, and acids/bases.'},
+  {id:'sc10', dept:'science', name:'AP Physics 1',            code:'23910/23911', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'Completion of MC1 and MC2; concurrent MC3', collegeCredit:true, desc:'Algebra-based physics: motion, forces, and energy. Tests understanding of the physical world.'},
+  {id:'sc11', dept:'science', name:'AP Environmental Science',code:'23906/23907', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'Two years lab science; at least MC1', collegeCredit:true, desc:'Scientific principles for understanding natural world interrelationships and environmental problems.'},
+  {id:'sc12', dept:'science', name:'Engineering Technology 1b: Engineering Sustainability CP', code:'23649/26350', grade:'9-12', credits:'10', ag:'d', type:'cp', prereq:'Math Course 1 with C or higher', dualEnroll:true, desc:'Explores sustainable energy solutions. Lab work tests and solves community energy problems.'},
+  {id:'lo1',  dept:'lote', name:'Filipino Language 1 CP',            code:'24112/24113', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'None', desc:'Introduction to Filipino (Tagalog). Develops all four language skills with emphasis on Speaking and Listening.'},
+  {id:'lo2',  dept:'lote', name:'Filipino Language 2 CP',            code:'24114/24115', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in Filipino 1 (recommended)', desc:'Continuation of Filipino 1. Builds on all four skills at the elementary level.'},
+  {id:'lo3',  dept:'lote', name:'Filipino Language 3 CP',            code:'24116/24117', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in Filipino 2 (recommended)', desc:'Advanced Tagalog. Strengthens communicative proficiency through real-world scenarios and cultural analysis.'},
+  {id:'lo4',  dept:'lote', name:'Spanish 1 CP',                      code:'24100/24101', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'None', desc:'Introduces four basic language skills within a cultural context. Includes dialogues, poems, and cultural projects.'},
+  {id:'lo5',  dept:'lote', name:'Spanish 2 CP',                      code:'24102/24103', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'Intermediate course building on Spanish 1. Develops vocabulary and complex language structures.'},
+  {id:'lo6',  dept:'lote', name:'Spanish 3 CP',                      code:'24104/24105', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'Expands vocabulary, academic reading/writing, and grammar. Bridge to AP Spanish.'},
+  {id:'lo7',  dept:'lote', name:'Spanish 4 CP',                      code:'24106/24107', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in Spanish 3 CP or Spanish for Spanish Speakers 2 CP', desc:'Aligns with AP themes using authentic texts on family, identity, science, and global challenges.'},
+  {id:'lo8',  dept:'lote', name:'Spanish for Spanish Speakers 1 CP', code:'24108/24109', grade:'10-12', credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'For heritage Spanish speakers. Develops proficiency in all four skills and explores Hispanic cultures.'},
+  {id:'lo9',  dept:'lote', name:'Spanish for Spanish Speakers 2 CP', code:'24110/24111', grade:'11-12', credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'Expands on Spanish for Spanish Speakers 1. Advanced communicative competence and academic writing.'},
+  {id:'lo10', dept:'lote', name:'AP Spanish Language & Culture',     code:'24900/24901', grade:'10-12', credits:'10', ag:'e', type:'ap', prereq:'C- in previous Spanish (recommended)', collegeCredit:true, desc:'Equivalent to intermediate college Spanish. Interpersonal, interpretive, and presentational communication.'},
+  {id:'vp1',  dept:'vpa', name:'Art 1 CP (Drawing & Painting 1)',    code:'25000/25001', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory visual arts: Elements of Art, 2D art making, and visual literacy.'},
+  {id:'vp2',  dept:'vpa', name:'Art 2 CP (Drawing & Painting 2)',    code:'25002/25003', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'C or better in Art 1 CP', desc:'Intermediate 2D visual arts. Builds on Art 1 — applies elements and principles of design with professional media.'},
+  {id:'vp3',  dept:'vpa', name:'Art 3 CP',                           code:'28406/28407', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'C or better in Art 2 CP', desc:'Advanced 2D studio art. Ideal preparation for AP Studio Art and portfolio building.'},
+  {id:'vp4',  dept:'vpa', name:'Visual Art CP (Pre-AP)',             code:'25908/25909', grade:'11-12', credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Leads directly into AP Studio Art. College-level engagement expected.'},
+  {id:'vp5',  dept:'vpa', name:'AP Studio Art: Drawing',             code:'25900/25901', grade:'9-12',  credits:'10', ag:'f', type:'ap', prereq:'C or better in prerequisite art class', collegeCredit:true, fullYear:true, desc:'Full-year course developing a college-level Drawing portfolio.'},
+  {id:'vp6',  dept:'vpa', name:'AP Studio Art: 2-D Design',          code:'25902/25903', grade:'9-12',  credits:'10', ag:'f', type:'ap', prereq:'C or better in prerequisite art class', collegeCredit:true, fullYear:true, desc:'Full-year course developing a college-level 2-D Design portfolio. Best choice if unsure which AP Art to take.'},
+  {id:'vp7',  dept:'vpa', name:'AP Studio Art: 3-D Design',          code:'25904/25905', grade:'9-12',  credits:'10', ag:'f', type:'ap', prereq:'C or better in prerequisite art class', collegeCredit:true, fullYear:true, desc:'Full-year course developing a college-level 3-D Design portfolio.'},
+  {id:'vp8',  dept:'vpa', name:'Ceramics 1 CP',                      code:'25006/25007', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory ceramics: slabs, sculptures, and reliefs.'},
+  {id:'vp9',  dept:'vpa', name:'Ceramics 2 CP',                      code:'25008/25009', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'C or better in Ceramics 1 CP', desc:'Advanced ceramics with student-directed projects and introduction to the potter\'s wheel.'},
+  {id:'vp10', dept:'vpa', name:'Concert Band CP (Level 1)',           code:'25200/25201', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introduction to playing a musical instrument of your choice. No experience needed.'},
+  {id:'vp11', dept:'vpa', name:'Symphonic Band CP (Level 2)',         code:'25202/25203', grade:'9-12',  credits:'2.10', ag:'f', type:'cp', prereq:'Passing grade in Concert Band CP', desc:'Advanced wind and percussion ensemble. 40-minute after-school (5th period) class.'},
+  {id:'vp12', dept:'vpa', name:'Dance 1: Composition CP',            code:'25216/25217', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', dualEnroll:true, desc:'Introductory dance (Performing Arts/CTE). Ballet, jazz, hip hop, modern, and cultural dance. Dual enrollment with Skyline College.'},
+  {id:'vp13', dept:'vpa', name:'Dance 2: Production CP',             code:'25218/25219', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'Passing grade in Dance 1', dualEnroll:true, desc:'Intermediate dance with choreographic skill and career development. Dual enrollment with Skyline College.'},
+  {id:'vp14', dept:'vpa', name:'Digital Art 1 CP',                   code:'26220/26221', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', dualEnroll:true, desc:'Photo manipulation and graphic design. Dual enrollment with Skyline College.'},
+  {id:'vp15', dept:'vpa', name:'Digital Art 2 CP',                   code:'26228/26229', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'Passing grade in Digital Art 1 CP', dualEnroll:true, desc:'Advanced digital media: video production from pre- to post-production. Dual enrollment with Skyline College.'},
+  {id:'vp16', dept:'vpa', name:'Fashion Design CP',                  code:'25248/25249', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory fashion design: sewing, pattern reading/creation, fashion illustration, and textiles.'},
+  {id:'vp17', dept:'vpa', name:'Fashion Design 2 CP',                code:'28410/28411', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'C or better in Fashion Design 1', desc:'Expands on Fashion 1: varied seams, alterations, and reading/drafting patterns.'},
+  {id:'vp18', dept:'vpa', name:'Guitar 1 CP',                        code:'25208/25209', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Beginning guitar: chords, pickstyle and fingerstyle techniques, music theory, and notation reading.'},
+  {id:'vp19', dept:'vpa', name:'Guitar 2 CP',                        code:'25210/25211', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'Guitar 1 (recommended)', desc:'Continuation of Guitar 1 with more advanced techniques and repertoire.'},
+  {id:'vp20', dept:'vpa', name:'Jewelry Design CP',                  code:'25246/25247', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory jewelry making: basics, materials, and creation of wearable art.'},
+  {id:'vp21', dept:'vpa', name:'Mural Design CP',                    code:'25252/25253', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory mural painting: composition, techniques, and collaborative teamwork.'},
+  {id:'vp22', dept:'vpa', name:'Piano 1 CP',                         code:'28406/28407', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Read and write basic music notes, gain performance confidence, and explore mallet instruments.'},
+  {id:'vp23', dept:'vpa', name:'Sculpture CP',                       code:'25010/25011', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory 3D visual arts with diverse materials. Critical thinking about art design emphasized.'},
+  {id:'vp24', dept:'vpa', name:'Vocal Music CP',                     code:'25204/25205', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory vocal music and performance. Students learn to read music and perform for peers.'},
+  {id:'ct1', dept:'cte', name:'Culinary Arts I: Foods & Nutrition',      code:'26104A/26105B', grade:'9-12',  credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Level 1: food safety, kitchen skills, recipe reading, nutrition, meal planning, baking, and weekly cooking labs.'},
+  {id:'ct2', dept:'cte', name:'Culinary Arts II: Foodservice & Hospitality', code:'26108/26109', grade:'10-12', credits:'10', ag:'g', type:'cp', prereq:'Passing grade in Culinary Arts I', dualEnroll:true, desc:'Level 2: hospitality industry, advanced culinary techniques, and formal dining service. Dual enrollment with Skyline College.'},
+  {id:'ct3', dept:'cte', name:'Engineering Technology 1a: Engineering Design CP', code:'26218/26219', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Introduction to engineering design process and STEM concepts.'},
+  {id:'ct4', dept:'cte', name:'Engineering Technology 2: Engineering Electronics CP', code:'23649/26350', grade:'9-12', credits:'10', ag:'', type:'cp', prereq:'Engineering Technology 1a or 1b', desc:'Advanced engineering covering electronics concepts and applications.'},
+  {id:'ct5', dept:'cte', name:'Gateway to Health CP',                    code:'EMC 425.1/425.2', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Introduction to health sciences careers, patient care, and healthcare pathways.'},
+  {id:'ct6', dept:'cte', name:'EMC Essentials (Emergency Medical Care)', code:'26374/26375', grade:'9-12', credits:'10', ag:'', type:'cp', prereq:'Gateway to Health CP (recommended)', desc:'Emergency medical care concepts, first aid, and basic life support skills.'},
+  {id:'ct7', dept:'cte', name:'CTE Work-Based Learning', code:'WORK 670.1/670.2', grade:'9-12', credits:'10', ag:'', type:'cp', prereq:'Counselor approval', desc:'Students earn CTE credit through supervised work experience tied to a career pathway.'},
+  {id:'pe1', dept:'pe', name:'PE 9',                   code:'27000/27001', grade:'9',    credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Physical education for 9th graders: fitness, team sports, and wellness fundamentals.'},
+  {id:'pe2', dept:'pe', name:'PE 10',                  code:'27002/27003', grade:'10',   credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Physical education for 10th graders.'},
+  {id:'pe3', dept:'pe', name:'PE 10: Yoga & Fitness',  code:'27206/27207', grade:'10',   credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Alternative PE 10 focusing on yoga, mindfulness, and fitness.'},
+  {id:'pe4', dept:'pe', name:'Team Sports: Anatomy in Motion CP', code:'28420/28421', grade:'11-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Anatomy, physiology, and biomechanics through team sports. Meets both PE and a-g "g" credit.'},
+  {id:'pe5', dept:'pe', name:'Yoga: Anatomy in Motion CP', code:'28418/28419', grade:'11-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Anatomy and physiology through yoga. Meets both PE and a-g "g" credit.'},
+  {id:'pe6', dept:'pe', name:'Health',                 code:'27200',       grade:'9-12', credits:'5',  ag:'',  type:'cp',  prereq:'None', desc:'Required health education: nutrition, wellness, mental health, and substance prevention.'},
+  {id:'pe7', dept:'pe', name:'Health EL',              code:'27205',       grade:'9-12', credits:'5',  ag:'',  type:'eld', prereq:'ELL status', desc:'Health education adapted for English Language Learners.'},
+  {id:'pe8', dept:'pe', name:'Weight Training',        code:'28410/28411', grade:'9-12', credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Strength and conditioning, proper lifting technique, and fitness program design.'},
+  {id:'el1',  dept:'electives', name:'AP African American Studies',           code:'28414/28415', grade:'9-12', credits:'10', ag:'g', type:'ap', prereq:'None', collegeCredit:true, desc:'Interdisciplinary examination of African American history, culture, politics, and contributions.'},
+  {id:'el2',  dept:'electives', name:'AP Psychology',                         code:'20906/20907', grade:'9-12', credits:'10', ag:'g', type:'ap', prereq:'None', collegeCredit:true, desc:'College-level psychology: behavior, mental processes, theories, and research methods.'},
+  {id:'el3',  dept:'electives', name:'Advanced Journalism: Yearbook CP',      code:'21206/21207', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'Application/teacher approval', desc:'Edit, design, and manage the school yearbook.'},
+  {id:'el4',  dept:'electives', name:'American History Through Film CP',      code:'20123/20124', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Examines American history through cinema and how film shapes historical narratives.'},
+  {id:'el5',  dept:'electives', name:'College & Career Exploration CP',       code:'26341',       grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Career exploration, college planning, and post-secondary pathways.'},
+  {id:'el6',  dept:'electives', name:'Creative Problem Solving CP',           code:'22104/22105', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Creative and critical thinking through design challenges and project-based learning.'},
+  {id:'el7',  dept:'electives', name:'Data Science CP',                       code:'22106/22107', grade:'9-12', credits:'10', ag:'c', type:'cp', prereq:'None', desc:'Introduces data science: correlation, modeling, analysis using Python tools.'},
+  {id:'el8',  dept:'electives', name:'Examining Diversity Through Media CP',  code:'21232/21233', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Critical media literacy analyzing how media represents diverse communities.'},
+  {id:'el9',  dept:'electives', name:'Financial Literacy CP',                 code:'20127/20128', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Practical personal finance: budgeting, saving, investing, credit, and taxes.'},
+  {id:'el10', dept:'electives', name:'Ghost Stories in Literature & Film CP', code:'21230/21231', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Explores the ghost story genre across literature and film.'},
+  {id:'el11', dept:'electives', name:'Graphic Novels & Identity CP',          code:'21238/21239', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Studies graphic novels exploring themes of identity, culture, and social justice.'},
+  {id:'el12', dept:'electives', name:'History of Sports CP',                  code:'20125/20126', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Social, cultural, and political history of sports in America and globally.'},
+  {id:'el13', dept:'electives', name:'Introduction to Robotics CP',           code:'',            grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Hands-on introduction to robotics, programming, and engineering design.'},
+  {id:'el14', dept:'electives', name:'Social Justice Movements CP',           code:'20121/20122', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Historical and contemporary analysis of social justice movements.'},
+  {id:'sp1',  dept:'special-ed', name:'Language Arts Seminar 1',  code:'29000/29001', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education language arts: foundational reading, writing, and communication.'},
+  {id:'sp2',  dept:'special-ed', name:'Language Arts Seminar 2',  code:'29002/29003', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Intermediate special education language arts.'},
+  {id:'sp3',  dept:'special-ed', name:'Language Arts Seminar 3',  code:'29004/29005', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Advanced special education language arts.'},
+  {id:'sp4',  dept:'special-ed', name:'Math Course 1 (Special Ed)',code:'29010/29011', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education Math Course 1 with additional support.'},
+  {id:'sp5',  dept:'special-ed', name:'Math 1A',                  code:'29059/29060', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'First semester of extended Math Course 1 sequence.'},
+  {id:'sp6',  dept:'special-ed', name:'Math 1B',                  code:'29061/29062', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP; Math 1A', desc:'Second semester of extended Math Course 1 sequence.'},
+  {id:'sp7',  dept:'special-ed', name:'World History (Special Ed)',code:'29022/29023', grade:'10',   credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education World History with individualized support.'},
+  {id:'sp8',  dept:'special-ed', name:'US History (Special Ed)',   code:'29024/29025', grade:'11',   credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education US History with individualized support.'},
+  {id:'sp9',  dept:'special-ed', name:'American Government/Economics (Special Ed)', code:'29026/29027', grade:'12', credits:'5', ag:'', type:'sp', prereq:'IEP', desc:'Special education Government and Economics.'},
+  {id:'sp10', dept:'special-ed', name:'Life Science (Special Ed)', code:'29030/29031', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education life science.'},
+  {id:'sp11', dept:'special-ed', name:'Physical Science (Special Ed)', code:'29032/29033', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education physical science.'},
+  {id:'sp12', dept:'special-ed', name:'Health (Special Ed)',       code:'29222',       grade:'9-12', credits:'5',  ag:'', type:'sp', prereq:'IEP', desc:'Health education adapted for special education students.'},
+  {id:'sp13', dept:'special-ed', name:'Study Skills',              code:'29223/29224', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Organizational, time management, and academic study strategies.'},
+  {id:'sp14', dept:'special-ed', name:'Tutorial',                  code:'29225/29226', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Individualized academic support for IEP students.'},
+  {id:'sp15', dept:'special-ed', name:'Social Communication',      code:'29229/29230', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Social communication skills, pragmatic language, and peer interaction strategies.'},
+];
+
+/* ═══════════════════════════════════════════════════
+   LOAD / SAVE
+═══════════════════════════════════════════════════ */
+const LS_KEY = 'jhs_catalog_courses';
+let courses = [];
+
+function loadCourses() {
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    courses = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(SEED));
+  } catch(e) { courses = JSON.parse(JSON.stringify(SEED)); }
+}
+function saveCourses() {
+  localStorage.setItem(LS_KEY, JSON.stringify(courses));
+}
+function resetToSeed() {
+  if (!confirm('Reset all courses back to the original catalog? All your edits will be lost.')) return;
+  courses = JSON.parse(JSON.stringify(SEED));
+  saveCourses();
+  renderAll();
+  showToast('✅ Reset to original catalog');
+}
+
+/* ═══════════════════════════════════════════════════
+   TABLE RENDER
+═══════════════════════════════════════════════════ */
+const DEPT_LABELS = {
+  'social-science':'Social Science','english':'English','mathematics':'Mathematics',
+  'science':'Science','lote':'LOTE','vpa':'Visual & Performing Arts',
+  'cte':'CTE','pe':'PE & Health','electives':'Electives','special-ed':'Special Ed'
+};
+
+function getFiltered() {
+  const q    = document.getElementById('editorSearch').value.trim().toLowerCase();
+  const dept = document.getElementById('filterDept').value;
+  const type = document.getElementById('filterType').value;
+  return courses.filter(c => {
+    if (dept && c.dept !== dept) return false;
+    if (type && c.type !== type) return false;
+    if (q) {
+      const hay = (c.name+' '+c.desc+' '+c.code+' '+(c.prereq||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function typeBadge(t) {
+  if (t==='ap')  return '<span class="badge-sm b-ap">AP</span>';
+  if (t==='eld') return '<span class="badge-sm b-eld">ELD</span>';
+  if (t==='sp')  return '<span class="badge-sm b-sp">SE</span>';
+  return '<span class="badge-sm b-cp">CP</span>';
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const tbody = document.getElementById('tableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No courses match your filters.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(c => `
+    <tr>
+      <td class="td-name">
+        ${c.name}
+        <div class="course-code">${c.code || '—'}</div>
+      </td>
+      <td>${DEPT_LABELS[c.dept] || c.dept}</td>
+      <td>${typeBadge(c.type)}</td>
+      <td>${c.grade}</td>
+      <td>${c.credits}</td>
+      <td>${c.ag ? '<span class="badge-sm b-ag">'+c.ag+'</span>' : '—'}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-primary btn-sm btn-icon" title="Edit" onclick="openEditModal('${c.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" title="Delete" onclick="openDeleteConfirm('${c.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderStats() {
+  const total = courses.length;
+  const apCount  = courses.filter(c=>c.type==='ap').length;
+  const cpCount  = courses.filter(c=>c.type==='cp').length;
+  const eldCount = courses.filter(c=>c.type==='eld').length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-chip"><strong>${total}</strong> Total Courses</div>
+    <div class="stat-chip"><strong>${apCount}</strong> AP</div>
+    <div class="stat-chip"><strong>${cpCount}</strong> CP</div>
+    <div class="stat-chip"><strong>${eldCount}</strong> ELD/ELA</div>
+    <div class="stat-chip"><strong>${courses.filter(c=>c.ag).length}</strong> a-g Certified</div>
+    <div class="stat-chip" style="margin-left:auto;">
+      <button onclick="resetToSeed()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--warn);">↺ Reset to original</button>
+    </div>
+  `;
+}
+
+function renderAll() { renderStats(); renderTable(); }
+
+/* ═══════════════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════════════ */
+function closeModal() { document.getElementById('editModal').classList.remove('open'); }
+function openExportModal() { document.getElementById('exportModal').classList.add('open'); }
+function closeExport()  { document.getElementById('exportModal').classList.remove('open'); }
+
+let deleteTarget = null;
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); deleteTarget = null; }
+function openDeleteConfirm(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+  deleteTarget = id;
+  document.getElementById('confirmName').textContent = '"' + c.name + '"';
+  document.getElementById('confirmModal').classList.add('open');
+}
+function confirmDelete() {
+  courses = courses.filter(c => c.id !== deleteTarget);
+  saveCourses(); renderAll(); closeConfirm();
+  showToast('🗑 Course deleted');
+}
+
+/* ═══════════════════════════════════════════════════
+   ADD / EDIT FORM
+═══════════════════════════════════════════════════ */
+function clearForm() {
+  document.getElementById('fId').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fDept').value = 'social-science';
+  document.getElementById('fType').value = 'cp';
+  document.getElementById('fGrade').value = '';
+  document.getElementById('fCredits').value = '10';
+  document.getElementById('fCode').value = '';
+  document.getElementById('fAg').value = '';
+  document.getElementById('fPrereq').value = '';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fCollege').checked = false;
+  document.getElementById('fDual').checked = false;
+  document.getElementById('fFullYear').checked = false;
+}
+
+function openAddModal() {
+  clearForm();
+  document.getElementById('modalTitle').textContent = '➕ Add New Course';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+  clearForm();
+  document.getElementById('modalTitle').textContent = '✏️ Edit Course';
+  document.getElementById('fId').value          = c.id;
+  document.getElementById('fName').value        = c.name;
+  document.getElementById('fDept').value        = c.dept;
+  document.getElementById('fType').value        = c.type;
+  document.getElementById('fGrade').value       = c.grade;
+  document.getElementById('fCredits').value     = c.credits;
+  document.getElementById('fCode').value        = c.code || '';
+  document.getElementById('fAg').value          = c.ag || '';
+  document.getElementById('fPrereq').value      = c.prereq || '';
+  document.getElementById('fDesc').value        = c.desc;
+  document.getElementById('fCollege').checked   = !!c.collegeCredit;
+  document.getElementById('fDual').checked      = !!c.dualEnroll;
+  document.getElementById('fFullYear').checked  = !!c.fullYear;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveCourse() {
+  const name = document.getElementById('fName').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  const grade = document.getElementById('fGrade').value.trim();
+  if (!name) { alert('Course Name is required.'); return; }
+  if (!desc)  { alert('Description is required.'); return; }
+  if (!grade) { alert('Grade Level is required.'); return; }
+
+  const obj = {
+    id:           document.getElementById('fId').value || 'c' + Date.now(),
+    dept:         document.getElementById('fDept').value,
+    name,
+    code:         document.getElementById('fCode').value.trim(),
+    grade,
+    credits:      document.getElementById('fCredits').value.trim() || '10',
+    ag:           document.getElementById('fAg').value,
+    type:         document.getElementById('fType').value,
+    prereq:       document.getElementById('fPrereq').value.trim() || 'None',
+    desc,
+  };
+  if (document.getElementById('fCollege').checked) obj.collegeCredit = true;
+  if (document.getElementById('fDual').checked)    obj.dualEnroll    = true;
+  if (document.getElementById('fFullYear').checked) obj.fullYear     = true;
+
+  const existing = courses.findIndex(c => c.id === obj.id);
+  if (existing >= 0) {
+    courses[existing] = obj;
+    showToast('✅ Course updated!', 'success');
+  } else {
+    courses.push(obj);
+    showToast('✅ Course added!', 'success');
+  }
+  saveCourses(); renderAll(); closeModal();
+}
+
+/* ═══════════════════════════════════════════════════
+   EXPORT — builds updated index.html (courses + info)
+═══════════════════════════════════════════════════ */
+function downloadCatalog() {
+  fetch('index.html')
+    .then(r => r.text())
+    .then(html => {
+      // Patch COURSES array
+      const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
+      let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
+      // Patch INFO object (between comment markers)
+      const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
+      updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
+      const blob = new Blob([updated], {type: 'text/html'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'index.html';
+      a.click();
+      showToast('⬇ Downloaded! Replace your index.html file.', 'success');
+      closeExport();
+    })
+    .catch(() => {
+      const blob = new Blob([JSON.stringify({courses, info: infoData}, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'catalog_data.json';
+      a.click();
+      showToast('⬇ Downloaded data as JSON.', 'warn');
+      closeExport();
+    });
+}
+
+/* ═══════════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════
+   INFO DATA — load / save
+═══════════════════════════════════════════════════ */
+const INFO_KEY = 'jhs_catalog_info';
+const INFO_SEED = {
+  overview: { tagline:'Excellence Through Equity', diplomaCredits:225, agMin:15, agByJunior:11, ucGPA:'3.0', csuGPA:'2.5' },
+  gradReqs: [
+    { area:'a', subject:'History / Social Science',        juhsd:'30 credits', note:'World History (10), US History (11), Gov/Econ (12)', ucCsu:'20 credits' },
+    { area:'b', subject:'English',                          juhsd:'40 credits', note:'', ucCsu:'40 credits' },
+    { area:'c', subject:'Mathematics',                      juhsd:'30 credits (incl. Math Course 1)', note:'', ucCsu:'30 credits (40 recommended)' },
+    { area:'d', subject:'Laboratory Science',               juhsd:'20 credits (bio + physical)', note:'', ucCsu:'20 credits (30 recommended)' },
+    { area:'e', subject:'Language Other Than English',      juhsd:'10 credits', note:'', ucCsu:'20 credits of same language (30 recommended)' },
+    { area:'f', subject:'Visual & Performing Arts',         juhsd:'10 credits', note:'', ucCsu:'10 credits' },
+    { area:'g', subject:'Electives',                        juhsd:'60 credits', note:'', ucCsu:'10 credits' },
+    { area:'\u2014', subject:'Health Education',            juhsd:'5 credits',  note:'', ucCsu:'N/A' },
+    { area:'\u2014', subject:'Physical Education',          juhsd:'20 credits', note:'', ucCsu:'N/A' },
+    { area:'\u2014', subject:'Career Technical Education',  juhsd:'10 credits', note:'', ucCsu:'N/A' },
+  ],
+  fourYear: {
+    grade9:  ['English 9 CP','Math Course 1 or 2 CP','Health / College & Career CP','Biology CP','PE','Ethnic Studies','LOTE CP','Visual / Performing Arts CP / CTE'],
+    grade10: ['English 10 CP','Math Course 2 or 3 CP','World or AP World History','Chemistry CP','PE','LOTE CP','CTE CP','Elective CP'],
+    grade11: ['English 11 CP or AP English Language','Math Course 3 CP or Trig/Pre-Calc CP','US History or AP US History','CP or AP Lab Science','LOTE CP','CTE CP (capstone)','Elective CP','Elective CP'],
+    grade12: ['AP English Lit or Film as Lit CP or ERWC CP','Statistics CP or Intro to Calculus CP or AP Calculus','AP Government/Econ or Econ CP / American Gov CP','CP or AP Lab Science','LOTE CP','Elective CP','Elective CP','Elective CP'],
+  },
+  postSecondary: [
+    { title:'University of California (UC)',        text:'Serves the top 12.5% of CA graduates. 9 four-year campuses. Requires all "a-g" courses with C or better, GPA \u2265 3.0.' },
+    { title:'California State University (CSU)',    text:'23 campuses across California. Requires all "a-g" courses with C or better, GPA \u2265 2.5 (supplemental criteria for 2.0\u20132.49).' },
+    { title:'Private Colleges',                     text:'86 private colleges in California \u2014 requirements similar to UC/CSU. Consult each college for specifics.' },
+    { title:'Community Colleges',                   text:'116 campuses statewide offering AA/AS degrees, certificates, and transfer programs to UC, CSU, and others.' },
+    { title:'Technical, Trade & Business Schools',  text:'Certificates for vocational careers. Most require a high school diploma or equivalent.' },
+    { title:'Apprenticeship Programs',              text:'Classroom instruction combined with on-the-job training. Typically require age 18+, diploma or GED.' },
+  ],
+  ncaa: {
+    d1GPA:'2.3',
+    d1Notes:'Complete 10 core courses before 7th semester; may not retake to improve GPA after. Test Scores: Match GPA on Division I sliding scale \u2014 ncaa.org',
+    d1:[{years:'4',subject:'English'},{years:'3',subject:'Mathematics (Algebra 1 or higher)'},{years:'2',subject:'natural/physical science (1 year lab)'},{years:'1',subject:'additional English, math, or science'},{years:'2',subject:'social science'},{years:'4',subject:'additional courses (above areas, foreign language, or comparative religion/philosophy)'}],
+    d2GPA:'2.2',
+    d2Notes:'Test Scores: Division II full qualifier sliding scale \u2014 ncaa.org. Use Eligibility Center code 9999 when registering for SAT/ACT.',
+    d2:[{years:'3',subject:'English'},{years:'2',subject:'Mathematics (Algebra 1 or higher)'},{years:'2',subject:'natural/physical science (1 year lab)'},{years:'3',subject:'additional English, math, or science'},{years:'2',subject:'social science'},{years:'4',subject:'additional courses'}],
+  },
+  scheduling: {
+    deadlineFall:'first two weeks of fall semester',
+    deadlineSpring:'first week of spring semester',
+    allowedReasons:'scheduling errors, summer coursework, inappropriate placement, incomplete prerequisites, or administrative directive',
+    conflictSteps:['Student contacts teacher directly.','If unresolved, schedule a parent/teacher/student conference.','If still unresolved, parent appeals to the Vice Principal.','VP meets with all parties to determine next steps.'],
+    apPolicy:'All AP students must meet with their AP teacher before enrollment. Students are expected to remain for the full term and are strongly encouraged to take the AP exam in May. Dropping an AP class requires VP approval.',
+  },
+  counselors:[
+    { name:'Regina Biagini',  caseload:'Last Names: A \u2013 Gac',                   phone:'(650) 550-7789', email:'rbiagi@jeffersonunion.net' },
+    { name:'Jasmine Genove',  caseload:'Last Names: Gaj \u2013 Orta',                phone:'(650) 550-7788', email:'jgenove@jeffersonunion.net' },
+    { name:'Shannon Paras',   caseload:'Last Names: Ortega \u2013 Z',                phone:'(650) 550-7786', email:'sparas@jeffersonunion.net' },
+    { name:'Jose Villalobos', caseload:'English Language Learner Students',          phone:'(650) 550-7798', email:'jvillalobos@jeffersonunion.net' },
+  ],
+  agList: {
+    _apexCourses: [
+      'U.S. Government and Politics','United States History and Geography','World History, Culture and Geography',
+      'English 9','English 10','English 11','English 12',
+      'APEX Precalculus','Apex Statistics & Probability','Mathematics I','Mathematics II','Mathematics III',
+      'Biology','Chemistry','Physics in the Universe',
+      'Apex Spanish 3','Spanish I','Spanish II',
+      'Music Appreciation (Apex)',
+      'Apex Geography & World Cultures','Apex Sociology','Business Applications (Apex)','Economics','Ethnic Studies (Apex)','Information Technology Applications (Apex)'
+    ],
+    a: { label:'History / Social Science',      required:'2 years required',               courses:['American Government CP','AP African American Studies','AP Government and Politics United States','AP United States History','AP World History','U.S. Government and Politics','U.S. History CP','United States History and Geography','World History, Culture & Geography CP','World History, Culture and Geography'] },
+    b: { label:'English',                        required:'4 years required',               courses:['AP English Language and Composition','AP English Literature and Composition','CSU Expository Reading and Writing','ELD 3 Grammar CP','English 10','English 10 CP','English 10 Enriched CP','English 11','English 11 CP','English 12','English 9','English 9 CP','Film as Literature CP','Ghost Stories in Film and Literature CP'] },
+    c: { label:'Mathematics',                    required:'3 years required, 4 recommended',courses:['AP Calculus AB','APEX Precalculus','Apex Statistics & Probability','Explorations in Data Science CP','Introduction to Calculus','Math Course 1 CP','Math Course 2 CP','Math Course 3 CP','Mathematics I','Mathematics II','Mathematics III','Statistics CP','Trig/Precalculus CP'] },
+    d: { label:'Laboratory Science',             required:'2 years required, 3 recommended',courses:['Advanced Biology','AP Biology','AP Chemistry','Biology','Biology: The Living Earth','Chemistry','Chemistry in the Earth System','Environmental Science-LS CP','Physics in the Universe','Physics in the Universe CP','Physiology CP','PLTW Digital Electronics','PLTW Principles of Engineering'] },
+    e: { label:'Language Other Than English',    required:'2 years required, 3 recommended',courses:['AP Spanish Language and Culture','Apex Spanish 3','Filipino 2 - Intermediate Tagalog','Filipino 3','Filipino Language','Spanish 1 CP','Spanish 2 CP','Spanish 3 CP','Spanish 4 CP','Spanish for Spanish Speakers 1 CP','Spanish for Spanish Speakers 2 CP','Spanish I','Spanish II'] },
+    f: { label:'Visual & Performing Arts',       required:'1 year required',                courses:['AP 2D Art and Design','AP 3D Art and Design','AP Drawing','Art 1 CP','Art 2 CP','Ceramics 1 CP','Ceramics 2 CP','Concert Band CP','Dance Composition CP','Dance Production CP','Digital Art 1','Digital Art 2','Drawing and Painting 2','Drawing and Painting CP','Fashion Design','Guitar I CP','Jewelry CP','Mural Design','Music Appreciation (Apex)','Piano','Sculpture CP','Symphonic Band CP','Theater Arts 2 CP','Theatre Arts 1 CP'] },
+    g: { label:'College-Preparatory Electives',  required:'1 year required',                courses:['Advanced Argument CP','Advanced CTE Work Experience','Advanced Journalism: Editing, Design & Management CP','American History Through Film','AP Macroeconomics','Apex Geography & World Cultures','Apex Sociology','Argument and Debate CP','Business Applications (Apex)','College and Career Exploration CP','Controversial Issues in American Society CP','Creative Problem Solving CP','Culinary Arts','Economics','Economics CP','Ethnic Studies (Apex)','Ethnic Studies (YR) CP','Examining Diversity through Media Study CP','Exploring Computer Science','Financial Literacy CP','Food and Nutrition','Graphic Novels and Identity','History of American Sports CP','Information Technology Applications (Apex)','Intro to Robotics','Newcomer Academy CP','Psychology CP','Social Justice Movements','Team Sports: Anatomy in Motion','Yoga: Anatomy in Motion'] },
+  },
+};
+let infoData = {};
+
+function loadInfo() {
+  try {
+    const saved = localStorage.getItem(INFO_KEY);
+    infoData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INFO_SEED));
+    // Migrate: always sync _apexCourses from INFO_SEED (list expanded in v3)
+    if (infoData.agList) {
+      infoData.agList._apexCourses = INFO_SEED.agList._apexCourses.slice();
+    }
+    // Migrate: strip stale "(Online)" suffixes from course names so they match UCOP
+    if (infoData.agList) {
+      ['a','b','c','d','e','f','g'].forEach(k => {
+        const area = infoData.agList[k];
+        if (area && area.courses) {
+          area.courses = area.courses.map(c => c.replace(/\s*\(Online\)\s*$/, '').trim());
+        }
+      });
+    }
+  } catch(e) { infoData = JSON.parse(JSON.stringify(INFO_SEED)); }
+}
+function saveInfo() { localStorage.setItem(INFO_KEY, JSON.stringify(infoData)); }
+function resetInfoToSeed() {
+  if (!confirm('Reset all Info Pages back to the original content? All edits will be lost.')) return;
+  infoData = JSON.parse(JSON.stringify(INFO_SEED));
+  saveInfo();
+  renderInfoEditor();
+  showToast('✅ Info Pages reset to original', 'success');
+}
+
+/* ─── read all form fields → infoData → save ─── */
+let infoSaveTimer;
+function saveInfoField() {
+  clearTimeout(infoSaveTimer);
+  infoSaveTimer = setTimeout(() => {
+    readInfoFields();
+    saveInfo();
+    showToast('✅ Saved', 'success');
+  }, 600);
+}
+
+function readInfoFields() {
+  const g = id => document.getElementById(id);
+  // Overview
+  infoData.overview.tagline        = g('ov-tagline').value;
+  infoData.overview.diplomaCredits = parseInt(g('ov-diplomaCredits').value) || 0;
+  infoData.overview.agMin          = parseInt(g('ov-agMin').value) || 0;
+  infoData.overview.agByJunior     = parseInt(g('ov-agByJunior').value) || 0;
+  infoData.overview.ucGPA          = g('ov-ucGPA').value;
+  infoData.overview.csuGPA         = g('ov-csuGPA').value;
+  // Four-Year Plan
+  ['grade9','grade10','grade11','grade12'].forEach(k => {
+    infoData.fourYear[k] = g('fy-'+k).value.split('\n').map(s=>s.trim()).filter(Boolean);
+  });
+  // Post-Secondary (read rendered inputs)
+  infoData.postSecondary.forEach((s,i) => {
+    const t = g('ps-title-'+i), d = g('ps-text-'+i);
+    if (t) s.title = t.value;
+    if (d) s.text  = d.value;
+  });
+  // NCAA
+  infoData.ncaa.d1GPA   = g('ncaa-d1GPA').value;
+  infoData.ncaa.d1Notes = g('ncaa-d1Notes').value;
+  infoData.ncaa.d1 = g('ncaa-d1').value.split('\n').map(line => {
+    const m = line.trim().match(/^(\d+)\s+(.+)$/);
+    return m ? {years:m[1], subject:m[2]} : null;
+  }).filter(Boolean);
+  infoData.ncaa.d2GPA   = g('ncaa-d2GPA').value;
+  infoData.ncaa.d2Notes = g('ncaa-d2Notes').value;
+  infoData.ncaa.d2 = g('ncaa-d2').value.split('\n').map(line => {
+    const m = line.trim().match(/^(\d+)\s+(.+)$/);
+    return m ? {years:m[1], subject:m[2]} : null;
+  }).filter(Boolean);
+  // Scheduling
+  infoData.scheduling.deadlineFall   = g('sch-deadlineFall').value;
+  infoData.scheduling.deadlineSpring = g('sch-deadlineSpring').value;
+  infoData.scheduling.allowedReasons = g('sch-allowedReasons').value;
+  infoData.scheduling.conflictSteps  = g('sch-conflictSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  infoData.scheduling.apPolicy       = g('sch-apPolicy').value;
+  // Grad Reqs are read on each row's input event via readGradReqRow()
+  // a-g Course List
+  if (!infoData.agList) infoData.agList = JSON.parse(JSON.stringify(INFO_SEED.agList));
+  ['a','b','c','d','e','f','g'].forEach(k => {
+    const el = document.getElementById('ag-'+k);
+    if (el) infoData.agList[k].courses = el.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  });
+}
+
+/* ─── render all form fields from infoData ─── */
+function renderInfoEditor() {
+  const g = id => document.getElementById(id);
+  const I = infoData;
+  // Overview
+  g('ov-tagline').value        = I.overview.tagline;
+  g('ov-diplomaCredits').value = I.overview.diplomaCredits;
+  g('ov-agMin').value          = I.overview.agMin;
+  g('ov-agByJunior').value     = I.overview.agByJunior;
+  g('ov-ucGPA').value          = I.overview.ucGPA;
+  g('ov-csuGPA').value         = I.overview.csuGPA;
+  // Grad Requirements table
+  renderGradTable();
+  // Four-Year Plan
+  ['grade9','grade10','grade11','grade12'].forEach(k => {
+    g('fy-'+k).value = I.fourYear[k].join('\n');
+  });
+  // Post-Secondary
+  renderPostSecBody();
+  // NCAA
+  g('ncaa-d1GPA').value   = I.ncaa.d1GPA;
+  g('ncaa-d1Notes').value = I.ncaa.d1Notes;
+  g('ncaa-d1').value      = I.ncaa.d1.map(r => r.years + ' ' + r.subject).join('\n');
+  g('ncaa-d2GPA').value   = I.ncaa.d2GPA;
+  g('ncaa-d2Notes').value = I.ncaa.d2Notes;
+  g('ncaa-d2').value      = I.ncaa.d2.map(r => r.years + ' ' + r.subject).join('\n');
+  // Scheduling
+  g('sch-deadlineFall').value   = I.scheduling.deadlineFall;
+  g('sch-deadlineSpring').value = I.scheduling.deadlineSpring;
+  g('sch-allowedReasons').value = I.scheduling.allowedReasons;
+  g('sch-conflictSteps').value  = I.scheduling.conflictSteps.join('\n');
+  g('sch-apPolicy').value       = I.scheduling.apPolicy;
+  // Counselors
+  renderCounselorTable();
+  // a-g Course List
+  if (!I.agList) I.agList = JSON.parse(JSON.stringify(INFO_SEED.agList));
+  ['a','b','c','d','e','f','g'].forEach(k => {
+    const el = g('ag-'+k);
+    if (el) el.value = (I.agList[k] && I.agList[k].courses || []).join('\n');
+  });
+}
+
+/* ─── Grad Requirements table ─── */
+function renderGradTable() {
+  document.getElementById('gradReqBody').innerHTML = infoData.gradReqs.map((r,i) => `
+    <tr id="gr-row-${i}">
+      <td><input class="gr-input" style="width:48px;" value="${escAttr(r.area)}" oninput="readGradReqRow(${i},'area',this.value)"></td>
+      <td><input class="gr-input" value="${escAttr(r.subject)}" oninput="readGradReqRow(${i},'subject',this.value)"></td>
+      <td><input class="gr-input" style="width:130px;" value="${escAttr(r.juhsd)}" oninput="readGradReqRow(${i},'juhsd',this.value)"></td>
+      <td><input class="gr-input" value="${escAttr(r.note)}" placeholder="optional note" oninput="readGradReqRow(${i},'note',this.value)"></td>
+      <td><input class="gr-input" style="width:130px;" value="${escAttr(r.ucCsu)}" oninput="readGradReqRow(${i},'ucCsu',this.value)"></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeGradRow(${i})">🗑</button></td>
+    </tr>
+  `).join('');
+}
+function readGradReqRow(i, key, val) {
+  infoData.gradReqs[i][key] = val;
+  clearTimeout(infoSaveTimer);
+  infoSaveTimer = setTimeout(() => { saveInfo(); showToast('✅ Saved','success'); }, 600);
+}
+function addGradRow() {
+  infoData.gradReqs.push({ area:'', subject:'', juhsd:'', note:'', ucCsu:'' });
+  saveInfo(); renderGradTable();
+}
+function removeGradRow(i) {
+  infoData.gradReqs.splice(i, 1);
+  saveInfo(); renderGradTable();
+  showToast('🗑 Row removed');
+}
+
+/* ─── Post-Secondary ─── */
+function renderPostSecBody() {
+  document.getElementById('postSecBody').innerHTML = infoData.postSecondary.map((s,i) => `
+    <div style="margin-bottom:14px;padding:12px;background:var(--bg);border-radius:6px;border:1px solid var(--border);">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+        <input class="info-input" id="ps-title-${i}" value="${escAttr(s.title)}" placeholder="Institution type title" oninput="saveInfoField()" style="font-weight:600;">
+        <button class="btn btn-danger btn-sm btn-icon" onclick="removePostSec(${i})" title="Remove section">🗑</button>
+      </div>
+      <textarea class="info-textarea" id="ps-text-${i}" rows="2" oninput="saveInfoField()">${escHtml(s.text)}</textarea>
+    </div>
+  `).join('') + `<button class="btn btn-success btn-sm" onclick="addPostSec()">＋ Add Section</button>`;
+}
+function addPostSec() {
+  infoData.postSecondary.push({ title:'New Section', text:'' });
+  saveInfo(); renderPostSecBody();
+}
+function removePostSec(i) {
+  // read current values first
+  readInfoFields();
+  infoData.postSecondary.splice(i, 1);
+  saveInfo(); renderPostSecBody();
+  showToast('🗑 Section removed');
+}
+
+/* ─── Counselors ─── */
+function renderCounselorTable() {
+  document.getElementById('counselorBody').innerHTML = infoData.counselors.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No counselors added yet.</td></tr>'
+    : infoData.counselors.map((c,i) => `
+      <tr>
+        <td style="font-weight:600;">${escHtml(c.name)}</td>
+        <td>${escHtml(c.caseload)}</td>
+        <td>${escHtml(c.phone||'—')}</td>
+        <td>${escHtml(c.email||'—')}</td>
+        <td>
+          <div style="display:flex;gap:5px;">
+            <button class="btn btn-primary btn-sm btn-icon" onclick="openCounselorModal(${i})" title="Edit">✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCounselor(${i})" title="Delete">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+}
+
+let editCounselorIdx = null;
+function openCounselorModal(idx) {
+  editCounselorIdx = (idx !== undefined) ? idx : null;
+  const c = (editCounselorIdx !== null) ? infoData.counselors[editCounselorIdx] : {};
+  document.getElementById('conModalTitle').textContent = editCounselorIdx !== null ? '✏️ Edit Counselor' : '＋ Add Counselor';
+  document.getElementById('cIdx').value     = editCounselorIdx !== null ? editCounselorIdx : '';
+  document.getElementById('cName').value    = c.name    || '';
+  document.getElementById('cCaseload').value= c.caseload|| '';
+  document.getElementById('cPhone').value   = c.phone   || '';
+  document.getElementById('cEmail').value   = c.email   || '';
+  document.getElementById('counselorModal').classList.add('open');
+}
+function closeCounselorModal() { document.getElementById('counselorModal').classList.remove('open'); }
+function saveCounselor() {
+  const name = document.getElementById('cName').value.trim();
+  const caseload = document.getElementById('cCaseload').value.trim();
+  if (!name)    { alert('Name is required.'); return; }
+  if (!caseload){ alert('Caseload is required.'); return; }
+  const obj = {
+    name, caseload,
+    phone: document.getElementById('cPhone').value.trim(),
+    email: document.getElementById('cEmail').value.trim(),
+  };
+  if (editCounselorIdx !== null) {
+    infoData.counselors[editCounselorIdx] = obj;
+    showToast('✅ Counselor updated', 'success');
+  } else {
+    infoData.counselors.push(obj);
+    showToast('✅ Counselor added', 'success');
+  }
+  saveInfo(); renderCounselorTable(); closeCounselorModal();
+}
+function deleteCounselor(i) {
+  if (!confirm('Delete counselor "' + infoData.counselors[i].name + '"?')) return;
+  infoData.counselors.splice(i, 1);
+  saveInfo(); renderCounselorTable();
+  showToast('🗑 Counselor deleted');
+}
+
+/* ─── Accordion ─── */
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+/* ─── HTML escape helpers for rendering ─── */
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escAttr(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' toast-'+type : '');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ═══════════════════════════════════════════════════
+   GOOGLE DOC EXPORT
+═══════════════════════════════════════════════════ */
+function openGDocModal() {
+  const script = generateGDocsScript();
+  document.getElementById('gdocScript').value = script;
+  document.getElementById('gdocCourseCount').textContent = courses.length;
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '📋 Copy Script';
+  btn.classList.remove('copied');
+  document.getElementById('gdocModal').classList.add('open');
+}
+
+function closeGDocModal() {
+  document.getElementById('gdocModal').classList.remove('open');
+}
+
+async function copyGDocScript() {
+  const ta  = document.getElementById('gdocScript');
+  const btn = document.getElementById('copyBtn');
+  const reset = () => { btn.textContent = '📋 Copy Script'; btn.classList.remove('copied'); };
+  try {
+    await navigator.clipboard.writeText(ta.value);
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(reset, 2800);
+  } catch(e) {
+    ta.select();
+    document.execCommand('copy');
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(reset, 2800);
+  }
+}
+
+function generateGDocsScript() {
+  const ts   = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  const data = JSON.stringify(courses, null, 2);
+
+  return `// ================================================================
+// JEFFERSON HIGH SCHOOL — Course Catalog Generator
+// Generated: ${ts}  |  Total courses: ${courses.length}
+//
+// INSTRUCTIONS
+//   1. In Google Apps Script: File > New > Script  (or open an existing project)
+//   2. Select All (Ctrl+A / Cmd+A) and paste this entire script.
+//   3. Make sure "myFunction" is selected in the function dropdown at the top.
+//   4. Click the \u25b6 Run button.
+//   5. Grant permissions when Google asks \u2192 click Allow.
+//   6. When done, check your Google Drive for the new doc!
+// ================================================================
+
+var COURSES_DATA    = ${data};
+var GRAD_REQS       = ${JSON.stringify(infoData.gradReqs)};
+var COUNSELORS_DATA = ${JSON.stringify(infoData.counselors)};
+var DIPLOMA_MIN     = ${infoData.overview.diplomaCredits};
+var AG_LIST         = ${JSON.stringify(infoData.agList || INFO_SEED.agList)};
+
+// \u2500\u2500 Entry point (this is what the Run button calls by default) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function myFunction() {
+  createCourseCatalog();
+}
+
+// \u2500\u2500 Main builder \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function createCourseCatalog() {
+
+  var doc  = DocumentApp.create('Jefferson High School \u2014 Course Catalog 2026\u20132027');
+  var body = doc.getBody();
+  body.setMarginTop(36).setMarginBottom(36).setMarginLeft(54).setMarginRight(54);
+
+  // \u2500\u2500 Cover Page \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  var h1 = body.appendParagraph('JEFFERSON HIGH SCHOOL');
+  h1.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  h1.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  h1.setSpacingBefore(72).setSpacingAfter(10);
+  h1.editAsText().setForegroundColor('#1a3a5c').setFontSize(26).setBold(true);
+
+  var h2 = body.appendParagraph('Course Catalog 2026\u20132027');
+  h2.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  h2.setSpacingBefore(0).setSpacingAfter(22);
+  h2.editAsText().setForegroundColor('#c8a227').setFontSize(17).setItalic(true).setBold(false);
+
+  var mot = body.appendParagraph('Knowledge  \u00b7  Service  \u00b7  Achievement');
+  mot.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  mot.setSpacingBefore(0).setSpacingAfter(10);
+  mot.editAsText().setForegroundColor('#6b7280').setFontSize(11).setItalic(true);
+
+  var paw = body.appendParagraph('Go Grizzlies!');
+  paw.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+  paw.setSpacingBefore(10).setSpacingAfter(72);
+  paw.editAsText().setForegroundColor('#1a3a5c').setFontSize(14).setBold(true);
+
+  body.appendPageBreak();
+
+  // \u2500\u2500 Graduation Requirements \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  var grH = body.appendParagraph('Graduation Requirements');
+  grH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  grH.editAsText().setForegroundColor('#1a3a5c');
+  grH.setSpacingAfter(10);
+
+  var grRows = [['a-g', 'Subject Area', 'JUHSD Diploma Requirements', 'Notes', 'CSU/UC Eligibility']];
+  for (var gr = 0; gr < GRAD_REQS.length; gr++) {
+    var r = GRAD_REQS[gr];
+    grRows.push([r.area, r.subject, r.juhsd, r.note || '', r.ucCsu]);
+  }
+  grRows.push(['\u2014', 'TOTAL', 'Min. ' + DIPLOMA_MIN + ' credits', '', '']);
+  var grTbl = body.appendTable(grRows);
+  grTbl.setBorderColor('#dde1e7').setBorderWidth(1);
+  styleHeader_(grTbl.getRow(0), 5);
+  var lastR = grTbl.getRow(grTbl.getNumRows() - 1);
+  for (var lc = 0; lc < 5; lc++) {
+    try { lastR.getCell(lc).editAsText().setBold(true); } catch(e) {}
+  }
+  for (var gi = 1; gi < grTbl.getNumRows() - 1; gi++) {
+    if (gi % 2 === 0) {
+      for (var gc = 0; gc < 5; gc++) {
+        try { grTbl.getRow(gi).getCell(gc).setBackgroundColor('#f8fafc'); } catch(e) {}
+      }
+    }
+  }
+
+  body.appendPageBreak();
+
+  // \u2500\u2500 a-g Certified Course List \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  var agH = body.appendParagraph('CSU/UC "a-g" Certified Course List 2026\u20132027');
+  agH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  agH.editAsText().setForegroundColor('#1a3a5c');
+  agH.setSpacingAfter(4);
+
+  var agNote = body.appendParagraph('Weighted (Honors) courses earn A=5, B=4, C=3. Maximum 8 honors points for CSU/UC GPA. This list is updated yearly.');
+  agNote.setSpacingBefore(0).setSpacingAfter(4);
+  agNote.editAsText().setForegroundColor('#6b7280').setFontSize(9).setItalic(true);
+
+  var agApexNote = body.appendParagraph('[APEX] = Online course — completed outside of the regular school day through an online platform.');
+  agApexNote.setSpacingBefore(0).setSpacingAfter(12);
+  agApexNote.editAsText().setForegroundColor('#856404').setFontSize(9).setItalic(true).setBold(false);
+
+  var AG_KEYS = ['a','b','c','d','e','f','g'];
+  for (var aa = 0; aa < AG_KEYS.length; aa++) {
+    var ak = AG_KEYS[aa];
+    var agArea = AG_LIST[ak];
+    if (!agArea || !agArea.courses || !agArea.courses.length) continue;
+    var agAreaH = body.appendParagraph(ak + '. ' + agArea.label + '  \u2014  ' + agArea.required);
+    agAreaH.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    agAreaH.editAsText().setForegroundColor('#1a3a5c').setFontSize(11);
+    agAreaH.setSpacingBefore(12).setSpacingAfter(3);
+    var agApexNames = AG_LIST._apexCourses || [];
+    var agLines = [];
+    for (var ci = 0; ci < agArea.courses.length; ci++) {
+      var cname = agArea.courses[ci];
+      var cIsApex = /apex/i.test(cname) || agApexNames.indexOf(cname) >= 0;
+      agLines.push(cIsApex ? cname + '  [APEX]' : cname);
+    }
+    var agP = body.appendParagraph(agLines.join('\n'));
+    agP.setSpacingBefore(0).setSpacingAfter(6);
+    agP.setIndentStart(14);
+    agP.editAsText().setForegroundColor('#374151').setFontSize(10);
+  }
+
+  body.appendPageBreak();
+
+  // \u2500\u2500 Courses by Department \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  var DEPT_ORDER = [
+    'social-science', 'english', 'mathematics', 'science',
+    'lote', 'vpa', 'cte', 'pe', 'electives', 'special-ed'
+  ];
+  var DEPT_LABELS = {
+    'social-science': 'Social Science',
+    'english':        'English Language Arts',
+    'mathematics':    'Mathematics',
+    'science':        'Science',
+    'lote':           'Languages Other Than English (LOTE)',
+    'vpa':            'Visual & Performing Arts',
+    'cte':            'Career Technical Education (CTE)',
+    'pe':             'Physical Education & Health',
+    'electives':      'Interdisciplinary Electives',
+    'special-ed':     'Special Education'
+  };
+  var TYPE_FULL = {
+    'ap':  'AP \u2014 Advanced Placement',
+    'cp':  'CP \u2014 College Prep',
+    'eld': 'ELD / ELA',
+    'sp':  'Special Education'
+  };
+
+  for (var d = 0; d < DEPT_ORDER.length; d++) {
+    var dept     = DEPT_ORDER[d];
+    var courses_ = COURSES_DATA.filter(function(c) { return c.dept === dept; });
+    if (!courses_.length) continue;
+
+    // Department heading
+    var dH = body.appendParagraph(DEPT_LABELS[dept] || dept);
+    dH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+    dH.editAsText().setForegroundColor('#1a3a5c');
+    dH.setSpacingBefore(18).setSpacingAfter(6);
+
+    for (var ci = 0; ci < courses_.length; ci++) {
+      var c = courses_[ci];
+
+      // Course name \u2014 Heading 2
+      var cH = body.appendParagraph(c.name);
+      cH.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+      cH.editAsText().setForegroundColor('#1e2428').setFontSize(11);
+      cH.setSpacingBefore(14).setSpacingAfter(2);
+
+      // Metadata line
+      var meta = [];
+      if (c.grade)   meta.push('Grade ' + c.grade);
+      if (c.credits) meta.push(c.credits + ' Credits');
+      if (c.ag)      meta.push('a-g: ' + c.ag.toUpperCase());
+      if (c.type)    meta.push(TYPE_FULL[c.type] || c.type.toUpperCase());
+      if (c.code)    meta.push('ID: ' + c.code);
+      if (meta.length) {
+        var mp = body.appendParagraph(meta.join('  \u00b7  '));
+        mp.setSpacingBefore(0).setSpacingAfter(3);
+        mp.editAsText().setForegroundColor('#6b7280').setFontSize(8.5);
+      }
+
+      // Prerequisite
+      if (c.prereq && c.prereq.toLowerCase() !== 'none' && c.prereq.trim() !== '') {
+        var pp = body.appendParagraph('Prerequisite: ' + c.prereq);
+        pp.setSpacingBefore(0).setSpacingAfter(2);
+        pp.editAsText().setForegroundColor('#374151').setItalic(true).setFontSize(9);
+      }
+
+      // Special flags
+      var flags = [];
+      if (c.collegeCredit) flags.push('College Credit Eligible');
+      if (c.dualEnroll)    flags.push('Dual Enrollment Available');
+      if (c.fullYear)      flags.push('Full-Year Course');
+      if (flags.length) {
+        var fp = body.appendParagraph('\u2605  ' + flags.join('   \u2605  '));
+        fp.setSpacingBefore(0).setSpacingAfter(3);
+        fp.editAsText().setForegroundColor('#b45309').setFontSize(8.5).setBold(true);
+      }
+
+      // Description
+      if (c.desc) {
+        var dp = body.appendParagraph(c.desc);
+        dp.setSpacingBefore(0).setSpacingAfter(10);
+        dp.setIndentStart(10);
+        dp.editAsText().setForegroundColor('#374151').setFontSize(10);
+      }
+    }
+
+    if (d < DEPT_ORDER.length - 1) body.appendPageBreak();
+  }
+
+  // \u2500\u2500 Counseling Contacts \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  body.appendPageBreak();
+  var conH = body.appendParagraph('Counseling Contacts');
+  conH.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  conH.editAsText().setForegroundColor('#1a3a5c');
+  conH.setSpacingAfter(10);
+
+  var conRows = [['Counselor', 'Caseload', 'Phone', 'Email']];
+  for (var cc = 0; cc < COUNSELORS_DATA.length; cc++) {
+    var con = COUNSELORS_DATA[cc];
+    conRows.push([con.name, con.caseload, con.phone || '', con.email || '']);
+  }
+  var conTbl = body.appendTable(conRows);
+  conTbl.setBorderColor('#dde1e7').setBorderWidth(1);
+  styleHeader_(conTbl.getRow(0), 4);
+  for (var j = 1; j < conTbl.getNumRows(); j++) {
+    if (j % 2 === 0) {
+      for (var jc = 0; jc < 4; jc++) {
+        try { conTbl.getRow(j).getCell(jc).setBackgroundColor('#f8fafc'); } catch(e) {}
+      }
+    }
+  }
+
+  // \u2500\u2500 Save & Report \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  doc.saveAndClose();
+  var url = 'https://docs.google.com/document/d/' + doc.getId();
+  Logger.log('SUCCESS!');
+  Logger.log('Open your catalog here: ' + url);
+
+  try {
+    var ui = DocumentApp.getUi();
+    ui.alert('Done!',
+      'Your Course Catalog Google Doc is ready! Find it in My Drive, or copy the URL from View > Execution Log.',
+      ui.ButtonSet.OK);
+  } catch(e) { /* Running from script editor - see Execution Log for the doc URL */ }
+}
+
+// Helper: apply navy header styling to a table row
+function styleHeader_(row, numCols) {
+  for (var i = 0; i < numCols; i++) {
+    try {
+      row.getCell(i).setBackgroundColor('#1a3a5c');
+      row.getCell(i).editAsText().setForegroundColor('#ffffff').setBold(true).setFontSize(10);
+    } catch(e) {}
+  }
+}
+`;
+}
+
+/* ═══════════════════════════════════════════════════
+   CLOSE MODALS ON OVERLAY CLICK
+═══════════════════════════════════════════════════ */
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('open');
+      deleteTarget = null;
+    }
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+loadCourses();
+renderAll();
+loadInfo();
+renderInfoEditor();
+</script>
+</body>
+</html>

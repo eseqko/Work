@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import docx; doc=docx.Document\\(r''C:\\\\Users\\\\jvillalobos\\\\Downloads\\\\Jefferson HS Course Catalog 2026-2027.docx''\\); [print\\(p.text\\) for p in doc.paragraphs]\")",
+      "Bash(pip install python-docx)",
+      "Bash(python -c \":*)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}
