@@ -378,6 +378,11 @@ tr:hover td { background: #fafbfc; }
       <option value="eld">ELD/ELA</option>
       <option value="sp">Special Ed</option>
     </select>
+    <select class="filter-sel" id="filterStatus" onchange="renderTable()">
+      <option value="">All Status</option>
+      <option value="active">Active Only</option>
+      <option value="inactive">Inactive Only</option>
+    </select>
     <div class="toolbar-right">
       <button class="btn btn-success" onclick="openAddModal()">＋ Add Course</button>
     </div>
@@ -664,6 +669,7 @@ tr:hover td { background: #fafbfc; }
             <div class="check-row"><input type="checkbox" id="fCollege"><label for="fCollege">College Credit Eligible (AP exam)</label></div>
             <div class="check-row"><input type="checkbox" id="fDual"><label for="fDual">Dual Enrollment with College</label></div>
             <div class="check-row"><input type="checkbox" id="fFullYear"><label for="fFullYear">Full-Year Course (2 semesters)</label></div>
+            <div class="check-row"><input type="checkbox" id="fInactive"><label for="fInactive" style="color:var(--warn);">Inactive (not offered this year)</label></div>
           </div>
         </div>
       </div>
@@ -1001,18 +1007,24 @@ const DEPT_LABELS = {
 };
 
 function getFiltered() {
-  const q    = document.getElementById('editorSearch').value.trim().toLowerCase();
-  const dept = document.getElementById('filterDept').value;
-  const type = document.getElementById('filterType').value;
-  return courses.filter(c => {
+  const q      = document.getElementById('editorSearch').value.trim().toLowerCase();
+  const dept   = document.getElementById('filterDept').value;
+  const type   = document.getElementById('filterType').value;
+  const status = document.getElementById('filterStatus').value;
+  const filtered = courses.filter(c => {
     if (dept && c.dept !== dept) return false;
     if (type && c.type !== type) return false;
+    if (status === 'active'   && c.inactive) return false;
+    if (status === 'inactive' && !c.inactive) return false;
     if (q) {
       const hay = (c.name+' '+c.desc+' '+c.code+' '+(c.prereq||'')).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
+  // Sort: active courses first, inactive at bottom
+  filtered.sort((a, b) => (a.inactive ? 1 : 0) - (b.inactive ? 1 : 0));
+  return filtered;
 }
 
 function typeBadge(t) {
@@ -1030,9 +1042,9 @@ function renderTable() {
     return;
   }
   tbody.innerHTML = filtered.map(c => `
-    <tr>
+    <tr style="${c.inactive ? 'opacity:0.45;' : ''}">
       <td class="td-name">
-        ${c.name}
+        ${c.name}${c.inactive ? ' <span style="font-size:0.7rem;color:var(--warn);font-weight:600;">INACTIVE</span>' : ''}
         <div class="course-code">${c.code || '—'}</div>
       </td>
       <td>${DEPT_LABELS[c.dept] || c.dept}</td>
@@ -1042,6 +1054,7 @@ function renderTable() {
       <td>${c.ag ? '<span class="badge-sm b-ag">'+c.ag+'</span>' : '—'}</td>
       <td>
         <div class="actions-cell">
+          <button class="btn ${c.inactive ? 'btn-success' : 'btn-white'} btn-sm btn-icon" title="${c.inactive ? 'Activate' : 'Deactivate'}" onclick="toggleActive('${c.id}')" style="${c.inactive ? '' : 'border:1px solid var(--border);color:var(--warn);'}">${c.inactive ? '✅' : '💤'}</button>
           <button class="btn btn-primary btn-sm btn-icon" title="Edit" onclick="openEditModal('${c.id}')">✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" title="Delete" onclick="openDeleteConfirm('${c.id}')">🗑</button>
         </div>
@@ -1051,16 +1064,18 @@ function renderTable() {
 }
 
 function renderStats() {
-  const total = courses.length;
-  const apCount  = courses.filter(c=>c.type==='ap').length;
-  const cpCount  = courses.filter(c=>c.type==='cp').length;
-  const eldCount = courses.filter(c=>c.type==='eld').length;
+  const active   = courses.filter(c=>!c.inactive);
+  const inactive = courses.filter(c=>c.inactive);
+  const apCount  = active.filter(c=>c.type==='ap').length;
+  const cpCount  = active.filter(c=>c.type==='cp').length;
+  const eldCount = active.filter(c=>c.type==='eld').length;
   document.getElementById('statsBar').innerHTML = `
-    <div class="stat-chip"><strong>${total}</strong> Total Courses</div>
+    <div class="stat-chip"><strong>${active.length}</strong> Active Courses</div>
+    ${inactive.length ? '<div class="stat-chip" style="color:var(--warn);"><strong>' + inactive.length + '</strong> Inactive</div>' : ''}
     <div class="stat-chip"><strong>${apCount}</strong> AP</div>
     <div class="stat-chip"><strong>${cpCount}</strong> CP</div>
     <div class="stat-chip"><strong>${eldCount}</strong> ELD/ELA</div>
-    <div class="stat-chip"><strong>${courses.filter(c=>c.ag).length}</strong> a-g Certified</div>
+    <div class="stat-chip"><strong>${active.filter(c=>c.ag).length}</strong> a-g Certified</div>
     <div class="stat-chip" style="margin-left:auto;">
       <button onclick="resetToSeed()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;color:var(--warn);">↺ Reset to original</button>
     </div>
@@ -1091,6 +1106,14 @@ function confirmDelete() {
   showToast('🗑 Course deleted');
 }
 
+function toggleActive(id) {
+  const c = courses.find(x => x.id === id);
+  if (!c) return;
+  if (c.inactive) { delete c.inactive; showToast('✅ ' + c.name + ' activated'); }
+  else { c.inactive = true; showToast('💤 ' + c.name + ' deactivated'); }
+  saveCourses(); renderAll();
+}
+
 /* ═══════════════════════════════════════════════════
    ADD / EDIT FORM
 ═══════════════════════════════════════════════════ */
@@ -1108,6 +1131,7 @@ function clearForm() {
   document.getElementById('fCollege').checked = false;
   document.getElementById('fDual').checked = false;
   document.getElementById('fFullYear').checked = false;
+  document.getElementById('fInactive').checked = false;
 }
 
 function openAddModal() {
@@ -1134,6 +1158,7 @@ function openEditModal(id) {
   document.getElementById('fCollege').checked   = !!c.collegeCredit;
   document.getElementById('fDual').checked      = !!c.dualEnroll;
   document.getElementById('fFullYear').checked  = !!c.fullYear;
+  document.getElementById('fInactive').checked  = !!c.inactive;
   document.getElementById('editModal').classList.add('open');
 }
 
@@ -1157,9 +1182,10 @@ function saveCourse() {
     prereq:       document.getElementById('fPrereq').value.trim() || 'None',
     desc,
   };
-  if (document.getElementById('fCollege').checked) obj.collegeCredit = true;
-  if (document.getElementById('fDual').checked)    obj.dualEnroll    = true;
-  if (document.getElementById('fFullYear').checked) obj.fullYear     = true;
+  if (document.getElementById('fCollege').checked)  obj.collegeCredit = true;
+  if (document.getElementById('fDual').checked)     obj.dualEnroll    = true;
+  if (document.getElementById('fFullYear').checked) obj.fullYear      = true;
+  if (document.getElementById('fInactive').checked) obj.inactive      = true;
 
   const existing = courses.findIndex(c => c.id === obj.id);
   if (existing >= 0) {
