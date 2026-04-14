@@ -1095,6 +1095,27 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Rich-text values from the editor may contain HTML (bold, lists, links, etc.).
+// Older plain-text values just have \n line breaks. Render either faithfully —
+// HTML inline; plain text wrapped in <p> with <br> for newlines.
+function rich(s) {
+  const str = String(s || '');
+  if (!str) return '';
+  if (/<[a-zA-Z][^>]*>/.test(str)) return str; // already HTML
+  return `<p>${esc(str).replace(/\n/g, '<br>')}</p>`;
+}
+
+// Like rich(), but for content interpolated inline into a sentence or list item:
+// strips outer block wrappers so it flows without causing an unexpected paragraph break.
+function richInline(s) {
+  const html = rich(s);
+  if (!html) return '';
+  // Drop a single wrapping <p>...</p> or <div>...</div> if that's all there is
+  const m = html.match(/^<(p|div)(\s[^>]*)?>([\s\S]*)<\/\1>\s*$/i);
+  if (m && !m[3].match(/<(p|div)[\s>]/i)) return m[3];
+  return html;
+}
+
 function renderInfoPages() {
   const I = INFO;
   document.getElementById('infoPages').innerHTML = `
@@ -1174,7 +1195,7 @@ function renderInfoPages() {
     <div class="info-page" id="page-postsecondary">
       <div class="info-card">
         <h2>🎓 Post-Secondary Opportunities</h2>
-        ${I.postSecondary.map(s=>`<h3>${esc(s.title)}</h3><p>${esc(s.text)}</p>`).join('')}
+        ${I.postSecondary.map(s=>`<h3>${esc(s.title)}</h3>${rich(s.text)}`).join('')}
       </div>
     </div>
 
@@ -1184,14 +1205,14 @@ function renderInfoPages() {
         <h3>Division I — 16 Core-Course Rule</h3>
         <ul>
           ${I.ncaa.d1.map(r=>`<li>${esc(r.years)} year${r.years!=='1'?'s':''} ${esc(r.subject)}</li>`).join('')}
-          <li>${esc(I.ncaa.d1Notes)}</li>
+          <li>${richInline(I.ncaa.d1Notes)}</li>
           <li><strong>GPA:</strong> At least ${esc(I.ncaa.d1GPA)} in core courses</li>
         </ul>
         <h3>Division II — 16 Core-Course Rule</h3>
         <ul>
           ${I.ncaa.d2.map(r=>`<li>${esc(r.years)} year${r.years!=='1'?'s':''} ${esc(r.subject)}</li>`).join('')}
           <li><strong>GPA:</strong> At least ${esc(I.ncaa.d2GPA)} in core courses</li>
-          <li>${esc(I.ncaa.d2Notes)}</li>
+          <li>${richInline(I.ncaa.d2Notes)}</li>
         </ul>
       </div>
     </div>
@@ -1200,12 +1221,12 @@ function renderInfoPages() {
       <div class="info-card">
         <h2>📆 Scheduling Procedures</h2>
         <h3>Class Changes</h3>
-        <p>No schedule changes based on teacher preference, time preference, or desire for easier classes. Changes allowed for: ${esc(I.scheduling.allowedReasons)}.</p>
+        <p>No schedule changes based on teacher preference, time preference, or desire for easier classes. Changes allowed for: ${richInline(I.scheduling.allowedReasons)}.</p>
         <p>Requests must be made within the <strong>${esc(I.scheduling.deadlineFall)}</strong> or <strong>${esc(I.scheduling.deadlineSpring)}</strong>.</p>
         <h3>Conflict Resolution Steps</h3>
         <ol>${I.scheduling.conflictSteps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
         <h3>AP Commitment</h3>
-        <p>${esc(I.scheduling.apPolicy).replace('strongly encouraged','<strong>strongly encouraged</strong>')}</p>
+        ${rich(I.scheduling.apPolicy)}
       </div>
       <div class="info-card">
         <h2>👥 Counseling Contacts</h2>
@@ -2970,7 +2991,7 @@ function renderCard(c, color) {
       ${prereqHtml}
     </div>
     <div class="card-body">
-      <p class="card-desc">${c.desc}</p>
+      <div class="card-desc">${rich(c.desc)}</div>
       <div class="card-meta">
         <div class="card-meta-item"><strong>Course ID</strong>${c.code || '—'}</div>
         <div class="card-meta-item"><strong>Credits</strong>${c.credits}</div>
