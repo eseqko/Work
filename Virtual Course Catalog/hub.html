@@ -146,7 +146,7 @@ en:{
       {q:"How do I check my credits?",a:(()=>{
         const custom=sdVal('gradCreditCheck','');
         if(custom){
-          return `<p>At our school:</p><p>${custom.replace(/\n/g,'<br>')}</p>
+          return `<p>At our school:</p>${renderSD(custom)}
 <div class="callout">📌 Check at the start of every school year so you're never caught off guard senior year.</div>`;
         }
         return `<p>Three ways to check your credit status:</p>
@@ -269,7 +269,7 @@ Thank you for your time.
       const fields=[['handbookAttendance','Attendance & tardies'],['handbookCellPhone','Cell phone policy'],['handbookDressCode','Dress code'],['handbookAcademicHonesty','Academic honesty'],['handbookGrading','Grading & appeals'],['handbookDiscipline','Discipline procedures'],['handbookScheduleChange','Schedule changes'],['handbookCampusAccess','Campus access']];
       const filled=fields.filter(([k])=>sdVal(k,''));
       if(!filled.length) return '<div class="callout">📌 Handbook policies not filled in yet. Use the editor to add your school\'s key policies.</div>';
-      return filled.map(([k,label])=>`<p><strong>${label}:</strong><br>${sd[k].replace(/\n/g,'<br>')}</p>`).join('');
+      return filled.map(([k,label])=>`<div style="margin-bottom:12px"><strong>${label}:</strong>${renderSD(sd[k])}</div>`).join('');
     })()}
     ]},
     support:{title:"Support & Resources",desc:"You don't have to go through hard things alone.",items:[
@@ -285,7 +285,10 @@ Thank you for your time.
       const parts=[['supportCounselors','School Counselor(s)'],['supportPsychologist','School Psychologist'],['supportWellness','Wellness Center'],['supportSocialWorker','Social Worker'],['supportCheckIn','How to Request a Check-In']];
       const filled=parts.filter(([k])=>sdVal(k,''));
       if(!filled.length) return '<div class="callout">📌 School support contacts not filled in yet. Use the editor to add counselor names, hours, and resources.</div>';
-      return filled.map(([k,label])=>`<p><strong>${label}:</strong><br>${sd[k].replace(/\n/g,'<br>')}</p>`).join('');
+      return filled.map(([k,label])=>{
+        const raw=sdVal(k,'');
+        return `<div style="margin-bottom:12px"><strong>${label}:</strong>${renderSD(raw)}</div>`;
+      }).join('');
     })()},
       {q:"Community resources",a:`<p>Local and community support resources:</p>`+sdBlock('supportCommunity','Add local mental health clinics, county resources, and youth programs in the editor.')},
       {q:"You are not alone",a:`<p>Feeling stressed, anxious, overwhelmed, or unmotivated doesn't mean something is wrong with you. A lot of students go through this — especially when juggling school, family, work, and everything else life brings.</p>
@@ -421,11 +424,23 @@ function gradRows(){
   return `<thead>${header}</thead><tbody>${body}</tbody>`;
 }
 
+// Rich-text values saved from the editor may contain HTML (from the rich-text
+// toolbar). Older plain-text values just have \n line breaks. Render either
+// faithfully — HTML inline; plain text wrapped in <p> with <br> for newlines.
+function renderSD(v){
+  const s=String(v||'');
+  if(!s) return '';
+  if(/<[a-zA-Z][^>]*>/.test(s)) return s; // already HTML from the rich editor
+  // Legacy plain-text: escape then turn newlines into breaks
+  const esc=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<p>${esc.replace(/\n/g,'<br>')}</p>`;
+}
+
 // Wrap school-data value in a content block, or show a placeholder callout
 function sdBlock(key,placeholderHtml){
   const v=sdVal(key,'');
   if(!v) return `<div class="callout">📌 <strong>Not filled in yet.</strong> ${placeholderHtml}</div>`;
-  return `<p>${v.replace(/\n/g,'<br>')}</p>`;
+  return renderSD(v);
 }
 
 // State
