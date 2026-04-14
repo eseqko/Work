@@ -143,11 +143,18 @@ en:{
         (rows?`<table>${rows}</table>`
              :`<div class="callout">📌 Graduation credit requirements not filled in yet. Use the editor to add your school's numbers.</div>`);
       })()},
-      {q:"How do I check my credits?",a:`<p>Three ways to check your credit status:</p>
+      {q:"How do I check my credits?",a:(()=>{
+        const custom=sdVal('gradCreditCheck','');
+        if(custom){
+          return `<p>At our school:</p><p>${custom.replace(/\n/g,'<br>')}</p>
+<div class="callout">📌 Check at the start of every school year so you're never caught off guard senior year.</div>`;
+        }
+        return `<p>Three ways to check your credit status:</p>
 <ul><li><strong>Aeries / StudentVUE:</strong> Log in and look for "Transcript" or "Graduation Progress."</li>
 <li><strong>Ask your counselor</strong> for a <em>credit audit</em> — a printed summary of where you stand.</li>
 <li><strong>Unofficial transcript</strong> from the front office or student portal.</li></ul>
-<p>Check at the start of every school year so you're never caught off guard senior year.</p>`},
+<p>Check at the start of every school year so you're never caught off guard senior year.</p>`;
+      })()},
       {q:"I'm behind on credits — what are my options?",a:`<p>There are usually several paths. The sooner you make a plan, the more options you'll have.</p>
 <ul><li><strong>Credit recovery courses</strong> — online or in-person retakes</li>
 <li><strong>Summer school</strong> — fast way to earn credits</li>
