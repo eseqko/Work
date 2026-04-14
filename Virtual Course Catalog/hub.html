@@ -319,16 +319,66 @@ function getSD(){
   return (typeof SCHOOL_DATA!=='undefined')?SCHOOL_DATA:{};
 }
 
-function sdVal(key,fallback){
-  const v=getSD()[key];
-  return(v&&v.trim&&v.trim())||v?v:fallback;
+// Read Course Catalog's imported info (grad reqs, counselors, etc.)
+// so hub fields auto-populate from the DOCX importer when hub editor is blank.
+function getCatalogInfo(){
+  try{
+    const raw=localStorage.getItem('jhs_catalog_info');
+    return raw?JSON.parse(raw):null;
+  }catch(e){return null;}
 }
 
-// Build grad requirements table rows from school data
+// Format catalog counselors array as a multi-line text block
+function catalogCounselorsText(){
+  const info=getCatalogInfo();
+  if(!info || !Array.isArray(info.counselors) || !info.counselors.length) return '';
+  return info.counselors.map(c=>{
+    const parts=[];
+    if(c.name) parts.push(c.name);
+    if(c.caseload) parts.push(c.caseload);
+    if(c.phone) parts.push(c.phone);
+    if(c.email) parts.push(c.email);
+    return parts.join(' — ');
+  }).join('\n');
+}
+
+// True if a value is effectively empty (undefined, null, or whitespace-only string)
+function isBlank(v){
+  if(v==null) return true;
+  if(typeof v==='string') return !v.trim();
+  if(Array.isArray(v)) return !v.length || v.every(r=>Array.isArray(r)?r.every(c=>!c||!String(c).trim()):!r||!String(r).trim());
+  return false;
+}
+
+function sdVal(key,fallback){
+  const sd=getSD();
+  if(!isBlank(sd[key])) return sd[key];
+  // Fall back to catalog info for known overlapping fields
+  if(key==='supportCounselors'){
+    const text=catalogCounselorsText();
+    if(text) return text;
+  }
+  return fallback;
+}
+
+// Build grad requirements table rows — prefers hub data, falls back to catalog's structured gradReqs
 function gradRows(){
   const sd=getSD();
-  const rawRows=sd.gradRequirements||[];
-  const cols=sd.gradColumns||['Subject Area','Credits Required'];
+  let rawRows=sd.gradRequirements||[];
+  let cols=sd.gradColumns||['Subject Area','Credits Required'];
+  // If hub has nothing filled in, fall back to the catalog importer's grad reqs table
+  if(isBlank(rawRows)){
+    const info=getCatalogInfo();
+    if(info && Array.isArray(info.gradReqs) && info.gradReqs.length){
+      cols=['Area','Subject','JUHSD Credits','UC/CSU Approved'];
+      rawRows=info.gradReqs.map(r=>[
+        (r.area && r.area!=='\u2014')?r.area.toUpperCase():'—',
+        r.subject||'',
+        r.juhsd||'',
+        r.ucCsu||''
+      ]);
+    }
+  }
   if(!rawRows.length) return '';
   // Normalize: support both old {subject,credits} objects and new array format
   const rows=rawRows.map(r=>Array.isArray(r)?r:[r.subject||'',r.credits||'']);

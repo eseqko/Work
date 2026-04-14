@@ -252,19 +252,13 @@ else{ showSetup(); }
 // ── Draft data ───────────────────────────────────────────────────────────────
 const DRAFT_KEY='grizznet_draft';
 
+// Empty defaults — on first open, the hub auto-pulls grad reqs and
+// counselors from the Course Catalog. Users add entries here only to
+// override or supplement catalog data.
 const DEFAULTS={
-  gradTotalCredits:'230',
+  gradTotalCredits:'',
   gradColumns:['Subject Area','Credits Required'],
-  gradRequirements:[
-    ['English / Language Arts','40 (4 years)'],
-    ['Math','20–30'],
-    ['Science','20'],
-    ['Social Studies / History','30'],
-    ['Physical Education','20'],
-    ['Health','5'],
-    ['Fine Arts or CTE','10'],
-    ['Electives','Remaining']
-  ],
+  gradRequirements:[],
   gradOtherRequirements:'',gradCreditCheck:'',
   aidLocalScholarships:'',
   advocacyBilingualContact:'',
@@ -418,7 +412,8 @@ function buildForm(){
       <div class="field"><label>Subject Area Requirements</label>
         <div id="req-table-wrap"></div>
         <button class="req-add-row" onclick="addReqRow()">＋ Add Row</button>
-        <div class="hint" style="margin-top:6px">Edit cells directly. Use ＋ buttons to add rows or columns; × to remove them.</div></div>
+        <div class="hint" style="margin-top:6px">Edit cells directly. Use ＋ buttons to add rows or columns; × to remove them.</div>
+        <div class="hint" style="margin-top:4px;color:#1B5E3B">💡 Leave this blank to use the grad requirements table from the Course Catalog (imported via the DOCX importer).</div></div>
       <div class="field"><label>Other Requirements (beyond credits)</label>
         <textarea id="f_gradOtherRequirements" oninput="autosave()" placeholder="e.g. Senior project, 20 hours community service, passing writing assessment...">${escHtml(d.gradOtherRequirements)}</textarea></div>
       <div class="field"><label>How Students Check Their Credits</label>
@@ -469,7 +464,8 @@ function buildForm(){
     <summary>💚 Support & Resources</summary>
     <div class="section-body">
       <div class="field"><label>School Counselor(s)</label>
-        <textarea id="f_supportCounselors" oninput="autosave()" placeholder="Name, caseload (A–L), room number, office hours&#10;e.g. Ms. Rivera (A–L), Room 204, Tue/Thu 7:30–8am & lunch">${escHtml(d.supportCounselors)}</textarea></div>
+        <textarea id="f_supportCounselors" oninput="autosave()" placeholder="Name, caseload (A–L), room number, office hours&#10;e.g. Ms. Rivera (A–L), Room 204, Tue/Thu 7:30–8am & lunch">${escHtml(d.supportCounselors)}</textarea>
+        <div class="hint" style="margin-top:4px;color:#1B5E3B">💡 Leave blank to use counselors from the Course Catalog importer.</div></div>
       <div class="field"><label>School Psychologist</label>
         <textarea id="f_supportPsychologist" oninput="autosave()" placeholder="Name, how to make an appointment">${escHtml(d.supportPsychologist)}</textarea></div>
       <div class="field"><label>Wellness Center / Wellness Room</label>
