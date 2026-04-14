@@ -93,6 +93,40 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 .preview-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);flex-shrink:0}
 .preview-bar strong{color:var(--text)}
 #preview-iframe{width:100%;flex:1;border:none}
+
+/* ── Translate modal ── */
+#tr-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+#tr-modal.on{display:flex}
+.tr-card{background:var(--surface);border-radius:14px;width:100%;max-width:540px;max-height:90vh;overflow:auto;padding:26px 28px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.tr-card h2{font-size:1.15rem;font-weight:800;color:var(--brand);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.tr-card .tr-sub{font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.tr-card .tr-sub a{color:var(--brand)}
+.tr-row{margin-bottom:14px}
+.tr-row label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.tr-row input[type=text],.tr-row input[type=password]{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:.88rem;font-family:inherit;outline:none}
+.tr-row input:focus{border-color:var(--brand)}
+.tr-checks{display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.tr-checks label{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;font-weight:500;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer;margin:0;padding:6px 10px;background:var(--bg);border-radius:7px}
+.tr-checks input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--brand)}
+#tr-log{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:10px 12px;font-size:.72rem;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;max-height:160px;overflow:auto;margin:12px 0;display:none;line-height:1.55}
+#tr-log.on{display:block}
+#tr-log .log-ok{color:#86EFAC}
+#tr-log .log-err{color:#FCA5A5}
+#tr-log .log-info{color:#93C5FD}
+.tr-bar-wrap{background:#E5E7EB;border-radius:8px;height:8px;overflow:hidden;margin:10px 0 4px;display:none}
+.tr-bar-wrap.on{display:block}
+#tr-bar{background:var(--brand);height:100%;width:0;transition:width .3s}
+#tr-status{font-size:.78rem;color:var(--muted);text-align:center;min-height:1.1em}
+.tr-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.tr-btn{background:var(--brand);color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:.85rem;font-weight:700;cursor:pointer}
+.tr-btn:hover{background:#144d2f}
+.tr-btn:disabled{background:#9CA3AF;cursor:not-allowed}
+.tr-btn.secondary{background:#E5E7EB;color:var(--text)}
+.tr-btn.secondary:hover{background:#D1D5DB}
+.tr-btn.accent{background:var(--accent);color:#1A1A1A}
+.tr-btn.accent:hover{background:#d97706}
+.tr-hint{font-size:.75rem;color:var(--muted);margin-top:3px}
+.tr-warn{background:var(--accent-lt);border:1px solid var(--accent);border-radius:8px;padding:9px 12px;font-size:.78rem;color:#78350F;margin-top:10px}
 </style>
 </head>
 <body>
@@ -136,6 +170,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
     <a class="tbtn" href="editor.html" style="text-decoration:none">📖 Catalog Editor</a>
     <button class="tbtn" id="layout-btn" onclick="toggleLayout()">⇄ Side by Side</button>
     <button class="tbtn" onclick="saveNow()">💾 Save</button>
+    <button class="tbtn" onclick="openTranslate()">🌐 Translate</button>
     <button class="tbtn accent" onclick="downloadData()">⬇ Download school-data.js</button>
     <button class="tbtn" onclick="logout()" style="opacity:.7">Sign out</button>
   </div>
@@ -164,6 +199,46 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
       <iframe id="preview-iframe" src="hub.html"></iframe>
     </div>
 
+  </div>
+</div>
+
+<!-- Translate modal -->
+<div id="tr-modal" onclick="if(event.target.id==='tr-modal')closeTranslate()">
+  <div class="tr-card">
+    <h2>🌐 Translate Hub with DeepL</h2>
+    <p class="tr-sub">Uses DeepL's free API (500,000 characters / month). Need a key?
+      <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener">Sign up for DeepL API Free</a>.
+      Translations are saved to your browser for preview, then you can download a baked <code>hub.html</code>.</p>
+
+    <div class="tr-row">
+      <label for="tr-key">DeepL API Key</label>
+      <input type="password" id="tr-key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx" autocomplete="off"/>
+      <div class="tr-hint">Stored locally in your browser only. Free-tier keys end in <code>:fx</code>.</div>
+    </div>
+
+    <div class="tr-row">
+      <label>Translate to</label>
+      <div class="tr-checks">
+        <label><input type="checkbox" id="tr-es" checked/> Spanish</label>
+        <label><input type="checkbox" id="tr-ar" checked/> Arabic</label>
+      </div>
+      <div class="tr-hint">Filipino is not supported by DeepL. English is the source.</div>
+    </div>
+
+    <div class="tr-bar-wrap" id="tr-bar-wrap"><div id="tr-bar"></div></div>
+    <div id="tr-status"></div>
+    <div id="tr-log"></div>
+
+    <div class="tr-warn" id="tr-warn" style="display:none">
+      ⚠️ Translate runs against the <strong>English content currently showing</strong> in the preview panel.
+      Save any edits and refresh the preview first for the most accurate translation.
+    </div>
+
+    <div class="tr-actions">
+      <button class="tr-btn secondary" onclick="closeTranslate()">Close</button>
+      <button class="tr-btn accent" id="tr-download" onclick="downloadTranslatedHub()" style="display:none">⬇ Download translated hub.html</button>
+      <button class="tr-btn" id="tr-start" onclick="startTranslate()">Start Translation</button>
+    </div>
   </div>
 </div>
 
@@ -526,6 +601,294 @@ function openEditor(){
   document.getElementById('app').style.display='flex';
   buildForm();
   renderReqTable();
+}
+
+// ── DeepL Translation ─────────────────────────────────────────────────────────
+const DEEPL_KEY_STORE='deepl_api_key';
+const TRANSLATIONS_STORE='grizznet_translations';
+const DEEPL_ENDPOINT='https://api-free.deepl.com/v2/translate';
+
+function openTranslate(){
+  document.getElementById('tr-modal').classList.add('on');
+  const savedKey=localStorage.getItem(DEEPL_KEY_STORE)||'';
+  document.getElementById('tr-key').value=savedKey;
+  document.getElementById('tr-warn').style.display='block';
+  // If previously translated, show the download button
+  if(localStorage.getItem(TRANSLATIONS_STORE)){
+    document.getElementById('tr-download').style.display='inline-block';
+  }
+}
+
+function closeTranslate(){
+  document.getElementById('tr-modal').classList.remove('on');
+}
+
+function trLog(msg, kind){
+  const el=document.getElementById('tr-log');
+  el.classList.add('on');
+  const line=document.createElement('div');
+  line.className='log-'+(kind||'info');
+  line.textContent=msg;
+  el.appendChild(line);
+  el.scrollTop=el.scrollHeight;
+}
+
+function trStatus(msg){ document.getElementById('tr-status').textContent=msg||''; }
+function trProgress(pct){
+  const wrap=document.getElementById('tr-bar-wrap');
+  wrap.classList.add('on');
+  document.getElementById('tr-bar').style.width=Math.max(0,Math.min(100,pct))+'%';
+}
+
+// Walk LANG.en and collect translatable strings, tagging HTML vs plain.
+function collectStrings(src){
+  const items=[]; // {path:[...], value:string, isHtml:boolean}
+  function add(path,value,isHtml){
+    if(value==null) return;
+    const s=String(value);
+    if(!s.trim()) return;
+    items.push({path,value:s,isHtml:!!isHtml});
+  }
+  if(src.meta){
+    add(['meta','title'], src.meta.title, false);
+    add(['meta','tag'], src.meta.tag, false);
+    add(['meta','footer'], src.meta.footer, false);
+  }
+  if(Array.isArray(src.nav)){
+    src.nav.forEach((n,i)=>add(['nav',i,'label'], n.label, false));
+  }
+  if(src.sections){
+    Object.keys(src.sections).forEach(secId=>{
+      const sec=src.sections[secId];
+      if(!sec) return;
+      add(['sections',secId,'title'], sec.title, false);
+      add(['sections',secId,'desc'], sec.desc, false);
+      if(Array.isArray(sec.items)){
+        sec.items.forEach((item,i)=>{
+          add(['sections',secId,'items',i,'q'], item.q, false);
+          add(['sections',secId,'items',i,'a'], item.a, true);
+        });
+      }
+    });
+  }
+  return items;
+}
+
+// Build an empty target-language skeleton that mirrors LANG.en's structure
+// (ids/icons preserved; strings will be filled in by the translation pass).
+function buildSkeleton(src){
+  const skel={meta:{}, nav:[], sections:{}};
+  if(src.meta){
+    skel.meta={
+      title:'', tag:'', footer:'', notice:null
+    };
+  }
+  if(Array.isArray(src.nav)){
+    skel.nav=src.nav.map(n=>({id:n.id, icon:n.icon, label:''}));
+  }
+  if(src.sections){
+    Object.keys(src.sections).forEach(secId=>{
+      const sec=src.sections[secId]||{};
+      skel.sections[secId]={
+        title:'', desc:'',
+        items:(sec.items||[]).map(()=>({q:'', a:''}))
+      };
+    });
+  }
+  return skel;
+}
+
+function setAtPath(obj, path, value){
+  let ref=obj;
+  for(let i=0;i<path.length-1;i++){
+    const key=path[i];
+    if(ref[key]==null) ref[key]={};
+    ref=ref[key];
+  }
+  ref[path[path.length-1]]=value;
+}
+
+// Call DeepL for a batch of texts. DeepL accepts multiple text[] params (up to 50).
+async function deeplBatch(key, texts, targetLang, isHtml){
+  const params=new URLSearchParams();
+  params.append('auth_key', key);
+  texts.forEach(t=>params.append('text', t));
+  params.append('target_lang', targetLang);
+  params.append('source_lang', 'EN');
+  if(isHtml){
+    params.append('tag_handling', 'html');
+    // Preserve <br> as a line break
+    params.append('split_sentences', '1');
+  }
+  let res;
+  try{
+    res=await fetch(DEEPL_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:params.toString()
+    });
+  }catch(e){
+    throw new Error('Network error calling DeepL. Check your internet connection. ('+e.message+')');
+  }
+  if(!res.ok){
+    let detail='';
+    try{ detail=await res.text(); }catch(e){}
+    if(res.status===403) throw new Error('DeepL: invalid API key (403). Free-tier keys end in :fx.');
+    if(res.status===456) throw new Error('DeepL: monthly character quota exceeded (456).');
+    if(res.status===429) throw new Error('DeepL: rate limit hit (429). Try again in a moment.');
+    throw new Error('DeepL error '+res.status+' '+detail.slice(0,200));
+  }
+  const json=await res.json();
+  return (json.translations||[]).map(t=>t.text);
+}
+
+const TR_STATE={busy:false};
+
+async function startTranslate(){
+  if(TR_STATE.busy) return;
+
+  const key=document.getElementById('tr-key').value.trim();
+  if(!key){ alert('Please enter your DeepL API key.'); return; }
+  localStorage.setItem(DEEPL_KEY_STORE, key);
+
+  const targets=[];
+  if(document.getElementById('tr-es').checked) targets.push({code:'es', dl:'ES', name:'Spanish'});
+  if(document.getElementById('tr-ar').checked) targets.push({code:'ar', dl:'AR', name:'Arabic'});
+  if(!targets.length){ alert('Select at least one target language.'); return; }
+
+  const iframe=document.getElementById('preview-iframe');
+  let src=null;
+  try{ src=iframe && iframe.contentWindow && iframe.contentWindow.LANG && iframe.contentWindow.LANG.en; }catch(e){}
+  if(!src){
+    alert('Preview not loaded yet — open the Preview tab or wait a moment, then try again.');
+    return;
+  }
+
+  const items=collectStrings(src);
+  if(!items.length){ alert('No strings found to translate.'); return; }
+
+  TR_STATE.busy=true;
+  const startBtn=document.getElementById('tr-start');
+  startBtn.disabled=true; startBtn.textContent='Translating…';
+  document.getElementById('tr-log').innerHTML='';
+  trProgress(0);
+  trStatus('Preparing…');
+  trLog('Collected '+items.length+' English strings to translate.','info');
+
+  // Partition into HTML and plain — DeepL handles them with different modes.
+  const htmlItems=items.filter(x=>x.isHtml);
+  const plainItems=items.filter(x=>!x.isHtml);
+  trLog('  • '+plainItems.length+' plain strings','info');
+  trLog('  • '+htmlItems.length+' HTML strings','info');
+
+  // Load existing translations so partial re-runs merge cleanly
+  let merged={};
+  try{ const raw=localStorage.getItem(TRANSLATIONS_STORE); if(raw) merged=JSON.parse(raw); }catch(e){}
+
+  const totalCalls=targets.length*(Math.ceil(plainItems.length/30)+Math.ceil(htmlItems.length/30));
+  let callsDone=0;
+
+  try{
+    for(const target of targets){
+      trLog('→ Translating to '+target.name+' ('+target.dl+')…','info');
+      const out=buildSkeleton(src);
+      const CHUNK=30;
+
+      // Plain strings
+      for(let i=0;i<plainItems.length;i+=CHUNK){
+        const batch=plainItems.slice(i, i+CHUNK);
+        trStatus(target.name+': plain '+(i+1)+'–'+Math.min(i+CHUNK,plainItems.length)+' / '+plainItems.length);
+        const results=await deeplBatch(key, batch.map(b=>b.value), target.dl, false);
+        batch.forEach((b,j)=>setAtPath(out, b.path, results[j]));
+        callsDone++;
+        trProgress(callsDone/totalCalls*100);
+      }
+
+      // HTML strings
+      for(let i=0;i<htmlItems.length;i+=CHUNK){
+        const batch=htmlItems.slice(i, i+CHUNK);
+        trStatus(target.name+': html '+(i+1)+'–'+Math.min(i+CHUNK,htmlItems.length)+' / '+htmlItems.length);
+        const results=await deeplBatch(key, batch.map(b=>b.value), target.dl, true);
+        batch.forEach((b,j)=>setAtPath(out, b.path, results[j]));
+        callsDone++;
+        trProgress(callsDone/totalCalls*100);
+      }
+
+      // Keep the existing "partial translation" notice localized per target
+      if(target.code==='es'){
+        out.meta.notice=null; // full translation, clear the notice
+      } else if(target.code==='ar'){
+        out.meta.notice=null;
+      }
+
+      merged[target.code]=out;
+      trLog('✓ '+target.name+' done','ok');
+    }
+
+    localStorage.setItem(TRANSLATIONS_STORE, JSON.stringify(merged));
+    trProgress(100);
+    trStatus('All translations saved. Refreshing preview…');
+    trLog('✓ Saved to browser. Click Refresh on the preview to see results.','ok');
+    refreshPreview();
+    document.getElementById('tr-download').style.display='inline-block';
+  }catch(e){
+    trLog('✗ '+e.message,'err');
+    trStatus('Failed.');
+    alert('Translation failed:\n\n'+e.message);
+  }finally{
+    TR_STATE.busy=false;
+    startBtn.disabled=false; startBtn.textContent='Re-run Translation';
+  }
+}
+
+// Fetch hub.html from disk (works over file:// via XMLHttpRequest)
+function fetchHubText(){
+  return new Promise((resolve,reject)=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('GET','hub.html?t='+Date.now(),true);
+    xhr.onload=()=>{
+      if((xhr.status>=200 && xhr.status<300) || xhr.status===0) resolve(xhr.responseText);
+      else reject(new Error('HTTP '+xhr.status));
+    };
+    xhr.onerror=()=>reject(new Error('Network error fetching hub.html'));
+    xhr.send();
+  });
+}
+
+async function downloadTranslatedHub(){
+  const raw=localStorage.getItem(TRANSLATIONS_STORE);
+  if(!raw){ alert('No translations saved yet. Run the translation first.'); return; }
+
+  let hubHtml;
+  try{ hubHtml=await fetchHubText(); }
+  catch(e){ alert('Could not read hub.html ('+e.message+'). Try running this from the same folder as hub.html.'); return; }
+
+  const START='/* TRANSLATIONS_START */';
+  const END='/* TRANSLATIONS_END */';
+  const i1=hubHtml.indexOf(START);
+  const i2=hubHtml.indexOf(END);
+  if(i1<0||i2<0||i2<=i1){
+    alert('Could not find TRANSLATIONS markers in hub.html. The file may be out of date.');
+    return;
+  }
+
+  // Pretty-print the translations so the file diff is readable
+  let pretty;
+  try{ pretty=JSON.stringify(JSON.parse(raw), null, 2); }catch(e){ pretty=raw; }
+
+  const injected=hubHtml.slice(0,i1)
+    + START
+    + '\nconst TRANSLATIONS = ' + pretty + ';\n'
+    + hubHtml.slice(i2);
+
+  const blob=new Blob([injected],{type:'text/html'});
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(blob),
+    download:'hub.html'
+  });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  trLog('⬇ Downloaded hub.html with baked translations.','ok');
 }
 </script>
 </body>

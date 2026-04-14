@@ -106,8 +106,9 @@ html[lang="ar"]{font-family:'Noto Sans Arabic','Arabic Typesetting',Arial,sans-s
     document.documentElement.style.setProperty('--accent', cfg.colors.secondary);
     document.documentElement.style.setProperty('--accent-lt', SchoolConfig.colorUtils.lighten(cfg.colors.secondary, 35));
   }
-  if (cfg.setupComplete && (cfg.shortName || cfg.schoolName)) {
-    document.title = (cfg.shortName || cfg.schoolName) + ' — Student Resource Hub';
+  if (cfg.setupComplete && cfg.schoolName) {
+    // Match the visible header: "<School Name> Student Resource Hub"
+    document.title = cfg.schoolName + ' Student Resource Hub';
   }
 })();
 </script>
@@ -309,6 +310,32 @@ fil:{
 }
 };
 
+// ── Translations (injected by Student Hub Editor via DeepL) ──────────────────
+// The editor's translate tool bakes Spanish/Arabic copies of LANG.en into the
+// TRANSLATIONS constant below when you download the translated hub.html.
+// It also writes a live copy to localStorage.grizznet_translations, which we
+// merge in first so the preview iframe reflects translations immediately.
+/* TRANSLATIONS_START */
+const TRANSLATIONS = {};
+/* TRANSLATIONS_END */
+
+(function mergeTranslations(){
+  let live=null;
+  try{
+    const raw=localStorage.getItem('grizznet_translations');
+    if(raw) live=JSON.parse(raw);
+  }catch(e){}
+  const merged=Object.assign({}, TRANSLATIONS||{}, live||{});
+  ['es','ar','fil'].forEach(code=>{
+    const t=merged[code];
+    if(!t || typeof t!=='object') return;
+    if(!LANG[code]) return;
+    if(t.meta) LANG[code].meta=Object.assign({}, LANG[code].meta, t.meta);
+    if(Array.isArray(t.nav) && t.nav.length) LANG[code].nav=t.nav;
+    if(t.sections && typeof t.sections==='object') LANG[code].sections=t.sections;
+  });
+})();
+
 // ── School data helper ─────────────────────────────────────────────────────
 // Checks localStorage for an editor draft first, then falls back to school-data.js
 function getSD(){
@@ -428,9 +455,17 @@ function toggle(key){
 
 function renderHdr(){
   const l=L();
+  // Prefix the title with the configured school name (from SchoolConfig)
+  let title=l.meta.title;
+  if(window.SchoolConfig){
+    const cfg=SchoolConfig.load();
+    if(cfg.setupComplete && cfg.schoolName){
+      title=cfg.schoolName+' '+title;
+    }
+  }
   document.getElementById('hdr').innerHTML=`
   <div class="hdr">
-    <div><div class="hdr-title">${l.meta.title}</div><div class="hdr-tag">${l.meta.tag}</div></div>
+    <div><div class="hdr-title">${title}</div><div class="hdr-tag">${l.meta.tag}</div></div>
     <div class="lang-wrap">
       ${[['en','EN'],['es','ES'],['ar','عربي'],['fil','Filipino']].map(([c,lb])=>`<button class="lb${S.lang===c?' on':''}" onclick="setLang('${c}')">${lb}</button>`).join('')}
     </div>
