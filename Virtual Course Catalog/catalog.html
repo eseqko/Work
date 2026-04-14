@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jefferson High School – Course Catalog 2026–2027</title>
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS & RESET
+═══════════════════════════════════════════ */
+:root {
+  --navy:       #1a3a5c;
+  --navy-dark:  #122844;
+  --gold:       #c8a227;
+  --gold-light: #f5e9c0;
+  --bg:         #f4f6f9;
+  --white:      #ffffff;
+  --text:       #1e2428;
+  --muted:      #6b7280;
+  --border:     #dde1e7;
+  --sidebar-w:  260px;
+  --r:          8px;
+  --shadow:     0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.13);
+  --ap-color:   #7c3aed;
+  --cp-color:   #0369a1;
+  --eld-color:  #065f46;
+  --sp-color:   #9a3412;
+  --header-h:   60px;
+  --transition: 0.22s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER  (no sticky — plays nice in iframes)
+═══════════════════════════════════════════ */
+header {
+  background: var(--navy);
+  color: #fff;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+  position: relative;
+  z-index: 200;
+}
+
+/* Hamburger */
+.ham-btn {
+  background: none; border: none; cursor: pointer;
+  color: #fff; padding: 6px; border-radius: 6px;
+  display: flex; flex-direction: column; gap: 5px;
+  flex-shrink: 0; transition: background var(--transition);
+}
+.ham-btn:hover { background: rgba(255,255,255,0.12); }
+.ham-btn span {
+  display: block; width: 22px; height: 2px;
+  background: #fff; border-radius: 2px;
+  transition: transform var(--transition), opacity var(--transition);
+}
+body.nav-open .ham-btn span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+body.nav-open .ham-btn span:nth-child(2) { opacity: 0; }
+body.nav-open .ham-btn span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Brand */
+.header-brand {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.paw { font-size: 24px; line-height: 1; }
+.brand-text h1 {
+  font-size: 0.95rem; font-weight: 700; line-height: 1.2; white-space: nowrap;
+}
+.brand-text p {
+  font-size: 0.65rem; color: var(--gold); font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+}
+
+/* Search in header */
+.header-search-wrap {
+  flex: 1; display: flex; align-items: center;
+  background: rgba(255,255,255,0.13);
+  border-radius: 24px; padding: 0 14px; height: 36px; gap: 8px;
+  min-width: 0;
+}
+.header-search-wrap input {
+  background: none; border: none; outline: none;
+  color: #fff; font-size: 0.88rem; width: 100%; min-width: 0;
+}
+.header-search-wrap input::placeholder { color: rgba(255,255,255,0.45); }
+.search-icon { font-size: 14px; flex-shrink: 0; opacity: 0.6; }
+
+.result-badge {
+  background: rgba(255,255,255,0.18);
+  border-radius: 12px; padding: 2px 9px;
+  font-size: 0.7rem; color: rgba(255,255,255,0.8);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.layout {
+  display: flex;
+  min-height: calc(100vh - var(--header-h));
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════
+   OVERLAY (mobile drawer backdrop)
+═══════════════════════════════════════════ */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.42);
+  z-index: 150; backdrop-filter: blur(2px);
+}
+body.nav-open .overlay { display: block; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR / DRAWER
+═══════════════════════════════════════════ */
+aside {
+  width: var(--sidebar-w);
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform var(--transition);
+}
+
+/* Sticky sidebar label at top */
+.sidebar-top {
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--white); z-index: 2;
+}
+.sidebar-top-title {
+  font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); font-weight: 700;
+}
+
+.sidebar-label {
+  font-size: 0.63rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); font-weight: 700;
+  padding: 14px 16px 4px;
+}
+.sidebar-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 16px; font-size: 0.82rem; color: var(--text);
+  text-decoration: none; border-radius: 0; cursor: pointer;
+  border: none; background: none; width: 100%; text-align: left;
+  transition: background var(--transition); position: relative;
+}
+.sidebar-link:hover { background: var(--bg); }
+.sidebar-link.active {
+  background: var(--gold-light); color: var(--navy); font-weight: 600;
+}
+.sidebar-link.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--navy); border-radius: 0 2px 2px 0;
+}
+.sidebar-link .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.sidebar-link .cnt {
+  margin-left: auto; font-size: 0.68rem; background: var(--border);
+  border-radius: 10px; padding: 1px 7px; color: var(--muted);
+}
+.sidebar-divider { height: 1px; background: var(--border); margin: 6px 16px; }
+
+/* Scrollbar */
+aside::-webkit-scrollbar { width: 3px; }
+aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Mobile: sidebar becomes a fixed drawer ── */
+@media (max-width: 900px) {
+  aside {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100dvh;
+    z-index: 160;
+    transform: translateX(-100%);
+    box-shadow: none;
+    width: min(var(--sidebar-w), 88vw);
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  body.nav-open aside {
+    transform: translateX(0);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+main {
+  flex: 1; padding: 20px 20px 48px;
+  min-width: 0; overflow-x: hidden;
+}
+
+@media (max-width: 600px) {
+  main { padding: 14px 12px 80px; }
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════════ */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  z-index: 140;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+}
+.bottom-nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; cursor: pointer;
+  font-size: 0.62rem; color: var(--muted); padding: 6px 10px;
+  border-radius: 10px; transition: color var(--transition), background var(--transition);
+  flex: 1; max-width: 80px;
+}
+.bottom-nav-btn .bn-icon { font-size: 20px; line-height: 1; }
+.bottom-nav-btn.active { color: var(--navy); background: var(--gold-light); }
+.bottom-nav-btn.active .bn-icon { transform: scale(1.1); }
+
+@media (max-width: 900px) {
+  .bottom-nav { display: flex; }
+}
+
+/* ═══════════════════════════════════════════
+   FILTER BAR
+═══════════════════════════════════════════ */
+.filters-bar {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 16px; align-items: center;
+}
+
+/* On mobile: scroll filters horizontally */
+@media (max-width: 600px) {
+  .filters-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  .filters-bar::-webkit-scrollbar { display: none; }
+  .filter-group { flex-wrap: nowrap; flex-shrink: 0; }
+  .filter-label { flex-shrink: 0; }
+  .filters-reset { flex-shrink: 0; }
+}
+
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+.chip {
+  padding: 5px 13px; border-radius: 20px;
+  font-size: 0.77rem; border: 1.5px solid var(--border);
+  background: white; cursor: pointer; white-space: nowrap;
+  transition: all var(--transition); font-weight: 500; color: var(--muted);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.chip:hover { border-color: var(--navy); color: var(--navy); }
+.chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+.chip.ap-chip.active  { background: var(--ap-color);  border-color: var(--ap-color);  }
+.chip.cp-chip.active  { background: var(--cp-color);  border-color: var(--cp-color);  }
+.chip.eld-chip.active { background: var(--eld-color); border-color: var(--eld-color); }
+.filters-reset {
+  margin-left: auto; font-size: 0.75rem; color: var(--muted);
+  cursor: pointer; text-decoration: underline; background: none;
+  border: none; white-space: nowrap; padding: 4px 0;
+}
+
+/* ═══════════════════════════════════════════
+   SECTION HEADING
+═══════════════════════════════════════════ */
+.section-heading {
+  display: flex; align-items: center; gap: 10px;
+  margin: 28px 0 12px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.section-heading:first-child { margin-top: 0; }
+.section-icon { font-size: 1.3rem; }
+.section-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); }
+.section-pill {
+  font-size: 0.68rem; background: var(--navy); color: white;
+  border-radius: 10px; padding: 2px 9px;
+}
+
+/* ═══════════════════════════════════════════
+   COURSE GRID
+═══════════════════════════════════════════ */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .course-grid { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* ═══════════════════════════════════════════
+   COURSE CARD
+═══════════════════════════════════════════ */
+.course-card {
+  background: white; border-radius: var(--r);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  transition: box-shadow var(--transition), transform var(--transition);
+  overflow: hidden; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.course-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.course-card:active { transform: scale(0.99); }
+.course-card.expanded .card-body { display: block; }
+
+.card-header { padding: 13px 14px 10px; border-left: 4px solid var(--navy); }
+.card-title-row {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px;
+}
+.card-title { font-size: 0.86rem; font-weight: 700; color: var(--navy); line-height: 1.35; }
+.expand-btn {
+  color: var(--muted); font-size: 11px; flex-shrink: 0;
+  margin-top: 3px; transition: transform var(--transition);
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--bg);
+}
+.course-card.expanded .expand-btn { transform: rotate(180deg); }
+
+.card-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.badge {
+  font-size: 0.63rem; padding: 2px 7px; border-radius: 10px;
+  font-weight: 600; letter-spacing: 0.03em; white-space: nowrap;
+}
+.badge-ap      { background: #ede9fe; color: var(--ap-color); }
+.badge-cp      { background: #e0f2fe; color: var(--cp-color); }
+.badge-eld     { background: #d1fae5; color: var(--eld-color); }
+.badge-sp      { background: #ffedd5; color: var(--sp-color); }
+.badge-ag      { background: var(--gold-light); color: #78450f; }
+.badge-grade   { background: #f3f4f6; color: var(--muted); }
+.badge-credits { background: #f3f4f6; color: var(--muted); }
+.badge-dual    { background: #fce7f3; color: #9d174d; }
+.badge-college { background: #fef3c7; color: #92400e; }
+
+.card-prereq { font-size: 0.71rem; color: var(--muted); margin-top: 5px; }
+.card-prereq em { color: #b45309; font-style: normal; font-weight: 600; }
+
+.card-body {
+  display: none; padding: 12px 14px 14px;
+  border-top: 1px solid var(--bg);
+  animation: slideDown 0.18s ease;
+}
+@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+
+.card-desc { font-size: 0.8rem; line-height: 1.65; color: #374151; }
+.card-meta {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4px 14px; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--bg);
+}
+.card-meta-item { font-size: 0.71rem; color: var(--muted); }
+.card-meta-item strong { color: var(--text); display: block; }
+
+/* ═══════════════════════════════════════════
+   INFO PAGES
+═══════════════════════════════════════════ */
+.info-page { display: none; }
+.info-page.active { display: block; }
+
+.info-card {
+  background: white; border-radius: var(--r);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  padding: 20px; margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .info-card { padding: 16px; }
+}
+
+.info-card h2 {
+  font-size: 1rem; font-weight: 700; color: var(--navy);
+  margin-bottom: 12px; line-height: 1.3;
+}
+.info-card h3 {
+  font-size: 0.86rem; font-weight: 700; color: var(--navy);
+  margin: 16px 0 6px;
+}
+.info-card p  { font-size: 0.82rem; line-height: 1.7; color: #374151; margin-bottom: 6px; }
+.info-card ul { padding-left: 18px; }
+.info-card ul li { font-size: 0.81rem; line-height: 1.7; color: #374151; margin-bottom: 3px; }
+.info-card ol { padding-left: 18px; }
+.info-card ol li { font-size: 0.81rem; line-height: 1.7; color: #374151; margin-bottom: 3px; }
+
+/* Responsive table — wrap on small screens */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.req-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 500px; }
+.req-table th {
+  background: var(--navy); color: white;
+  padding: 8px 12px; text-align: left; font-size: 0.73rem;
+}
+.req-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.req-table tr:last-child td { border-bottom: none; }
+.req-table tr:nth-child(even) td { background: var(--bg); }
+
+.ag-badge {
+  display: inline-flex; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--navy); color: white; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; margin-right: 4px; flex-shrink: 0;
+}
+
+.apex-tag {
+  display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em;
+  background: #fff3cd; color: #856404; border: 1px solid #ffc107;
+  border-radius: 3px; padding: 1px 5px; margin-left: 5px; vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Four-year grid: 2 cols on tablet+, 1 col on phone */
+.four-year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px,100%), 1fr));
+  gap: 12px;
+}
+.grade-block { background: var(--bg); border-radius: 8px; padding: 14px; }
+.grade-block h3 {
+  color: var(--navy); font-size: 0.85rem; font-weight: 700;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.grade-block ol { padding-left: 18px; }
+.grade-block ol li { font-size: 0.78rem; line-height: 1.7; color: #374151; }
+
+/* Counselors */
+.counselor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px,100%), 1fr));
+  gap: 12px; margin-top: 10px;
+}
+.counselor-card {
+  background: var(--bg); border-radius: 8px; padding: 14px;
+  border-left: 3px solid var(--gold);
+}
+.counselor-card h3 { font-size: 0.83rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.counselor-card p  { font-size: 0.75rem; color: var(--muted); margin-bottom: 3px; }
+.counselor-card a  { color: var(--navy); word-break: break-all; }
+
+/* ═══════════════════════════════════════════
+   NO RESULTS
+═══════════════════════════════════════════ */
+.no-results { text-align: center; padding: 60px 20px; color: var(--muted); }
+.no-results .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+.no-results p { font-size: 0.9rem; }
+
+/* ═══════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════ */
+.hidden { display: none !important; }
+.courses-view.hidden { display: none !important; }
+
+/* ── Desktop: no drawer, just static sidebar ── */
+@media (min-width: 901px) {
+  .ham-btn { display: none; }
+  .bottom-nav { display: none !important; }
+  .overlay { display: none !important; }
+  aside {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    /* allow sidebar to scroll independently */
+    transform: none !important;
+  }
+}
+
+/* ── Tablet tweak ── */
+@media (min-width: 601px) and (max-width: 900px) {
+  :root { --sidebar-w: 240px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <button class="ham-btn" id="hamBtn" aria-label="Toggle navigation" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="header-brand">
+    <span class="paw" data-school-emoji>🐾</span>
+    <div class="brand-text">
+      <h1 data-school-name>Jefferson High School</h1>
+      <p>Course Catalog <span data-school-year>2026–2027</span></p>
+    </div>
+  </div>
+  <div class="header-search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search courses…" autocomplete="off" inputmode="search">
+  </div>
+  <span class="result-badge hidden" id="resultCount"></span>
+</header>
+
+<!-- ── OVERLAY ── -->
+<div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-top-title" data-school-mascot>🐾 Go Grizzlies!</div>
+    </div>
+
+    <div class="sidebar-label">Information</div>
+    <button class="sidebar-link active" id="sl-home"         onclick="showPage('home','sl-home')">🏠 Overview &amp; Planning</button>
+    <button class="sidebar-link"        id="sl-requirements" onclick="showPage('requirements','sl-requirements')">📋 Grad Requirements</button>
+    <button class="sidebar-link"        id="sl-ag"           onclick="showPage('ag','sl-ag')">✅ a-g Courses</button>
+    <button class="sidebar-link"        id="sl-fouryear"     onclick="showPage('fouryear','sl-fouryear')">📅 Four-Year Plan</button>
+    <button class="sidebar-link"        id="sl-postsecondary"onclick="showPage('postsecondary','sl-postsecondary')">🎓 Post-Secondary</button>
+    <button class="sidebar-link"        id="sl-ncaa"         onclick="showPage('ncaa','sl-ncaa')">🏈 NCAA Eligibility</button>
+    <button class="sidebar-link"        id="sl-scheduling"   onclick="showPage('scheduling','sl-scheduling')">📆 Scheduling &amp; Contacts</button>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">Course Departments</div>
+
+    <button class="sidebar-link" id="sl-all"          onclick="filterDept('all','sl-all')">
+      <span class="dot" style="background:#1a3a5c"></span> All Courses
+      <span class="cnt" id="cnt-all">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-social-science" onclick="filterDept('social-science','sl-social-science')">
+      <span class="dot" style="background:#dc2626"></span> Social Science
+      <span class="cnt" id="cnt-social-science">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-english"      onclick="filterDept('english','sl-english')">
+      <span class="dot" style="background:#ea580c"></span> English
+      <span class="cnt" id="cnt-english">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-mathematics"  onclick="filterDept('mathematics','sl-mathematics')">
+      <span class="dot" style="background:#d97706"></span> Mathematics
+      <span class="cnt" id="cnt-mathematics">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-science"      onclick="filterDept('science','sl-science')">
+      <span class="dot" style="background:#16a34a"></span> Science
+      <span class="cnt" id="cnt-science">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-lote"         onclick="filterDept('lote','sl-lote')">
+      <span class="dot" style="background:#0284c7"></span> Languages (LOTE)
+      <span class="cnt" id="cnt-lote">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-vpa"          onclick="filterDept('vpa','sl-vpa')">
+      <span class="dot" style="background:#7c3aed"></span> Visual &amp; Performing Arts
+      <span class="cnt" id="cnt-vpa">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-cte"          onclick="filterDept('cte','sl-cte')">
+      <span class="dot" style="background:#be185d"></span> Career Technical Ed
+      <span class="cnt" id="cnt-cte">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-pe"           onclick="filterDept('pe','sl-pe')">
+      <span class="dot" style="background:#0f766e"></span> PE &amp; Health
+      <span class="cnt" id="cnt-pe">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-electives"    onclick="filterDept('electives','sl-electives')">
+      <span class="dot" style="background:#6366f1"></span> Interdisciplinary Electives
+      <span class="cnt" id="cnt-electives">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-special-ed"   onclick="filterDept('special-ed','sl-special-ed')">
+      <span class="dot" style="background:#92400e"></span> Special Education
+      <span class="cnt" id="cnt-special-ed">0</span>
+    </button>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main id="mainContent">
+
+    <!-- ══ INFO PAGES (rendered by renderInfoPages() from INFO constant) ══ -->
+    <div id="infoPages"></div>
+
+    <!-- ══ COURSES VIEW ══ -->
+    <div class="courses-view hidden" id="coursesView">
+      <div class="filters-bar" id="filtersBar">
+        <div class="filter-group">
+          <span class="filter-label">Grade:</span>
+          <div class="chip active" data-grade="all"  onclick="toggleGrade(this,'all')">All</div>
+          <div class="chip"        data-grade="9"    onclick="toggleGrade(this,'9')">9th</div>
+          <div class="chip"        data-grade="10"   onclick="toggleGrade(this,'10')">10th</div>
+          <div class="chip"        data-grade="11"   onclick="toggleGrade(this,'11')">11th</div>
+          <div class="chip"        data-grade="12"   onclick="toggleGrade(this,'12')">12th</div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Type:</span>
+          <div class="chip ap-chip"  data-type="ap"  onclick="toggleType(this,'ap')">AP</div>
+          <div class="chip cp-chip"  data-type="cp"  onclick="toggleType(this,'cp')">CP</div>
+          <div class="chip eld-chip" data-type="eld" onclick="toggleType(this,'eld')">ELD/ELA</div>
+        </div>
+        <button class="filters-reset" onclick="resetFilters()">Reset</button>
+      </div>
+      <div id="courseContainer"></div>
+      <div class="no-results hidden" id="noResults">
+        <div class="emoji">🔍</div>
+        <p>No courses match your search or filters.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── BOTTOM NAV (mobile) ── -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-btn active" id="bn-home" onclick="showPage('home','sl-home');setBN('bn-home')">
+    <span class="bn-icon">🏠</span>Home
+  </button>
+  <button class="bottom-nav-btn" id="bn-courses" onclick="filterDept('all','sl-all');setBN('bn-courses')">
+    <span class="bn-icon">📚</span>Courses
+  </button>
+  <button class="bottom-nav-btn" id="bn-plan" onclick="showPage('fouryear','sl-fouryear');setBN('bn-plan')">
+    <span class="bn-icon">📅</span>Plan
+  </button>
+  <button class="bottom-nav-btn" id="bn-more" onclick="toggleNav()">
+    <span class="bn-icon">☰</span>Menu
+  </button>
+</nav>
+
+<script src="school-config.js"></script>
+<script>
+/* ── Boot check: redirect to setup if not configured ── */
+if (typeof SchoolConfig !== 'undefined') {
+  SchoolConfig.requireSetup();
+  SchoolConfig.applyTheme();
+}
+const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
+
+/* ═══════════════════════════════════════════════════
+   INFO PAGE DATA  (edit via editor.html → Info Pages tab)
+═══════════════════════════════════════════════════ */
+/* INFO_SEED_START */
+const INFO = {
+  overview: {
+    tagline: 'Excellence Through Equity',
+    diplomaCredits: 225,
+    agMin: 15,
+    agByJunior: 11,
+    ucGPA: '3.0',
+    csuGPA: '2.5',
+  },
+  gradReqs: [
+    { area:'a', subject:'History / Social Science',        juhsd:'30 credits', note:'World History (10), US History (11), Gov/Econ (12)', ucCsu:'20 credits' },
+    { area:'b', subject:'English',                          juhsd:'40 credits', note:'', ucCsu:'40 credits' },
+    { area:'c', subject:'Mathematics',                      juhsd:'30 credits (incl. Math Course 1)', note:'', ucCsu:'30 credits (40 recommended)' },
+    { area:'d', subject:'Laboratory Science',               juhsd:'20 credits (bio + physical)', note:'', ucCsu:'20 credits (30 recommended)' },
+    { area:'e', subject:'Language Other Than English',      juhsd:'10 credits', note:'', ucCsu:'20 credits of same language (30 recommended)' },
+    { area:'f', subject:'Visual & Performing Arts',         juhsd:'10 credits', note:'', ucCsu:'10 credits' },
+    { area:'g', subject:'Electives',                        juhsd:'60 credits', note:'', ucCsu:'10 credits' },
+    { area:'—', subject:'Health Education',                 juhsd:'5 credits',  note:'', ucCsu:'N/A' },
+    { area:'—', subject:'Physical Education',               juhsd:'20 credits', note:'', ucCsu:'N/A' },
+    { area:'—', subject:'Career Technical Education',       juhsd:'10 credits', note:'', ucCsu:'N/A' },
+  ],
+  fourYear: {
+    grade9:  ['English 9 CP','Math Course 1 or 2 CP','Health / College & Career CP','Biology CP','PE','Ethnic Studies','LOTE CP','Visual / Performing Arts CP / CTE'],
+    grade10: ['English 10 CP','Math Course 2 or 3 CP','World or AP World History','Chemistry CP','PE','LOTE CP','CTE CP','Elective CP'],
+    grade11: ['English 11 CP or AP English Language','Math Course 3 CP or Trig/Pre-Calc CP','US History or AP US History','CP or AP Lab Science','LOTE CP','CTE CP (capstone)','Elective CP','Elective CP'],
+    grade12: ['AP English Lit or Film as Lit CP or ERWC CP','Statistics CP or Intro to Calculus CP or AP Calculus','AP Government/Econ or Econ CP / American Gov CP','CP or AP Lab Science','LOTE CP','Elective CP','Elective CP','Elective CP'],
+  },
+  postSecondary: [
+    { title:'University of California (UC)',        text:'Serves the top 12.5% of CA graduates. 9 four-year campuses. Requires all "a-g" courses with C or better, GPA \u2265 3.0.' },
+    { title:'California State University (CSU)',    text:'23 campuses across California. Requires all "a-g" courses with C or better, GPA \u2265 2.5 (supplemental criteria for 2.0\u20132.49).' },
+    { title:'Private Colleges',                     text:'86 private colleges in California \u2014 requirements similar to UC/CSU. Consult each college for specifics.' },
+    { title:'Community Colleges',                   text:'116 campuses statewide offering AA/AS degrees, certificates, and transfer programs to UC, CSU, and others.' },
+    { title:'Technical, Trade & Business Schools',  text:'Certificates for vocational careers. Most require a high school diploma or equivalent.' },
+    { title:'Apprenticeship Programs',              text:'Classroom instruction combined with on-the-job training. Typically require age 18+, diploma or GED.' },
+  ],
+  ncaa: {
+    d1GPA: '2.3',
+    d1Notes: 'Complete 10 core courses before 7th semester; may not retake to improve GPA after. Test Scores: Match GPA on Division I sliding scale \u2014 ncaa.org',
+    d1: [
+      { years:'4', subject:'English' },
+      { years:'3', subject:'Mathematics (Algebra 1 or higher)' },
+      { years:'2', subject:'natural/physical science (1 year lab)' },
+      { years:'1', subject:'additional English, math, or science' },
+      { years:'2', subject:'social science' },
+      { years:'4', subject:'additional courses (above areas, foreign language, or comparative religion/philosophy)' },
+    ],
+    d2GPA: '2.2',
+    d2Notes: 'Test Scores: Division II full qualifier sliding scale \u2014 ncaa.org. Use Eligibility Center code 9999 when registering for SAT/ACT.',
+    d2: [
+      { years:'3', subject:'English' },
+      { years:'2', subject:'Mathematics (Algebra 1 or higher)' },
+      { years:'2', subject:'natural/physical science (1 year lab)' },
+      { years:'3', subject:'additional English, math, or science' },
+      { years:'2', subject:'social science' },
+      { years:'4', subject:'additional courses' },
+    ],
+  },
+  scheduling: {
+    deadlineFall:   'first two weeks of fall semester',
+    deadlineSpring: 'first week of spring semester',
+    allowedReasons: 'scheduling errors, summer coursework, inappropriate placement, incomplete prerequisites, or administrative directive',
+    conflictSteps: [
+      'Student contacts teacher directly.',
+      'If unresolved, schedule a parent/teacher/student conference.',
+      'If still unresolved, parent appeals to the Vice Principal.',
+      'VP meets with all parties to determine next steps.',
+    ],
+    apPolicy: 'All AP students must meet with their AP teacher before enrollment. Students are expected to remain for the full term and are strongly encouraged to take the AP exam in May. Dropping an AP class requires VP approval.',
+  },
+  counselors: [
+    { name:'Regina Biagini',  caseload:'Last Names: A \u2013 Gac',                   phone:'(650) 550-7789', email:'rbiagi@jeffersonunion.net' },
+    { name:'Jasmine Genove',  caseload:'Last Names: Gaj \u2013 Orta',                phone:'(650) 550-7788', email:'jgenove@jeffersonunion.net' },
+    { name:'Shannon Paras',   caseload:'Last Names: Ortega \u2013 Z',                phone:'(650) 550-7786', email:'sparas@jeffersonunion.net' },
+    { name:'Jose Villalobos', caseload:'English Language Learner Students',          phone:'(650) 550-7798', email:'jvillalobos@jeffersonunion.net' },
+  ],
+  agList: {
+    _apexCourses: [
+      'U.S. Government and Politics','United States History and Geography','World History, Culture and Geography',
+      'English 9','English 10','English 11','English 12',
+      'APEX Precalculus','Apex Statistics & Probability','Mathematics I','Mathematics II','Mathematics III',
+      'Biology','Chemistry','Physics in the Universe',
+      'Apex Spanish 3','Spanish I','Spanish II',
+      'Music Appreciation (Apex)',
+      'Apex Geography & World Cultures','Apex Sociology','Business Applications (Apex)','Economics','Ethnic Studies (Apex)','Information Technology Applications (Apex)'
+    ],
+    a: { label:'History / Social Science',      required:'2 years required',               courses:['American Government CP','AP African American Studies','AP Government and Politics United States','AP United States History','AP World History','U.S. Government and Politics','U.S. History CP','United States History and Geography','World History, Culture & Geography CP','World History, Culture and Geography'] },
+    b: { label:'English',                        required:'4 years required',               courses:['AP English Language and Composition','AP English Literature and Composition','CSU Expository Reading and Writing','ELD 3 Grammar CP','English 10','English 10 CP','English 10 Enriched CP','English 11','English 11 CP','English 12','English 9','English 9 CP','Film as Literature CP','Ghost Stories in Film and Literature CP'] },
+    c: { label:'Mathematics',                    required:'3 years required, 4 recommended',courses:['AP Calculus AB','APEX Precalculus','Apex Statistics & Probability','Explorations in Data Science CP','Introduction to Calculus','Math Course 1 CP','Math Course 2 CP','Math Course 3 CP','Mathematics I','Mathematics II','Mathematics III','Statistics CP','Trig/Precalculus CP'] },
+    d: { label:'Laboratory Science',             required:'2 years required, 3 recommended',courses:['Advanced Biology','AP Biology','AP Chemistry','Biology','Biology: The Living Earth','Chemistry','Chemistry in the Earth System','Environmental Science-LS CP','Physics in the Universe','Physics in the Universe CP','Physiology CP','PLTW Digital Electronics','PLTW Principles of Engineering'] },
+    e: { label:'Language Other Than English',    required:'2 years required, 3 recommended',courses:['AP Spanish Language and Culture','Apex Spanish 3','Filipino 2 - Intermediate Tagalog','Filipino 3','Filipino Language','Spanish 1 CP','Spanish 2 CP','Spanish 3 CP','Spanish 4 CP','Spanish for Spanish Speakers 1 CP','Spanish for Spanish Speakers 2 CP','Spanish I','Spanish II'] },
+    f: { label:'Visual & Performing Arts',       required:'1 year required',                courses:['AP 2D Art and Design','AP 3D Art and Design','AP Drawing','Art 1 CP','Art 2 CP','Ceramics 1 CP','Ceramics 2 CP','Concert Band CP','Dance Composition CP','Dance Production CP','Digital Art 1','Digital Art 2','Drawing and Painting 2','Drawing and Painting CP','Fashion Design','Guitar I CP','Jewelry CP','Mural Design','Music Appreciation (Apex)','Piano','Sculpture CP','Symphonic Band CP','Theater Arts 2 CP','Theatre Arts 1 CP'] },
+    g: { label:'College-Preparatory Electives',  required:'1 year required',                courses:['Advanced Argument CP','Advanced CTE Work Experience','Advanced Journalism: Editing, Design & Management CP','American History Through Film','AP Macroeconomics','Apex Geography & World Cultures','Apex Sociology','Argument and Debate CP','Business Applications (Apex)','College and Career Exploration CP','Controversial Issues in American Society CP','Creative Problem Solving CP','Culinary Arts','Economics','Economics CP','Ethnic Studies (Apex)','Ethnic Studies (YR) CP','Examining Diversity through Media Study CP','Exploring Computer Science','Financial Literacy CP','Food and Nutrition','Graphic Novels and Identity','History of American Sports CP','Information Technology Applications (Apex)','Intro to Robotics','Newcomer Academy CP','Psychology CP','Social Justice Movements','Team Sports: Anatomy in Motion','Yoga: Anatomy in Motion'] },
+  },
+};
+/* INFO_SEED_END */
+
+/* ═══════════════════════════════════════════════════
+   INFO PAGE RENDERER
+═══════════════════════════════════════════════════ */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderInfoPages() {
+  const I = INFO;
+  document.getElementById('infoPages').innerHTML = `
+    <div class="info-page active" id="page-home">
+      <div class="info-card">
+        <h2>🎓 Welcome to ${esc(_sc.schoolName || 'Your School')} Course Catalog ${esc(_sc.schoolYear || '')}</h2>
+        <p><em>"${esc(I.overview.tagline)}"</em> — ${esc(_sc.schoolName || 'Our school')} offers a full range of college-preparatory courses designed to prepare every ${esc(_sc.mascot ? _sc.mascot.replace(/s$/,'y') : 'student')} for success in college and beyond.</p>
+        <h3>Diploma Requirements</h3>
+        <ul>
+          <li>Earn a minimum of <strong>${esc(I.overview.diplomaCredits)} credits</strong></li>
+          <li>Pass all specific subject requirements (see Graduation Requirements)</li>
+        </ul>
+        <h3>UC/CSU Eligibility</h3>
+        <ul>
+          <li>Complete a minimum of <strong>${esc(I.overview.agMin)} "a-g" courses</strong> with a C or better — at least ${esc(I.overview.agByJunior)} by end of junior year</li>
+          <li>Maintain a competitive GPA — UC minimum ${esc(I.overview.ucGPA)}, CSU minimum ${esc(I.overview.csuGPA)}</li>
+          <li>SAT/ACT no longer required by UC/CSU, but may be required by private or out-of-state colleges</li>
+        </ul>
+        <h3>How to Use This Catalog</h3>
+        <p>Tap a <strong>department</strong> in the menu (☰) to browse, or use the <strong>search bar</strong> to find any course. Filter by grade level or course type. Tap any card to read its full description.</p>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-requirements">
+      <div class="info-card">
+        <h2>📋 Graduation &amp; A-G Requirements</h2>
+        <div class="table-wrap">
+          <table class="req-table">
+            <tr><th>Area</th><th>Subject</th><th>JUHSD Grad Req.</th><th>CSU/UC Req.</th></tr>
+            ${I.gradReqs.map(r => `<tr>
+              <td>${r.area === '—' ? '—' : `<span class="ag-badge">${esc(r.area)}</span>`}</td>
+              <td>${esc(r.subject)}</td>
+              <td>${esc(r.juhsd)}${r.note ? `<br><small>${esc(r.note)}</small>` : ''}</td>
+              <td>${esc(r.ucCsu)}</td>
+            </tr>`).join('')}
+          </table>
+        </div>
+        <h3>Weighted / Honors Credit</h3>
+        <p>Courses in <strong>BOLD</strong> on the a-g list carry weighted honors credit: <strong>A=5, B=4, C=3</strong>. Students may earn a maximum of 8 points of honors credit for CSU/UC.</p>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-ag">
+      <div class="info-card">
+        <h2>✅ UC/CSU "a-g" Certified Course List 2026–2027</h2>
+        <p style="color:var(--muted);font-size:0.9em;margin-bottom:8px;">Official UC-approved list for ${esc(_sc.schoolName || 'your school')}. Weighted (honors) courses earn A=5, B=4, C=3. Maximum 8 honors points toward CSU/UC GPA.</p>
+        <p style="font-size:0.88em;margin-bottom:16px;display:flex;align-items:center;gap:6px;"><span class="apex-tag">APEX</span> <span style="color:var(--muted);">= Online course — completed outside of the regular school day through an online platform.</span></p>
+        ${Object.entries(I.agList).filter(([k])=>k!=='_apexCourses').map(([key,area]) => {
+          const apexList = I.agList._apexCourses || [];
+          return `
+          <h3 style="color:var(--navy);margin-top:18px;margin-bottom:6px;">
+            <span class="ag-badge" style="font-size:1rem;padding:3px 10px;margin-right:8px;">${key}</span>
+            ${esc(area.label)} <small style="font-weight:400;color:var(--muted);font-size:0.82em;">— ${esc(area.required)}</small>
+          </h3>
+          <ul style="margin:0 0 4px 0;padding-left:20px;columns:2;column-gap:24px;">
+            ${area.courses.map(c => {
+              const isApex = /apex/i.test(c) || apexList.includes(c);
+              return `<li style="break-inside:avoid;margin-bottom:2px;font-size:0.92em;">${esc(c)}${isApex ? ' <span class="apex-tag">APEX</span>' : ''}</li>`;
+            }).join('')}
+          </ul>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="info-page" id="page-fouryear">
+      <div class="info-card">
+        <h2>📅 Sample Four-Year Plan</h2>
+        <p>These are <em>sample</em> plans. Build your personal four-year plan at <strong>californiacolleges.edu</strong>.</p>
+        <div class="four-year-grid" style="margin-top:14px;">
+          ${[{emoji:'🟢',label:'9th Grade',key:'grade9'},{emoji:'🔵',label:'10th Grade',key:'grade10'},{emoji:'🟠',label:'11th Grade',key:'grade11'},{emoji:'🔴',label:'12th Grade',key:'grade12'}]
+            .map(g => `<div class="grade-block"><h3>${g.emoji} ${g.label}</h3><ol>${I.fourYear[g.key].map(c=>`<li>${esc(c)}</li>`).join('')}</ol></div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-postsecondary">
+      <div class="info-card">
+        <h2>🎓 Post-Secondary Opportunities</h2>
+        ${I.postSecondary.map(s=>`<h3>${esc(s.title)}</h3><p>${esc(s.text)}</p>`).join('')}
+      </div>
+    </div>
+
+    <div class="info-page" id="page-ncaa">
+      <div class="info-card">
+        <h2>🏈 NCAA Freshman Eligibility Standards</h2>
+        <h3>Division I — 16 Core-Course Rule</h3>
+        <ul>
+          ${I.ncaa.d1.map(r=>`<li>${esc(r.years)} year${r.years!=='1'?'s':''} ${esc(r.subject)}</li>`).join('')}
+          <li>${esc(I.ncaa.d1Notes)}</li>
+          <li><strong>GPA:</strong> At least ${esc(I.ncaa.d1GPA)} in core courses</li>
+        </ul>
+        <h3>Division II — 16 Core-Course Rule</h3>
+        <ul>
+          ${I.ncaa.d2.map(r=>`<li>${esc(r.years)} year${r.years!=='1'?'s':''} ${esc(r.subject)}</li>`).join('')}
+          <li><strong>GPA:</strong> At least ${esc(I.ncaa.d2GPA)} in core courses</li>
+          <li>${esc(I.ncaa.d2Notes)}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-scheduling">
+      <div class="info-card">
+        <h2>📆 Scheduling Procedures</h2>
+        <h3>Class Changes</h3>
+        <p>No schedule changes based on teacher preference, time preference, or desire for easier classes. Changes allowed for: ${esc(I.scheduling.allowedReasons)}.</p>
+        <p>Requests must be made within the <strong>${esc(I.scheduling.deadlineFall)}</strong> or <strong>${esc(I.scheduling.deadlineSpring)}</strong>.</p>
+        <h3>Conflict Resolution Steps</h3>
+        <ol>${I.scheduling.conflictSteps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+        <h3>AP Commitment</h3>
+        <p>${esc(I.scheduling.apPolicy).replace('strongly encouraged','<strong>strongly encouraged</strong>')}</p>
+      </div>
+      <div class="info-card">
+        <h2>👥 Counseling Contacts</h2>
+        <div class="counselor-grid">
+          ${I.counselors.map(c=>`<div class="counselor-card">
+            <h3>${esc(c.name)}</h3>
+            <p>${esc(c.caseload)}</p>
+            ${c.phone?`<p>📞 ${esc(c.phone)}</p>`:''}
+            ${c.email?`<p><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p>`:''}
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════
+   COURSE DATA
+═══════════════════════════════════════════════════ */
+const COURSES = [
+  // ── SOCIAL SCIENCE ──
+  {id:'ss1',  dept:'social-science', name:'World History, Cultures & Geography CP',  code:'20001/20002', grade:'10',    credits:'10', ag:'a', type:'cp',  prereq:'None', desc:'Focuses on modern history: democratic ideals, the Industrial Revolution, imperialism, WWI, totalitarianism, WWII, and the post-war world. Students analyze causes, consequences, and their global impact.'},
+  {id:'ss2',  dept:'social-science', name:'AP World History',                          code:'20908/20909', grade:'10',    credits:'10', ag:'a', type:'ap',  prereq:'None', collegeCredit:true, desc:'Equivalent to a two-semester introductory college world history course covering six historical periods from ~8000 B.C.E. to the present. Students use historian skills: analyzing sources, making comparisons, historical argumentation.'},
+  {id:'ss3',  dept:'social-science', name:'US History CP',                             code:'20007/20008', grade:'11',    credits:'10', ag:'a', type:'cp',  prereq:'None', desc:'Chronological study of American History focusing on the 20th century, integrating geography, economics, sociology, and government.'},
+  {id:'ss4',  dept:'social-science', name:'US History EL CP',                          code:'20009/20010', grade:'11',    credits:'10', ag:'a', type:'eld', prereq:'None', desc:'Designed for English Language Learners. Mirrors the regular US History course with language scaffolding.'},
+  {id:'ss5',  dept:'social-science', name:'AP United States History',                  code:'20902/20903', grade:'11',    credits:'10', ag:'a', type:'ap',  prereq:'"B" or above in World History preferred', collegeCredit:true, desc:'Chronological survey from Colonial America to the present. College-level critical thinking about U.S. History. Summer work may be required.'},
+  {id:'ss6',  dept:'social-science', name:'American Government CP',                    code:'20011',       grade:'12',    credits:'5',  ag:'a', type:'cp',  prereq:'None', desc:'Decision-making in America\'s governmental institutions — presidency, Congress, courts, and bureaucracy. Taken in conjunction with Economics CP.'},
+  {id:'ss7',  dept:'social-science', name:'AP US Government & Politics',               code:'20904',       grade:'12',    credits:'5',  ag:'a', type:'ap',  prereq:'"B" or above in US History preferred', collegeCredit:true, desc:'U.S. Constitution concepts, citizen relationship to the constitutional system, and U.S. political institutions. AP exam in May. Summer work may be required.'},
+  {id:'ss8',  dept:'social-science', name:'Economics CP',                              code:'20013',       grade:'12',    credits:'5',  ag:'g', type:'cp',  prereq:'None', desc:'Applied economics: money, banking, supply/demand, business organization, and comparative economic systems. Taken with American Government CP.'},
+  {id:'ss9',  dept:'social-science', name:'AP Macroeconomics',                         code:'20905',       grade:'12',    credits:'5',  ag:'g', type:'ap',  prereq:'None', collegeCredit:true, desc:'Rigorous college-level course: financial markets, graphing, statistics, and economic decision making. AP exam in May.'},
+  {id:'ss10', dept:'social-science', name:'Psychology CP',                             code:'20100/20101', grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Introduction to psychological concepts and theories including perception, cognition, emotion, behavior, and mental health.'},
+  {id:'ss11', dept:'social-science', name:'Ethnic Studies CP',                         code:'20129/20130', grade:'9',     credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Explores histories, cultures, and contributions of diverse ethnic groups in the U.S. Fulfills the state-mandated Ethnic Studies graduation requirement.'},
+  {id:'ss12', dept:'social-science', name:'Leadership: Student Government',            code:'20108/20109', grade:'9-12',  credits:'10', ag:'',  type:'cp',  prereq:'Application/election', desc:'Students develop leadership skills by planning school events, representing the student body, and working with administration.'},
+  {id:'ss13', dept:'social-science', name:'Advanced Argument CP',                      code:'21226/21227', grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Advanced coursework in argumentation, rhetoric, and debate. Prepares students for college-level discourse.'},
+  {id:'ss14', dept:'social-science', name:'Argument & Debate CP',                      code:'21228/21229', grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Introduction to formal debate techniques, logic, evidence evaluation, and oral argumentation.'},
+  {id:'ss15', dept:'social-science', name:'Controversial Issues in American Society CP',code:'20113/20114',grade:'9-12',  credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Examines and debates contemporary controversial issues in American society using evidence-based reasoning.'},
+
+  // ── ENGLISH ──
+  {id:'en1',  dept:'english', name:'English 9 CP',                              code:'21000/21001', grade:'9',    credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Empowers students to analyze, evaluate, and elaborate on what they read. Works with short stories, novels, poetry, and digital media. Develops expository, analytical, and creative writing.'},
+  {id:'en2',  dept:'english', name:'English 10 CP',                             code:'21004/21005', grade:'10',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Study of other cultures through literature. Develops reading, writing, speaking, research, and critical thinking. Themes include courage, war, friendship, coming of age, and cultural differences.'},
+  {id:'en3',  dept:'english', name:'English 11 CP',                             code:'21008/21009', grade:'11',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Parallels US History through American literature. Explores American identity — freedom, equality, diversity, the American Dream, and the tension between material success and democracy.'},
+  {id:'en4',  dept:'english', name:'AP English Language & Composition',         code:'21900/21901', grade:'11',   credits:'10', ag:'b', type:'ap',  prereq:'None', collegeCredit:true, desc:'College-level course developing skilled reading of diverse prose and sophisticated writing for varied purposes. Intense focus on language and argumentative styles. Summer work may be required.'},
+  {id:'en5',  dept:'english', name:'Expository Reading/Writing CP (ERWC)',      code:'21024/21025', grade:'12',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'CSU-developed course building high-level literacy for college success. Explores contemporary issues through expository texts and strengthens reading/writing skills.'},
+  {id:'en6',  dept:'english', name:'Film as Literature CP',                     code:'21026/21027', grade:'12',   credits:'10', ag:'b', type:'cp',  prereq:'None', desc:'Senior English course using film as the major text alongside novels, poems, and articles. Analyzes how filmmakers and authors create meaning through thematic units.'},
+  {id:'en7',  dept:'english', name:'AP English Literature & Composition',       code:'21902/21903', grade:'12',   credits:'10', ag:'b', type:'ap',  prereq:'None', collegeCredit:true, desc:'Reads novels, plays, and poetry from the 16th–21st century. Writing ranges from in-class pieces to formal essays. Sharpens interpretive skills for college. Summer work may be required.'},
+  {id:'en8',  dept:'english', name:'ELD 1',                                     code:'21100/21101', grade:'9-12', credits:'10', ag:'',  type:'eld', prereq:'ELPAC Scores', desc:'Designated ELD for emerging English learners. Uses CA ELD standards to develop listening, speaking, reading, and writing at the emerging level.'},
+  {id:'en9',  dept:'english', name:'ELA 1',                                     code:'21102/21103', grade:'9-12', credits:'10', ag:'',  type:'eld', prereq:'ELPAC Scores', desc:'Integrated ELA for emerging English learners. Uses Common Core ELA standards (gr. 9/10) with ELD strategies.'},
+  {id:'en10', dept:'english', name:'ELD 2',                                     code:'21106/21107', grade:'9-12', credits:'10', ag:'',  type:'eld', prereq:'ELD 1', desc:'Designated ELD at the expanding level. Builds on ELD 1 and progresses into the expanding stage of language acquisition.'},
+  {id:'en11', dept:'english', name:'ELA 2',                                     code:'21108/21109', grade:'9-12', credits:'10', ag:'',  type:'eld', prereq:'ELD 1', desc:'Integrated ELA at the expanding level. Common Core ELA standards (gr. 9/10) with ELD instructional strategies.'},
+  {id:'en12', dept:'english', name:'ELD 3',                                     code:'21110/21111', grade:'9-12', credits:'10', ag:'',  type:'eld', prereq:'ELD 2', desc:'Designated ELD progressing from expanding to bridging stage. Higher-level language proficiency across all four domains.'},
+  {id:'en13', dept:'english', name:'ELA 3 CP',                                  code:'21112/21113', grade:'9-12', credits:'10', ag:'b', type:'eld', prereq:'ELD 2', desc:'Integrated ELA progressing from expanding to bridging level using Common Core ELA standards with ELD strategies. Meets a-g area "b".'},
+
+  // ── MATHEMATICS ──
+  {id:'ma1', dept:'mathematics', name:'Math for Newcomers',          code:'22014/22015', grade:'9-12',  credits:'10', ag:'',  type:'eld', prereq:'EL 9-10', desc:'For beginning English learners. Covers arithmetic, number sense, and introductory Math Course 1 concepts. Does NOT fulfill CSU/UC math requirement.'},
+  {id:'ma2', dept:'mathematics', name:'Math Course 1 CP',            code:'22000/22001', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'First in JUHSD\'s three-year college prep math sequence. Covers Number & Quantity, Algebra, Functions, Geometry, and Statistics with probability.'},
+  {id:'ma3', dept:'mathematics', name:'Math Course 2 CP',            code:'22002/22003', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass at least one semester of Math Course 1 with D- or better', desc:'Second in the three-year sequence. Focuses on quadratic functions and equations, geometry, and probability.'},
+  {id:'ma4', dept:'mathematics', name:'Math Course 3 CP',            code:'22004/22005', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass MC2 with C- or better', desc:'Third in the sequence. Covers exponential and trigonometric functions, probability, and statistics. A-G approved and Common Core aligned.'},
+  {id:'ma5', dept:'mathematics', name:'Statistics CP',               code:'22100/22101', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'Introduction to probability and statistics. Focuses on analysis, interpretation, and presentation of data. Covers correlation vs. causality.'},
+  {id:'ma6', dept:'mathematics', name:'Trigonometry/Precalculus CP', code:'22102/22103', grade:'10-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'College-level Algebra and Trigonometry, preparing students for Calculus. Topics include trig functions, logarithms, sequences, vectors, and limits.'},
+  {id:'ma7', dept:'mathematics', name:'Intro to Calculus CP',        code:'22906/22907', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'Pass Trig/Precalculus with C- or better both semesters', desc:'Introduces calculus using analytic geometry. Topics: limits, continuity, derivatives, optimization, related rates, and integration.'},
+  {id:'ma8', dept:'mathematics', name:'AP Calculus AB',              code:'22902/22903', grade:'11-12', credits:'10', ag:'c', type:'ap',  prereq:'Enrollment in Intro to Calculus; Precalculus C- or better', collegeCredit:true, fullYear:true, desc:'Full-year course (1 semester Intro to Calculus + 1 semester AP Calculus AB). Extends calculus with Value Theorems, Accumulation, Differential Equations, and advanced function types.'},
+  {id:'ma9', dept:'mathematics', name:'Data Science CP',             code:'22106/22107', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'Introduces data science: correlation/causation, modeling, analysis, and data-based arguments. Project-based using Google Sheets, CODAP, and Colab (Python).'},
+
+  // ── SCIENCE ──
+  {id:'sc1',  dept:'science', name:'Biology CP',                                      code:'23100/23101', grade:'9',     credits:'10', ag:'d', type:'cp',  prereq:'None', desc:'First science course covering NGSS for the Living Earth. Inquiry-based exploration of Ecology, Energy, Cells, Genetics, and Evolution. Fulfills lab science requirement.'},
+  {id:'sc2',  dept:'science', name:'Biology EL CP',                                   code:'23102/23103', grade:'9',     credits:'10', ag:'d', type:'eld', prereq:'ELPAC Scores', desc:'For English Language Learners. Mirrors Biology CP with verbal and written scaffolding for language support.'},
+  {id:'sc3',  dept:'science', name:'Chemistry CP',                                    code:'23004/23005', grade:'10-11', credits:'10', ag:'d', type:'cp',  prereq:'Passing grade in Biology', desc:'NGSS Chemistry in the Earth System. Covers atomic/molecular structure, chemical bonds, conservation of matter, stoichiometry, gas laws, and solutions chemistry.'},
+  {id:'sc4',  dept:'science', name:'Environmental Science CP',                        code:'23122/23123', grade:'10-12', credits:'10', ag:'d', type:'cp',  prereq:'Biology (recommended)', desc:'Major ecological concepts and environmental problems: endangered species, sustainability, pollution, climate change, and waste management.'},
+  {id:'sc5',  dept:'science', name:'Physics CP',                                      code:'23006/23007', grade:'10-12', credits:'10', ag:'d', type:'cp',  prereq:'None', desc:'Covers motion, forces, momentum, energy, heat, thermodynamics, waves, electricity, and magnetism based on CA Science Content Standards.'},
+  {id:'sc6',  dept:'science', name:'Physiology CP',                                   code:'23104/23105', grade:'11-12', credits:'10', ag:'d', type:'cp',  prereq:'Biology and Chemistry with C or higher', desc:'Anatomy and physiology of the human body. Emphasis on structure, function, and homeostasis: cells, tissues, and all body systems.'},
+  {id:'sc7',  dept:'science', name:'Advanced Biology CP',                             code:'23908/23909', grade:'11-12', credits:'10', ag:'d', type:'cp',  prereq:'Biology and Chemistry with C or higher', desc:'Required pre-requisite for AP Biology. Covers statistics in science, scientific writing, chemistry review, cell biology, and cell energy.'},
+  {id:'sc8',  dept:'science', name:'AP Biology',                                      code:'23902/23903', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'Biology and Chemistry with C or higher', collegeCredit:true, fullYear:true, desc:'Full-year course (Advanced Biology + AP Biology). College-level biology with opportunity to earn college credit through the AP exam.'},
+  {id:'sc9',  dept:'science', name:'AP Chemistry',                                    code:'23900/23901', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'C- or better in Biology & Chemistry; C- or concurrent MC3', collegeCredit:true, desc:'College-level chemistry via hands-on labs: chemical reactions, energy, equilibrium, and acids/bases. Builds critical thinking and scientific reasoning.'},
+  {id:'sc10', dept:'science', name:'AP Physics 1',                                    code:'23910/23911', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'Completion of MC1 and MC2; concurrent MC3', collegeCredit:true, desc:'Algebra-based physics applying concepts to models for motion, forces, and energy. Tests understanding of the physical world.'},
+  {id:'sc11', dept:'science', name:'AP Environmental Science',                        code:'23906/23907', grade:'11-12', credits:'10', ag:'d', type:'ap',  prereq:'Two years lab science (life & physical); at least MC1', collegeCredit:true, desc:'Scientific principles for understanding natural world interrelationships. Identifies and analyzes environmental problems and examines solutions. Draws from biology and chemistry.'},
+  {id:'sc12', dept:'science', name:'Engineering Technology 1b: Engineering Sustainability CP', code:'23649/26350', grade:'9-12', credits:'10', ag:'d', type:'cp', prereq:'Math Course 1 with C or higher', dualEnroll:true, desc:'Explores sustainable energy solutions. Lab work tests, observes, and solves community problems related to the energy transition.'},
+
+  // ── LOTE ──
+  {id:'lo1',  dept:'lote', name:'Filipino Language 1 CP',              code:'24112/24113', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'None', desc:'Introduction to Filipino (Tagalog). Develops all four language skills with emphasis on Speaking and Listening — sounds, intonation, stress, vocabulary, and basic grammar.'},
+  {id:'lo2',  dept:'lote', name:'Filipino Language 2 CP',              code:'24114/24115', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in Filipino 1 (recommended)', desc:'Continuation of Filipino 1. Builds on all four skills at the elementary level, with attention to intonation, stress, vocabulary, and grammatical structures.'},
+  {id:'lo3',  dept:'lote', name:'Filipino Language 3 CP',              code:'24116/24117', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in Filipino 2 (recommended)', desc:'Advanced Tagalog. Strengthens communicative proficiency through real-world scenarios, cultural analysis, and authentic language. Advanced grammar and analytical thinking.'},
+  {id:'lo4',  dept:'lote', name:'Spanish 1 CP',                        code:'24100/24101', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'None', desc:'Introduces four basic language skills within a cultural context. Includes dialogues, poems, and cultural projects. Evaluated on participation, homework, tests, quizzes, projects, and presentations.'},
+  {id:'lo5',  dept:'lote', name:'Spanish 2 CP',                        code:'24102/24103', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'Intermediate course building on Spanish 1. Develops vocabulary and increasingly complex language structures across all four skills. Continues exploring Hispanic cultures and history.'},
+  {id:'lo6',  dept:'lote', name:'Spanish 3 CP',                        code:'24104/24105', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'Expands vocabulary, academic reading/writing, and grammar. Strong bridge to AP Spanish. Meets the third-year requirement favored by CSU/UC.'},
+  {id:'lo7',  dept:'lote', name:'Spanish 4 CP',                        code:'24106/24107', grade:'9-12',  credits:'10', ag:'e', type:'cp', prereq:'C- in Spanish 3 CP or Spanish for Spanish Speakers 2 CP', desc:'Aligns with AP themes. Uses authentic texts (videos, audio, articles, literature) to explore family, identity, aesthetics, science, contemporary life, and global challenges.'},
+  {id:'lo8',  dept:'lote', name:'Spanish for Spanish Speakers 1 CP',   code:'24108/24109', grade:'10-12', credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'For heritage Spanish speakers. Develops, maintains, and enhances proficiency in all four skills. Explores Hispanic cultures and academic Spanish.'},
+  {id:'lo9',  dept:'lote', name:'Spanish for Spanish Speakers 2 CP',   code:'24110/24111', grade:'11-12', credits:'10', ag:'e', type:'cp', prereq:'C- in previous Spanish (recommended)', desc:'Expands on Spanish for Spanish Speakers 1. Advanced communicative competence, cultural understanding, language variation, and complex academic writing.'},
+  {id:'lo10', dept:'lote', name:'AP Spanish Language & Culture',       code:'24900/24901', grade:'10-12', credits:'10', ag:'e', type:'ap', prereq:'C- in previous Spanish (recommended)', collegeCredit:true, desc:'Equivalent to intermediate college Spanish. Interpersonal, interpretive, and presentational communication. Explores family, identity, aesthetics, science, contemporary life, and global challenges. Summer work may be required.'},
+
+  // ── VISUAL & PERFORMING ARTS ──
+  {id:'vp1',  dept:'vpa', name:'Art 1 CP (Drawing & Painting 1)',    code:'25000/25001', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory visual arts. Emphasis on Elements of Art, 2D art making, and visual literacy. Students conceptualize, create, self-assess, and critique artwork.'},
+  {id:'vp2',  dept:'vpa', name:'Art 2 CP (Drawing & Painting 2)',    code:'25002/25003', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'C or better in Art 1 CP', desc:'Intermediate 2D visual arts. Builds on Art 1 foundations — applies elements and principles of design with professional media.'},
+  {id:'vp3',  dept:'vpa', name:'Art 3 CP',                           code:'28406/28407', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'C or better in Art 2 CP', desc:'Advanced 2D studio art exploring professional materials and personal/social/technical perspectives. Ideal for AP Studio Art and portfolio preparation.'},
+  {id:'vp4',  dept:'vpa', name:'Visual Art CP (Pre-AP)',             code:'25908/25909', grade:'11-12', credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Leads directly into AP Studio Art. College-level engagement expected. Students should complete half of their 10 required portfolio pieces in this course.'},
+  {id:'vp5',  dept:'vpa', name:'AP Studio Art: Drawing',             code:'25900/25901', grade:'9-12',  credits:'10', ag:'f', type:'ap', prereq:'C or better in prerequisite art class', collegeCredit:true, fullYear:true, desc:'Full-year course (Visual Art + AP Drawing). Develops a college-level portfolio of 10 individual pieces. Students conceptualize, research, create, and critique. Strong visual art background required.'},
+  {id:'vp6',  dept:'vpa', name:'AP Studio Art: 2-D Design',          code:'25902/25903', grade:'9-12',  credits:'10', ag:'f', type:'ap', prereq:'C or better in prerequisite art class', collegeCredit:true, fullYear:true, desc:'Full-year course (Visual Art + AP 2-D Design). Best choice if unsure which AP Art to take. College-level portfolio development.'},
+  {id:'vp7',  dept:'vpa', name:'AP Studio Art: 3-D Design',          code:'25904/25905', grade:'9-12',  credits:'10', ag:'f', type:'ap', prereq:'C or better in prerequisite art class', collegeCredit:true, fullYear:true, desc:'Full-year course (Visual Art + AP 3-D Design). Develops a college-level 3D art portfolio.'},
+  {id:'vp8',  dept:'vpa', name:'Ceramics 1 CP',                      code:'25006/25007', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory ceramics: slabs, sculptures, and reliefs. Basics of ceramic arts.'},
+  {id:'vp9',  dept:'vpa', name:'Ceramics 2 CP',                      code:'25008/25009', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'C or better in Ceramics 1 CP', desc:'Advanced ceramics: student-directed projects, detail work, glazing, thematic pieces, and introduction to the potter\'s wheel.'},
+  {id:'vp10', dept:'vpa', name:'Concert Band CP (Level 1)',           code:'25200/25201', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introduction to playing a musical instrument of your choice. No previous experience needed. Covers technique and music notation. School instruments available.'},
+  {id:'vp11', dept:'vpa', name:'Symphonic Band CP (Level 2)',         code:'25202/25203', grade:'9-12',  credits:'2.10', ag:'f', type:'cp', prereq:'Passing grade in Concert Band CP', desc:'Advanced wind and percussion ensemble. High skill level required. Covers ensemble precision and standard band literature. 40-minute after-school (5th period) class.'},
+  {id:'vp12', dept:'vpa', name:'Dance 1: Composition CP',            code:'25216/25217', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', dualEnroll:true, desc:'Introductory dance (Performing Arts/CTE). Develops body alignment, coordination, flexibility, and appreciation for dance forms: ballet, jazz, hip hop, modern, cultural dance. Dual enrollment with Skyline College.'},
+  {id:'vp13', dept:'vpa', name:'Dance 2: Production CP',             code:'25218/25219', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'Passing grade in Dance 1', dualEnroll:true, desc:'Intermediate dance (CTE). Deeper choreographic skill, technical accuracy, and career development. Dual enrollment with Skyline College.'},
+  {id:'vp14', dept:'vpa', name:'Digital Art 1 CP',                   code:'26220/26221', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', dualEnroll:true, desc:'Explores digital media in contemporary art. Covers photo manipulation and graphic design. Dual enrollment with Skyline College.'},
+  {id:'vp15', dept:'vpa', name:'Digital Art 2 CP',                   code:'26228/26229', grade:'10-12', credits:'10', ag:'f', type:'cp', prereq:'Passing grade in Digital Art 1 CP', dualEnroll:true, desc:'Advanced digital media: video production from pre- to post-production. Dual enrollment with Skyline College.'},
+  {id:'vp16', dept:'vpa', name:'Fashion Design CP',                  code:'25248/25249', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory fashion design: hand and machine sewing, pattern reading/creation, fashion illustration, textiles, fashion history, and contemporary trends.'},
+  {id:'vp17', dept:'vpa', name:'Fashion Design 2 CP',                code:'28410/28411', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'C or better in Fashion Design 1', desc:'Expands on Fashion 1: varied seams, alterations, and reading/drafting patterns.'},
+  {id:'vp18', dept:'vpa', name:'Guitar 1 CP',                        code:'25208/25209', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Beginning guitar: open chords, power chords, moveable chords, pickstyle and fingerstyle techniques. Music theory, composition, improvisation, and notation/tablature reading.'},
+  {id:'vp19', dept:'vpa', name:'Guitar 2 CP',                        code:'25210/25211', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'Guitar 1 (recommended)', desc:'Continuation of Guitar 1 with more advanced techniques, theory, and repertoire.'},
+  {id:'vp20', dept:'vpa', name:'Jewelry Design CP',                  code:'25246/25247', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory jewelry making: basics, variety of materials, and creation of wearable art.'},
+  {id:'vp21', dept:'vpa', name:'Mural Design CP',                    code:'25252/25253', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory mural painting. Composition, painting techniques, image transfer to vertical surfaces, and collaborative teamwork.'},
+  {id:'vp22', dept:'vpa', name:'Piano 1 CP',                         code:'28406/28407', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Learn to read and write basic music notes and beats, gain performance confidence, and explore mallet instruments such as xylophone.'},
+  {id:'vp23', dept:'vpa', name:'Sculpture CP',                       code:'25010/25011', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory 3D visual arts. Students conceptualize 3D space to create artworks with diverse materials. Critical thinking about art design is heavily emphasized.'},
+  {id:'vp24', dept:'vpa', name:'Vocal Music CP',                     code:'25204/25205', grade:'9-12',  credits:'10', ag:'f', type:'cp', prereq:'None', desc:'Introductory vocal music and performance. Students learn to read written music and translate it to vocal performance. Includes peer performances.'},
+
+  // ── CTE ──
+  {id:'ct1', dept:'cte', name:'Culinary Arts I: Foods & Nutrition',      code:'26104A/26105B',     grade:'9-12',  credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Level 1: career readiness, food safety, kitchen equipment, knife skills, recipe reading, food science, dietary guidelines, meal planning, baking, and global food exploration. Weekly cooking labs.'},
+  {id:'ct2', dept:'cte', name:'Culinary Arts II: Foodservice & Hospitality', code:'26108/26109',   grade:'10-12', credits:'10', ag:'g', type:'cp', prereq:'Passing grade in Culinary Arts I', dualEnroll:true, desc:'Level 2: hospitality industry standards, advanced culinary techniques, front/back-of-house. Dual enrollment with Skyline College (Restaurant & Banquet Operations). Students earn a professional portfolio.'},
+  {id:'ct3', dept:'cte', name:'Engineering Technology 1a: Engineering Design CP', code:'26218/26219', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Introduction to engineering design process, problem-solving, and STEM concepts.'},
+  {id:'ct4', dept:'cte', name:'Engineering Technology 2: Engineering Electronics CP', code:'23649/26350', grade:'9-12', credits:'10', ag:'', type:'cp', prereq:'Engineering Technology 1a or 1b', desc:'Advanced engineering covering electronics concepts and applications.'},
+  {id:'ct5', dept:'cte', name:'Gateway to Health CP',                    code:'EMC 425.1/425.2',   grade:'9-12',  credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Introduction to health sciences careers. Covers foundational health concepts, patient care, and pathways into healthcare professions.'},
+  {id:'ct6', dept:'cte', name:'EMC Essentials (Emergency Medical Care)', code:'26374/26375',       grade:'9-12',  credits:'10', ag:'',  type:'cp', prereq:'Gateway to Health CP (recommended)', desc:'Emergency medical care concepts, first aid, and basic life support skills.'},
+  {id:'ct7', dept:'cte', name:'CTE Work-Based Learning',                 code:'WORK 670.1/670.2',  grade:'9-12',  credits:'10', ag:'',  type:'cp', prereq:'Counselor approval', desc:'Students earn CTE credit through supervised work experience tied to a career pathway.'},
+
+  // ── PE & HEALTH ──
+  {id:'pe1', dept:'pe', name:'PE 9',                                    code:'27000/27001', grade:'9',    credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Physical education for 9th graders: fitness, team sports, and wellness fundamentals.'},
+  {id:'pe2', dept:'pe', name:'PE 10',                                   code:'27002/27003', grade:'10',   credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Physical education for 10th graders. Continued development of fitness and sporting skills.'},
+  {id:'pe3', dept:'pe', name:'PE 10: Yoga & Fitness',                  code:'27206/27207', grade:'10',   credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Alternative PE 10 focusing on yoga, mindfulness, and fitness fundamentals.'},
+  {id:'pe4', dept:'pe', name:'Team Sports: Anatomy in Motion CP',       code:'28420/28421', grade:'11-12',credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Explores anatomy, physiology, and biomechanics through team sports. Meets both PE and a-g "g" elective credit.'},
+  {id:'pe5', dept:'pe', name:'Yoga: Anatomy in Motion CP',             code:'28418/28419', grade:'11-12',credits:'10', ag:'g', type:'cp',  prereq:'None', desc:'Explores anatomy and physiology through yoga practice. Meets both PE and a-g "g" elective credit.'},
+  {id:'pe6', dept:'pe', name:'Health',                                  code:'27200',       grade:'9-12', credits:'5',  ag:'',  type:'cp',  prereq:'None', desc:'Required health education: nutrition, personal wellness, mental health, substance prevention, and healthy relationships.'},
+  {id:'pe7', dept:'pe', name:'Health EL',                              code:'27205',       grade:'9-12', credits:'5',  ag:'',  type:'eld', prereq:'ELL status', desc:'Health education adapted for English Language Learners with language scaffolding.'},
+  {id:'pe8', dept:'pe', name:'Weight Training',                        code:'28410/28411', grade:'9-12', credits:'10', ag:'',  type:'cp',  prereq:'None', desc:'Introduces principles of strength and conditioning, proper lifting technique, and fitness program design.'},
+
+  // ── INTERDISCIPLINARY ELECTIVES ──
+  {id:'el1',  dept:'electives', name:'AP African American Studies',              code:'28414/28415', grade:'9-12', credits:'10', ag:'g', type:'ap', prereq:'None', collegeCredit:true, desc:'Interdisciplinary examination of African American history, culture, politics, and contributions. One of College Board\'s newest AP courses.'},
+  {id:'el2',  dept:'electives', name:'AP Psychology',                           code:'20906/20907', grade:'9-12', credits:'10', ag:'g', type:'ap', prereq:'None', collegeCredit:true, desc:'College-level psychology: scientific study of behavior and mental processes. Covers major theories, research methods, and applied psychology.'},
+  {id:'el3',  dept:'electives', name:'Advanced Journalism: Yearbook CP',        code:'21206/21207', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'Application/teacher approval', desc:'Edit, design, and manage the school yearbook. Covers journalism, layout design, photography, and deadline management.'},
+  {id:'el4',  dept:'electives', name:'American History Through Film CP',        code:'20123/20124', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Examines American history through cinema, analyzing how film reflects and shapes historical narratives.'},
+  {id:'el5',  dept:'electives', name:'College & Career Exploration CP',         code:'26341',       grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Guides students through career exploration, college planning, and post-secondary pathways.'},
+  {id:'el6',  dept:'electives', name:'Creative Problem Solving CP',             code:'22104/22105', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Develops creative and critical thinking through design challenges, project-based learning, and innovation frameworks.'},
+  {id:'el7',  dept:'electives', name:'Data Science CP',                         code:'22106/22107', grade:'9-12', credits:'10', ag:'c', type:'cp', prereq:'None', desc:'Introduces data science: correlation, modeling, analysis, and data-based arguments. Project-based using Python and data tools.'},
+  {id:'el8',  dept:'electives', name:'Examining Diversity Through Media CP',    code:'21232/21233', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Analyzes how media represents and impacts diverse communities. Critical media literacy with a social justice lens.'},
+  {id:'el9',  dept:'electives', name:'Financial Literacy CP',                   code:'20127/20128', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Practical personal finance: budgeting, saving, investing, credit, taxes, and planning for life after high school.'},
+  {id:'el10', dept:'electives', name:'Ghost Stories in Literature & Film CP',   code:'21230/21231', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Explores the ghost story genre across literature and film: cultural, psychological, and narrative dimensions.'},
+  {id:'el11', dept:'electives', name:'Graphic Novels & Identity CP',            code:'21238/21239', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Studies graphic novels as literary and artistic works, exploring themes of identity, culture, and social justice.'},
+  {id:'el12', dept:'electives', name:'History of Sports CP',                    code:'20125/20126', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Social, cultural, and political history of sports in America and globally.'},
+  {id:'el13', dept:'electives', name:'Introduction to Robotics CP',             code:'',            grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Hands-on introduction to robotics, programming, and engineering design.'},
+  {id:'el14', dept:'electives', name:'Social Justice Movements CP',             code:'20121/20122', grade:'9-12', credits:'10', ag:'g', type:'cp', prereq:'None', desc:'Historical and contemporary analysis of social justice movements in the United States and globally.'},
+
+  // ── SPECIAL EDUCATION ──
+  {id:'sp1',  dept:'special-ed', name:'Language Arts Seminar 1',           code:'29000/29001', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education language arts support: foundational reading, writing, and communication skills.'},
+  {id:'sp2',  dept:'special-ed', name:'Language Arts Seminar 2',           code:'29002/29003', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Intermediate special education language arts building on foundational skills.'},
+  {id:'sp3',  dept:'special-ed', name:'Language Arts Seminar 3',           code:'29004/29005', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Advanced special education language arts course.'},
+  {id:'sp4',  dept:'special-ed', name:'Math Course 1 (Special Ed)',        code:'29010/29011', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education version of Math Course 1 with additional support and accommodations.'},
+  {id:'sp5',  dept:'special-ed', name:'Math 1A',                           code:'29059/29060', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'First semester of a two-semester Math Course 1 sequence for students needing extended time.'},
+  {id:'sp6',  dept:'special-ed', name:'Math 1B',                           code:'29061/29062', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP; Math 1A', desc:'Second semester of the extended Math Course 1 sequence.'},
+  {id:'sp7',  dept:'special-ed', name:'World History (Special Ed)',        code:'29022/29023', grade:'10',   credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education World History with individualized support.'},
+  {id:'sp8',  dept:'special-ed', name:'US History (Special Ed)',           code:'29024/29025', grade:'11',   credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education US History with individualized support.'},
+  {id:'sp9',  dept:'special-ed', name:'American Government/Economics (Special Ed)', code:'29026/29027', grade:'12', credits:'5', ag:'', type:'sp', prereq:'IEP', desc:'Special education Government and Economics with individualized support.'},
+  {id:'sp10', dept:'special-ed', name:'Life Science (Special Ed)',         code:'29030/29031', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education life science with individualized support.'},
+  {id:'sp11', dept:'special-ed', name:'Physical Science (Special Ed)',     code:'29032/29033', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education physical science with individualized support.'},
+  {id:'sp12', dept:'special-ed', name:'Health (Special Ed)',               code:'29222',       grade:'9-12', credits:'5',  ag:'', type:'sp', prereq:'IEP', desc:'Health education adapted for special education students.'},
+  {id:'sp13', dept:'special-ed', name:'Study Skills',                      code:'29223/29224', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Develops organizational, time management, and academic study strategies.'},
+  {id:'sp14', dept:'special-ed', name:'Tutorial',                          code:'29225/29226', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Individualized academic support and tutoring for IEP students.'},
+  {id:'sp15', dept:'special-ed', name:'Social Communication',              code:'29229/29230', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Develops social communication skills, pragmatic language, and peer interaction strategies.'},
+];
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let currentDept  = 'all';
+let currentGrade = 'all';
+let activeTypes  = new Set();
+let searchQuery  = '';
+let activeSidebarId = 'sl-home';
+
+const DEPT_CONFIG = {
+  'social-science': { label:'Social Science',              color:'#dc2626', icon:'🌍' },
+  'english':        { label:'English',                     color:'#ea580c', icon:'📖' },
+  'mathematics':    { label:'Mathematics',                 color:'#d97706', icon:'📐' },
+  'science':        { label:'Science',                     color:'#16a34a', icon:'🔬' },
+  'lote':           { label:'Languages (LOTE)',             color:'#0284c7', icon:'🌐' },
+  'vpa':            { label:'Visual & Performing Arts',    color:'#7c3aed', icon:'🎨' },
+  'cte':            { label:'Career Technical Education',  color:'#be185d', icon:'🛠️' },
+  'pe':             { label:'PE & Health',                 color:'#0f766e', icon:'🏃' },
+  'electives':      { label:'Interdisciplinary Electives', color:'#6366f1', icon:'🔭' },
+  'special-ed':     { label:'Special Education',           color:'#92400e', icon:'🤝' },
+};
+const DEPT_ORDER = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
+
+/* ═══════════════════════════════════════════════════
+   NAV HELPERS
+═══════════════════════════════════════════════════ */
+function toggleNav() {
+  document.body.classList.toggle('nav-open');
+}
+function closeNav() {
+  document.body.classList.remove('nav-open');
+}
+
+function setActiveSidebar(id) {
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      activeSidebarId = id;
+    }
+  }
+}
+
+function setBN(id) {
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE NAVIGATION
+═══════════════════════════════════════════════════ */
+function showPage(pageId, slId) {
+  document.querySelectorAll('.info-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('coursesView').classList.add('hidden');
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+  document.getElementById('resultCount').classList.add('hidden');
+  setActiveSidebar(slId || null);
+  closeNav();
+  window.scrollTo(0, 0);
+}
+
+function filterDept(dept, slId) {
+  currentDept = dept;
+  document.querySelectorAll('.info-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('coursesView').classList.remove('hidden');
+  setActiveSidebar(slId || null);
+  closeNav();
+  renderCourses();
+  window.scrollTo(0, 0);
+}
+
+/* ═══════════════════════════════════════════════════
+   FILTERS
+═══════════════════════════════════════════════════ */
+function toggleGrade(el, grade) {
+  document.querySelectorAll('[data-grade]').forEach(c => c.classList.remove('active'));
+  currentGrade = grade;
+  el.classList.add('active');
+  renderCourses();
+}
+function toggleType(el, type) {
+  if (activeTypes.has(type)) { activeTypes.delete(type); el.classList.remove('active'); }
+  else { activeTypes.add(type); el.classList.add('active'); }
+  renderCourses();
+}
+function resetFilters() {
+  currentGrade = 'all';
+  activeTypes.clear();
+  document.querySelectorAll('[data-grade]').forEach(c => c.classList.remove('active'));
+  document.querySelector('[data-grade="all"]').classList.add('active');
+  document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+  renderCourses();
+}
+
+/* ═══════════════════════════════════════════════════
+   COURSE FILTER
+═══════════════════════════════════════════════════ */
+function courseMatches(c) {
+  if (c.inactive) return false;
+  if (currentDept !== 'all' && c.dept !== currentDept) return false;
+  if (currentGrade !== 'all') {
+    const parts = c.grade.replace(/ELL /,'').split('-');
+    const lo = parseInt(parts[0]);
+    const hi = parseInt(parts[parts.length - 1]);
+    const gi = parseInt(currentGrade);
+    if (gi < lo || gi > hi) return false;
+  }
+  if (activeTypes.size > 0 && !activeTypes.has(c.type)) return false;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    const hay = (c.name + ' ' + c.desc + ' ' + c.code + ' ' + (c.prereq||'')).toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+function renderCourses() {
+  const filtered = COURSES.filter(courseMatches);
+  const container = document.getElementById('courseContainer');
+  const noResults = document.getElementById('noResults');
+  const badge     = document.getElementById('resultCount');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    noResults.classList.remove('hidden');
+    badge.textContent = '0';
+    badge.classList.remove('hidden');
+    return;
+  }
+  noResults.classList.add('hidden');
+  badge.textContent = filtered.length + (filtered.length === 1 ? ' course' : ' courses');
+  badge.classList.remove('hidden');
+
+  // Group by dept
+  const groups = {};
+  for (const c of filtered) {
+    if (!groups[c.dept]) groups[c.dept] = [];
+    groups[c.dept].push(c);
+  }
+
+  let html = '';
+  for (const dept of DEPT_ORDER) {
+    if (!groups[dept]) continue;
+    const cfg = DEPT_CONFIG[dept];
+    html += `<div class="section-heading">
+      <span class="section-icon">${cfg.icon}</span>
+      <span class="section-title">${cfg.label}</span>
+      <span class="section-pill">${groups[dept].length}</span>
+    </div><div class="course-grid">`;
+    for (const c of groups[dept]) html += renderCard(c, cfg.color);
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function renderCard(c, color) {
+  const typeBadge =
+    c.type === 'ap'  ? '<span class="badge badge-ap">AP</span>' :
+    c.type === 'eld' ? '<span class="badge badge-eld">ELD/ELA</span>' :
+    c.type === 'sp'  ? '<span class="badge badge-sp">Special Ed</span>' :
+                       '<span class="badge badge-cp">CP</span>';
+
+  const agBadge      = c.ag         ? `<span class="badge badge-ag">a-g: ${c.ag}</span>` : '';
+  const dualBadge    = c.dualEnroll ? `<span class="badge badge-dual">Dual Enroll</span>` : '';
+  const collegeBadge = c.collegeCredit ? `<span class="badge badge-college">College Credit</span>` : '';
+  const yearBadge    = c.fullYear   ? `<span class="badge badge-college">Full-Year</span>` : '';
+
+  const prereqHtml = c.prereq && c.prereq !== 'None'
+    ? `<div class="card-prereq">Prereq: <em>${c.prereq}</em></div>` : '';
+
+  return `<div class="course-card" id="card-${c.id}" onclick="toggleCard('${c.id}')">
+    <div class="card-header" style="border-left-color:${color}">
+      <div class="card-title-row">
+        <div class="card-title">${c.name}</div>
+        <span class="expand-btn">▼</span>
+      </div>
+      <div class="card-badges">
+        ${typeBadge}
+        <span class="badge badge-grade">Gr ${c.grade}</span>
+        <span class="badge badge-credits">${c.credits} cr</span>
+        ${agBadge}${dualBadge}${collegeBadge}${yearBadge}
+      </div>
+      ${prereqHtml}
+    </div>
+    <div class="card-body">
+      <p class="card-desc">${c.desc}</p>
+      <div class="card-meta">
+        <div class="card-meta-item"><strong>Course ID</strong>${c.code || '—'}</div>
+        <div class="card-meta-item"><strong>Credits</strong>${c.credits}</div>
+        <div class="card-meta-item"><strong>Grade Level</strong>${c.grade}</div>
+        <div class="card-meta-item"><strong>a-g Area</strong>${c.ag ? '"' + c.ag + '"' : 'N/A'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  document.getElementById('card-' + id).classList.toggle('expanded');
+}
+
+/* ═══════════════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════════════ */
+document.getElementById('searchInput').addEventListener('input', function () {
+  searchQuery = this.value.trim();
+  if (searchQuery) {
+    document.querySelectorAll('.info-page').forEach(p => p.classList.remove('active'));
+    document.getElementById('coursesView').classList.remove('hidden');
+    currentDept = 'all';
+    setActiveSidebar(null);
+    setBN('bn-courses');
+  }
+  renderCourses();
+});
+
+/* ═══════════════════════════════════════════════════
+   INIT — populate counts
+═══════════════════════════════════════════════════ */
+renderInfoPages();
+
+(function initCounts() {
+  const activeCourses = COURSES.filter(c => !c.inactive);
+  document.getElementById('cnt-all').textContent = activeCourses.length;
+  for (const dept of DEPT_ORDER) {
+    const el = document.getElementById('cnt-' + dept);
+    if (el) el.textContent = activeCourses.filter(c => c.dept === dept).length;
+  }
+})();
+
+/* ── Apply school identity to data-* elements ── */
+if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
+</script>
+</body>
+</html>

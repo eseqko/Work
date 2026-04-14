@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
    SchoolConfig — shared school identity module
-   Loaded by setup.html, index.html, editor.html
+   Loaded by setup.html, catalog.html, editor.html, hub.html, hub-editor.html, index.html (dashboard)
 ═══════════════════════════════════════════ */
 (function () {
   'use strict';

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Student Hub Editor</title>
+<script src="school-config.js"></script>
+<style>
+:root{--brand:#1B5E3B;--brand-lt:#E8F5EE;--accent:#F59E0B;--accent-lt:#FEF3C7;--bg:#F3F4F6;--surface:#fff;--text:#1A1A1A;--muted:#6B7280;--border:#E5E7EB;--r:10px;--danger:#DC2626}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+
+/* ── Auth gate ── */
+#gate{position:fixed;inset:0;background:var(--brand);display:flex;align-items:center;justify-content:center;z-index:999}
+.gate-card{background:var(--surface);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.gate-card h1{font-size:1.3rem;font-weight:800;color:var(--brand);margin-bottom:6px}
+.gate-card p{font-size:.85rem;color:var(--muted);margin-bottom:22px;line-height:1.5}
+.gate-card label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:var(--text)}
+.gate-card input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.95rem;margin-bottom:14px;outline:none}
+.gate-card input:focus{border-color:var(--brand)}
+.gate-btn{width:100%;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:11px;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:4px}
+.gate-btn:hover{background:#144d2f}
+.gate-err{color:var(--danger);font-size:.82rem;margin-top:8px;display:none}
+.gate-link{display:block;text-align:center;font-size:.78rem;color:var(--muted);margin-top:14px;cursor:pointer;text-decoration:underline}
+
+/* ── App shell ── */
+#app{display:none;flex-direction:column;height:100vh}
+
+/* ── Toolbar ── */
+.toolbar{background:var(--brand);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.toolbar h1{font-size:.95rem;font-weight:700;flex:1}
+.tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:6px 14px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s}
+.tbtn:hover{background:rgba(255,255,255,.25)}
+.tbtn.accent{background:var(--accent);border-color:var(--accent);color:#1A1A1A}
+.tbtn.accent:hover{background:#d97706}
+.saved-badge{font-size:.75rem;opacity:.7;margin-left:4px}
+
+/* ── Layout modes ── */
+.content-area{display:flex;flex:1;overflow:hidden}
+
+/* Split */
+.layout-split .editor-panel{width:50%;border-right:1px solid var(--border)}
+.layout-split .preview-panel{width:50%;display:flex!important;flex-direction:column}
+.layout-split .tab-btns{display:none}
+
+/* Tabs */
+.layout-tabs .editor-panel,.layout-tabs .preview-panel{width:100%}
+.layout-tabs .preview-panel{display:none}
+.layout-tabs.show-preview .preview-panel{display:flex!important;flex-direction:column}
+.layout-tabs.show-preview .editor-panel{display:none}
+.layout-tabs .tab-btns{display:flex}
+
+.tab-btns{background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-btns button{padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+.tab-btns button.on{color:var(--brand);border-bottom-color:var(--brand)}
+
+/* ── Editor panel ── */
+.editor-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.editor-scroll{flex:1;overflow-y:auto;padding:20px}
+
+.section-group{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.section-group summary{padding:13px 16px;font-size:.9rem;font-weight:700;color:var(--brand);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:8px}
+.section-group summary::-webkit-details-marker{display:none}
+.section-group summary::before{content:'▸';font-size:.8rem;color:var(--muted);transition:transform .2s}
+.section-group[open] summary::before{transform:rotate(90deg)}
+.section-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+
+.field label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:.88rem;font-family:inherit;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus{border-color:var(--brand)}
+.field textarea{resize:vertical;min-height:90px}
+.field .hint{font-size:.75rem;color:var(--muted);margin-top:3px}
+
+/* Grad requirements table editor */
+.req-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:6px}
+.req-table th{background:var(--brand-lt);color:var(--brand);padding:6px 9px;text-align:left;font-weight:700;border:1px solid var(--border)}
+.req-table td{border:1px solid var(--border);padding:2px 4px}
+.req-table td input{border:none;width:100%;padding:6px 7px;font-size:.84rem;background:transparent;outline:none}
+.req-table td input:focus{background:var(--brand-lt)}
+.req-del{background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:.9rem;padding:0 4px;line-height:1;border-radius:4px;flex-shrink:0}
+.req-del:hover{color:var(--danger);background:#FEE2E2}
+.req-th-wrap{display:flex;align-items:center;gap:4px}
+.req-th-wrap input{background:transparent;border:none;font-weight:700;color:var(--brand);font-size:.85rem;padding:2px 4px;width:100%;outline:none;min-width:60px}
+.req-th-wrap input:focus{background:rgba(255,255,255,.6);border-radius:3px}
+.req-add-row{margin-top:8px;background:none;border:1.5px dashed var(--border);border-radius:7px;padding:6px 14px;font-size:.82rem;color:var(--muted);cursor:pointer;width:100%;transition:all .15s}
+.req-add-row:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-lt)}
+.req-add-col-th{background:var(--brand-lt);border:1px solid var(--border);padding:4px}
+.req-add-col-btn{background:none;border:none;cursor:pointer;color:var(--brand);font-size:1rem;font-weight:700;padding:2px 8px;border-radius:4px}
+.req-add-col-btn:hover{background:rgba(27,94,59,.15)}
+
+/* ── Preview panel ── */
+.preview-panel{background:#e5e7eb;overflow:hidden}
+.preview-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);flex-shrink:0}
+.preview-bar strong{color:var(--text)}
+#preview-iframe{width:100%;flex:1;border:none}
+</style>
+</head>
+<body>
+
+<script>
+// Apply school colors from SchoolConfig (overrides Grizzly green defaults)
+(function(){
+  if (!window.SchoolConfig) return;
+  const cfg = SchoolConfig.load();
+  if (cfg.colors && cfg.colors.primary) {
+    const root = document.documentElement.style;
+    root.setProperty('--brand', cfg.colors.primary);
+    root.setProperty('--brand-lt', SchoolConfig.colorUtils.lighten(cfg.colors.primary, 45));
+  }
+  if (cfg.colors && cfg.colors.secondary) {
+    document.documentElement.style.setProperty('--accent', cfg.colors.secondary);
+    document.documentElement.style.setProperty('--accent-lt', SchoolConfig.colorUtils.lighten(cfg.colors.secondary, 35));
+  }
+  if (cfg.setupComplete && (cfg.shortName || cfg.schoolName)) {
+    document.title = (cfg.shortName || cfg.schoolName) + ' — Student Hub Editor';
+  }
+})();
+</script>
+
+<!-- Auth gate -->
+<div id="gate">
+  <div class="gate-card">
+    <h1 id="gate-title">Student Hub Editor</h1>
+    <p id="gate-desc"></p>
+    <div id="gate-form"></div>
+    <div class="gate-err" id="gate-err"></div>
+    <a class="gate-link" id="gate-reset-link" style="display:none" onclick="showResetConfirm()">Forgot password? Reset it</a>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="toolbar">
+    <h1>🛠 Student Hub Editor <span class="saved-badge" id="saved-badge"></span></h1>
+    <a class="tbtn" href="index.html" style="text-decoration:none">← Dashboard</a>
+    <a class="tbtn" href="editor.html" style="text-decoration:none">📖 Catalog Editor</a>
+    <button class="tbtn" id="layout-btn" onclick="toggleLayout()">⇄ Side by Side</button>
+    <button class="tbtn" onclick="saveNow()">💾 Save</button>
+    <button class="tbtn accent" onclick="downloadData()">⬇ Download school-data.js</button>
+    <button class="tbtn" onclick="logout()" style="opacity:.7">Sign out</button>
+  </div>
+
+  <div class="content-area layout-tabs" id="content-area">
+
+    <!-- Tab buttons (tabs mode only) -->
+    <div class="tab-btns" id="tab-btns">
+      <button class="on" id="tab-edit" onclick="showTab('edit')">✏️ Edit</button>
+      <button id="tab-preview" onclick="showTab('preview')">👁 Preview</button>
+    </div>
+
+    <!-- Editor panel -->
+    <div class="editor-panel">
+      <div class="editor-scroll" id="editor-scroll">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <!-- Preview panel -->
+    <div class="preview-panel">
+      <div class="preview-bar">
+        <strong>Live Preview</strong> — reflects your saved changes &nbsp;
+        <button class="tbtn" style="padding:3px 10px;font-size:.72rem" onclick="refreshPreview()">↺ Refresh</button>
+      </div>
+      <iframe id="preview-iframe" src="hub.html"></iframe>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Password / Auth ─────────────────────────────────────────────────────────
+const PW_KEY='grizznet_editor_pw';
+const SESSION_KEY='grizznet_auth';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function showErr(msg){const e=document.getElementById('gate-err');e.textContent=msg;e.style.display='block';}
+function hideErr(){document.getElementById('gate-err').style.display='none';}
+
+function showSetup(){
+  document.getElementById('gate-title').textContent='Welcome to Student Hub Editor';
+  document.getElementById('gate-desc').textContent='Create a password to protect this editor. You\'ll use it every time you sign in.';
+  document.getElementById('gate-form').innerHTML=`
+    <label>New password</label><input type="password" id="pw1" placeholder="Choose a password"/>
+    <label>Confirm password</label><input type="password" id="pw2" placeholder="Confirm your password"/>
+    <button class="gate-btn" onclick="submitSetup()">Create Password</button>`;
+}
+
+function showLogin(){
+  document.getElementById('gate-title').textContent='Student Hub Editor';
+  document.getElementById('gate-desc').textContent='Enter your password to access the editor.';
+  document.getElementById('gate-form').innerHTML=`
+    <label>Password</label><input type="password" id="pw1" placeholder="Your password" onkeydown="if(event.key==='Enter')submitLogin()"/>
+    <button class="gate-btn" onclick="submitLogin()">Sign In</button>`;
+  document.getElementById('gate-reset-link').style.display='block';
+  setTimeout(()=>{const i=document.getElementById('pw1');if(i)i.focus();},50);
+}
+
+async function submitSetup(){
+  hideErr();
+  const p1=document.getElementById('pw1').value;
+  const p2=document.getElementById('pw2').value;
+  if(!p1){showErr('Please enter a password.');return;}
+  if(p1!==p2){showErr('Passwords do not match.');return;}
+  if(p1.length<4){showErr('Password must be at least 4 characters.');return;}
+  const hash=await sha256(p1);
+  localStorage.setItem(PW_KEY,hash);
+  sessionStorage.setItem(SESSION_KEY,'1');
+  openEditor();
+}
+
+async function submitLogin(){
+  hideErr();
+  const p=document.getElementById('pw1').value;
+  if(!p){showErr('Please enter your password.');return;}
+  const hash=await sha256(p);
+  const stored=localStorage.getItem(PW_KEY);
+  if(hash===stored){
+    sessionStorage.setItem(SESSION_KEY,'1');
+    openEditor();
+  } else {
+    showErr('Incorrect password. Try again.');
+    document.getElementById('pw1').value='';
+    document.getElementById('pw1').focus();
+  }
+}
+
+function showResetConfirm(){
+  if(confirm('This will clear your saved password. You\'ll create a new one. Continue?')){
+    localStorage.removeItem(PW_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById('gate-reset-link').style.display='none';
+    showSetup();
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+// ── Init auth ───────────────────────────────────────────────────────────────
+const hasPw=!!localStorage.getItem(PW_KEY);
+const hasSession=!!sessionStorage.getItem(SESSION_KEY);
+if(hasPw&&hasSession){ openEditor(); }
+else if(hasPw){ showLogin(); }
+else{ showSetup(); }
+
+// ── Draft data ───────────────────────────────────────────────────────────────
+const DRAFT_KEY='grizznet_draft';
+
+const DEFAULTS={
+  gradTotalCredits:'230',
+  gradColumns:['Subject Area','Credits Required'],
+  gradRequirements:[
+    ['English / Language Arts','40 (4 years)'],
+    ['Math','20–30'],
+    ['Science','20'],
+    ['Social Studies / History','30'],
+    ['Physical Education','20'],
+    ['Health','5'],
+    ['Fine Arts or CTE','10'],
+    ['Electives','Remaining']
+  ],
+  gradOtherRequirements:'',gradCreditCheck:'',
+  aidLocalScholarships:'',
+  advocacyBilingualContact:'',
+  handbookAttendance:'',handbookCellPhone:'',handbookDressCode:'',
+  handbookAcademicHonesty:'',handbookGrading:'',handbookDiscipline:'',
+  handbookScheduleChange:'',handbookCampusAccess:'',
+  supportCounselors:'',supportPsychologist:'',supportWellness:'',
+  supportSocialWorker:'',supportCheckIn:'',supportCommunity:''
+};
+
+function loadDraft(){
+  try{const d=localStorage.getItem(DRAFT_KEY);return d?JSON.parse(d):JSON.parse(JSON.stringify(DEFAULTS));}
+  catch(e){return JSON.parse(JSON.stringify(DEFAULTS));}
+}
+
+function saveDraft(data){
+  localStorage.setItem(DRAFT_KEY,JSON.stringify(data));
+  const b=document.getElementById('saved-badge');
+  if(b){b.textContent='✓ Saved';setTimeout(()=>{b.textContent=''},2000);}
+}
+
+let saveTimer=null;
+function autosave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveNow(),800);
+}
+
+function saveNow(){
+  saveDraft(collectForm());
+  refreshPreview();
+}
+
+function collectForm(){
+  const data=JSON.parse(JSON.stringify(DEFAULTS));
+  // Simple fields
+  const simpleKeys=['gradTotalCredits','gradOtherRequirements','gradCreditCheck',
+    'aidLocalScholarships','advocacyBilingualContact',
+    'handbookAttendance','handbookCellPhone','handbookDressCode','handbookAcademicHonesty',
+    'handbookGrading','handbookDiscipline','handbookScheduleChange','handbookCampusAccess',
+    'supportCounselors','supportPsychologist','supportWellness','supportSocialWorker',
+    'supportCheckIn','supportCommunity'];
+  simpleKeys.forEach(k=>{const el=document.getElementById('f_'+k);if(el)data[k]=el.value;});
+  // Grad requirements table — dynamic columns and rows
+  const colInputs=document.querySelectorAll('.req-col-header');
+  const dataRows=document.querySelectorAll('.req-data-row');
+  if(colInputs.length){
+    data.gradColumns=[...colInputs].map(i=>i.value);
+    data.gradRequirements=[...dataRows].map(tr=>[...tr.querySelectorAll('.req-cell')].map(i=>i.value));
+  }
+  return data;
+}
+
+function downloadData(){
+  const data=collectForm();
+  const js=`// school-data.js — Student Hub School Configuration\n// Generated by the editor. Upload this file to your GitHub repo.\n\nconst SCHOOL_DATA = ${JSON.stringify(data,null,2)};\n`;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([js],{type:'text/javascript'})),download:'school-data.js'});
+  a.click();
+}
+
+// ── Dynamic requirement table ─────────────────────────────────────────────────
+function normalizeReqData(d){
+  // Migrate old {subject,credits} object format to arrays
+  const cols=d.gradColumns||['Subject Area','Credits Required'];
+  const rows=(d.gradRequirements||[]).map(r=>{
+    if(Array.isArray(r)) return r;
+    return [r.subject||'',r.credits||''];
+  });
+  return {cols,rows};
+}
+
+function renderReqTable(){
+  const d=loadDraft();
+  const {cols,rows}=normalizeReqData(d);
+  const numCols=cols.length;
+
+  const thCells=cols.map((col,j)=>`
+    <th style="padding:0;border:1px solid var(--border)">
+      <div class="req-th-wrap">
+        <input class="req-col-header" value="${escAttr(col)}" oninput="autosave()" title="Edit column name"/>
+        <button class="req-del" onclick="removeReqCol(${j})" title="Delete column">×</button>
+      </div>
+    </th>`).join('')+
+    `<th class="req-add-col-th"><button class="req-add-col-btn" onclick="addReqCol()" title="Add column">＋</button></th>
+     <th style="width:28px;background:var(--brand-lt);border:1px solid var(--border)"></th>`;
+
+  const dataRows=rows.map((row,i)=>{
+    const cells=Array.from({length:numCols},(_,j)=>`
+      <td style="border:1px solid var(--border);padding:2px 4px">
+        <input class="req-cell" value="${escAttr(row[j]||'')}" oninput="autosave()"/>
+      </td>`).join('');
+    return `<tr class="req-data-row">${cells}
+      <td style="border:1px solid var(--border);padding:2px 4px;text-align:center;width:28px"></td>
+      <td style="border:1px solid var(--border);padding:2px;text-align:center;width:28px">
+        <button class="req-del" onclick="removeReqRow(${i})" title="Delete row">×</button>
+      </td></tr>`;
+  }).join('');
+
+  document.getElementById('req-table-wrap').innerHTML=
+    `<table class="req-table"><thead><tr>${thCells}</tr></thead><tbody>${dataRows}</tbody></table>`;
+}
+
+function addReqRow(){
+  const data=collectForm();
+  const numCols=(data.gradColumns||[]).length||2;
+  data.gradRequirements.push(Array(numCols).fill(''));
+  saveDraft(data);
+  renderReqTable();
+}
+
+function removeReqRow(i){
+  const data=collectForm();
+  data.gradRequirements.splice(i,1);
+  saveDraft(data);
+  renderReqTable();
+}
+
+function addReqCol(){
+  const data=collectForm();
+  data.gradColumns=data.gradColumns||['Subject Area','Credits Required'];
+  data.gradColumns.push('New Column');
+  data.gradRequirements=(data.gradRequirements||[]).map(r=>[...r,'']);
+  saveDraft(data);
+  renderReqTable();
+}
+
+function removeReqCol(j){
+  const data=collectForm();
+  if((data.gradColumns||[]).length<=1){alert('Table must have at least one column.');return;}
+  data.gradColumns.splice(j,1);
+  data.gradRequirements=(data.gradRequirements||[]).map(r=>{r.splice(j,1);return r;});
+  saveDraft(data);
+  renderReqTable();
+}
+
+// ── Form builder ─────────────────────────────────────────────────────────────
+function field(key,label,hint,type='text'){
+  const tag=type==='textarea'?'textarea':'input';
+  const extra=type==='textarea'?'':'type="text"';
+  return `<div class="field"><label>${label}</label><${tag} id="f_${key}" ${extra} oninput="autosave()" placeholder="${hint}"></${tag==='textarea'?'textarea':'input'}></div>`;
+}
+
+function buildForm(){
+  const d=loadDraft();
+  document.getElementById('editor-scroll').innerHTML=`
+
+  <details class="section-group" open>
+    <summary>🎓 Graduation Requirements</summary>
+    <div class="section-body">
+      <div class="field"><label>Total Credits to Graduate</label>
+        <input id="f_gradTotalCredits" type="text" value="${escAttr(d.gradTotalCredits)}" oninput="autosave()" placeholder="e.g. 230"/></div>
+      <div class="field"><label>Subject Area Requirements</label>
+        <div id="req-table-wrap"></div>
+        <button class="req-add-row" onclick="addReqRow()">＋ Add Row</button>
+        <div class="hint" style="margin-top:6px">Edit cells directly. Use ＋ buttons to add rows or columns; × to remove them.</div></div>
+      <div class="field"><label>Other Requirements (beyond credits)</label>
+        <textarea id="f_gradOtherRequirements" oninput="autosave()" placeholder="e.g. Senior project, 20 hours community service, passing writing assessment...">${escHtml(d.gradOtherRequirements)}</textarea></div>
+      <div class="field"><label>How Students Check Their Credits</label>
+        <textarea id="f_gradCreditCheck" oninput="autosave()" placeholder="e.g. Log in to Aeries/StudentVUE → Transcript tab, or ask for a credit audit at the counseling office.">${escHtml(d.gradCreditCheck)}</textarea></div>
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>💰 Financial Aid</summary>
+    <div class="section-body">
+      <div class="field"><label>Local & School Scholarships</label>
+        <textarea id="f_aidLocalScholarships" oninput="autosave()" placeholder="List scholarships with name, deadline, amount, and how to apply. One per line or paragraph." style="min-height:140px">${escHtml(d.aidLocalScholarships)}</textarea>
+        <div class="hint">Students will see this in the Financial Aid → Local Scholarships section.</div></div>
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>✉️ Self-Advocacy</summary>
+    <div class="section-body">
+      <div class="field"><label>Bilingual Staff / Parent Liaison Contact</label>
+        <textarea id="f_advocacyBilingualContact" oninput="autosave()" placeholder="e.g. Bilingual Parent Liaison: Maria Gomez, Room 101, mgomez@school.edu, available Mon–Fri 7:30–3:30pm">${escHtml(d.advocacyBilingualContact)}</textarea></div>
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>📋 School Handbook</summary>
+    <div class="section-body">
+      <div class="field"><label>Attendance & Tardy Policy</label>
+        <textarea id="f_handbookAttendance" oninput="autosave()" placeholder="Paste or summarize your school's attendance policy...">${escHtml(d.handbookAttendance)}</textarea></div>
+      <div class="field"><label>Cell Phone / Technology Policy</label>
+        <textarea id="f_handbookCellPhone" oninput="autosave()" placeholder="">${escHtml(d.handbookCellPhone)}</textarea></div>
+      <div class="field"><label>Dress Code</label>
+        <textarea id="f_handbookDressCode" oninput="autosave()" placeholder="">${escHtml(d.handbookDressCode)}</textarea></div>
+      <div class="field"><label>Academic Honesty / Cheating Policy</label>
+        <textarea id="f_handbookAcademicHonesty" oninput="autosave()" placeholder="">${escHtml(d.handbookAcademicHonesty)}</textarea></div>
+      <div class="field"><label>Grading & Grade Appeals</label>
+        <textarea id="f_handbookGrading" oninput="autosave()" placeholder="">${escHtml(d.handbookGrading)}</textarea></div>
+      <div class="field"><label>Discipline Procedures</label>
+        <textarea id="f_handbookDiscipline" oninput="autosave()" placeholder="">${escHtml(d.handbookDiscipline)}</textarea></div>
+      <div class="field"><label>How to Request a Schedule Change</label>
+        <textarea id="f_handbookScheduleChange" oninput="autosave()" placeholder="">${escHtml(d.handbookScheduleChange)}</textarea></div>
+      <div class="field"><label>Campus Access Rules</label>
+        <textarea id="f_handbookCampusAccess" oninput="autosave()" placeholder="">${escHtml(d.handbookCampusAccess)}</textarea></div>
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>💚 Support & Resources</summary>
+    <div class="section-body">
+      <div class="field"><label>School Counselor(s)</label>
+        <textarea id="f_supportCounselors" oninput="autosave()" placeholder="Name, caseload (A–L), room number, office hours&#10;e.g. Ms. Rivera (A–L), Room 204, Tue/Thu 7:30–8am & lunch">${escHtml(d.supportCounselors)}</textarea></div>
+      <div class="field"><label>School Psychologist</label>
+        <textarea id="f_supportPsychologist" oninput="autosave()" placeholder="Name, how to make an appointment">${escHtml(d.supportPsychologist)}</textarea></div>
+      <div class="field"><label>Wellness Center / Wellness Room</label>
+        <textarea id="f_supportWellness" oninput="autosave()" placeholder="Location, hours, what students can access there">${escHtml(d.supportWellness)}</textarea></div>
+      <div class="field"><label>Social Worker</label>
+        <textarea id="f_supportSocialWorker" oninput="autosave()" placeholder="Name and how to reach them (if applicable)">${escHtml(d.supportSocialWorker)}</textarea></div>
+      <div class="field"><label>How to Request a Confidential Check-In</label>
+        <textarea id="f_supportCheckIn" oninput="autosave()" placeholder="e.g. Fill out the form in the counseling office, or email your counselor directly.">${escHtml(d.supportCheckIn)}</textarea></div>
+      <div class="field"><label>Community Resources</label>
+        <textarea id="f_supportCommunity" oninput="autosave()" placeholder="Local mental health clinics, county resources, food/housing help, youth programs..." style="min-height:140px">${escHtml(d.supportCommunity)}</textarea></div>
+    </div>
+  </details>`;
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
+
+// ── Layout toggle ────────────────────────────────────────────────────────────
+let isSplit=false;
+function toggleLayout(){
+  isSplit=!isSplit;
+  const ca=document.getElementById('content-area');
+  const btn=document.getElementById('layout-btn');
+  if(isSplit){
+    ca.classList.remove('layout-tabs');ca.classList.add('layout-split');
+    btn.textContent='☰ Tabbed View';
+  } else {
+    ca.classList.remove('layout-split');ca.classList.add('layout-tabs');
+    btn.textContent='⇄ Side by Side';
+    showTab('edit');
+  }
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function showTab(tab){
+  const ca=document.getElementById('content-area');
+  const te=document.getElementById('tab-edit');
+  const tp=document.getElementById('tab-preview');
+  if(tab==='preview'){
+    ca.classList.add('show-preview');
+    te.classList.remove('on');tp.classList.add('on');
+    refreshPreview();
+  } else {
+    ca.classList.remove('show-preview');
+    te.classList.add('on');tp.classList.remove('on');
+  }
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+function refreshPreview(){
+  const f=document.getElementById('preview-iframe');
+  if(f) f.src='hub.html?t='+Date.now();
+}
+
+// ── Open editor ───────────────────────────────────────────────────────────────
+function openEditor(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='flex';
+  buildForm();
+  renderReqTable();
+}
+</script>
+</body>
+</html>

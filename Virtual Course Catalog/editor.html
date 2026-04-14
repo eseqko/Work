@@ -320,8 +320,81 @@ tr:hover td { background: #fafbfc; }
   display: flex; align-items: flex-start; gap: 6px; line-height: 1.55;
 }
 </style>
+<style>
+/* Auth gate (shared with hub-editor / dashboard) */
+#catalog-gate{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.cg-box{background:#fff;border-radius:14px;padding:36px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.cg-box h2{color:var(--navy);margin-bottom:8px;font-size:1.3rem}
+.cg-box p{color:#555;font-size:.9rem;margin-bottom:20px;line-height:1.45}
+.cg-box input{width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:1rem;margin-bottom:12px;outline:none;font-family:inherit}
+.cg-box input:focus{border-color:var(--navy)}
+.cg-box button{background:var(--navy);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:1rem;cursor:pointer;width:100%;font-weight:600}
+.cg-box button:hover{filter:brightness(1.15)}
+#cg-err{color:#c00;font-size:.85rem;margin-top:8px;min-height:18px}
+.cg-link{display:block;margin-top:10px;font-size:.78rem;color:#666;text-decoration:none}
+.cg-link:hover{color:var(--navy);text-decoration:underline}
+</style>
 </head>
 <body>
+
+<!-- Shared password gate (uses same keys as hub-editor/dashboard) -->
+<div id="catalog-gate" style="display:none">
+  <div class="cg-box">
+    <h2 id="cg-heading">Catalog Editor</h2>
+    <p id="cg-subtext">Enter your admin password to continue.</p>
+    <input type="password" id="cg-pw" placeholder="Password" onkeydown="if(event.key==='Enter')cgLogin()">
+    <button onclick="cgLogin()">Unlock</button>
+    <div id="cg-err"></div>
+    <a class="cg-link" href="index.html">← Back to Dashboard</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  const PW_KEY='grizznet_editor_pw', SK='grizznet_auth';
+  async function sha256(s){
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  const stored=localStorage.getItem(PW_KEY);
+  const active=sessionStorage.getItem(SK);
+  const gate=document.getElementById('catalog-gate');
+
+  if(!stored){
+    // First-time setup — force user to set up at dashboard first
+    gate.style.display='flex';
+    document.getElementById('cg-heading').textContent='Set Up Admin Password';
+    document.getElementById('cg-subtext').textContent='No admin password has been set yet. Please set one up from the Dashboard first.';
+    document.getElementById('cg-pw').style.display='none';
+    document.querySelector('.cg-box button').style.display='none';
+    return;
+  }
+
+  if(active){
+    // Already unlocked
+    gate.style.display='none';
+    return;
+  }
+
+  // Needs login
+  gate.style.display='flex';
+  setTimeout(()=>{const i=document.getElementById('cg-pw');if(i)i.focus();},50);
+
+  window.cgLogin=async function(){
+    const pw=document.getElementById('cg-pw').value;
+    const err=document.getElementById('cg-err');
+    const hash=await sha256(pw);
+    if(hash===stored){
+      sessionStorage.setItem(SK,'1');
+      gate.style.display='none';
+    } else {
+      err.textContent='Incorrect password.';
+      document.getElementById('cg-pw').value='';
+      document.getElementById('cg-pw').focus();
+    }
+  };
+})();
+</script>
 
 <header>
   <div class="hdr-left">
@@ -333,7 +406,8 @@ tr:hover td { background: #fafbfc; }
   </div>
   <div class="hdr-actions">
     <button class="btn btn-white" onclick="openImportModal()" title="Import catalog from file">📥 Import</button>
-    <a href="index.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
+    <a href="index.html" class="btn btn-white" title="Back to Dashboard">← Dashboard</a>
+    <a href="catalog.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
     <button class="btn btn-gdoc" onclick="openGDocModal()">📄 → Google Doc</button>
     <button class="btn btn-pdf" onclick="downloadCatalogPDF()">📕 → PDF</button>
     <button class="btn btn-gold" onclick="openExportModal()">⬇ Export &amp; Save</button>
@@ -709,18 +783,18 @@ tr:hover td { background: #fafbfc; }
     </div>
     <div class="modal-body">
       <div class="export-box">
-        Your edits are saved in this browser tab. To make them permanent in the catalog, download the updated <strong>index.html</strong> file and replace the current one in your project folder.
+        Your edits are saved in this browser tab. To make them permanent in the catalog, download the updated <strong>catalog.html</strong> file and replace the current one in your project folder.
       </div>
       <ol class="export-steps">
-        <li>Click <strong>Download index.html</strong> below.</li>
+        <li>Click <strong>Download catalog.html</strong> below.</li>
         <li>Go to your project folder (where the catalog files live).</li>
-        <li>Replace the existing <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">index.html</code> with the downloaded file.</li>
+        <li>Replace the existing <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">catalog.html</code> with the downloaded file.</li>
         <li>Re-embed in Google Sites if needed.</li>
       </ol>
     </div>
     <div class="modal-footer">
       <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeExport()">Cancel</button>
-      <button class="btn btn-gold" onclick="downloadCatalog()">⬇ Download index.html</button>
+      <button class="btn btn-gold" onclick="downloadCatalog()">⬇ Download catalog.html</button>
     </div>
   </div>
 </div>
@@ -1222,12 +1296,12 @@ function saveCourse() {
 }
 
 /* ═══════════════════════════════════════════════════
-   EXPORT — builds updated index.html (courses + info)
+   EXPORT — builds updated catalog.html (courses + info)
 ═══════════════════════════════════════════════════ */
 function downloadCatalog() {
   _loadIndexHtml(function(html) {
     if (!html) {
-      showToast('Could not load index.html — download JSON data instead.', 'warn');
+      showToast('Could not load catalog.html — download JSON data instead.', 'warn');
       _downloadJson();
       return;
     }
@@ -1235,7 +1309,7 @@ function downloadCatalog() {
     const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
     let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
     if (updated === html) {
-      showToast('Could not patch courses in index.html — downloading JSON instead.', 'warn');
+      showToast('Could not patch courses in catalog.html — downloading JSON instead.', 'warn');
       _downloadJson();
       return;
     }
@@ -1245,9 +1319,9 @@ function downloadCatalog() {
     const blob = new Blob([updated], {type: 'text/html'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'index.html';
+    a.download = 'catalog.html';
     a.click();
-    showToast('⬇ Downloaded! Replace your index.html file.', 'success');
+    showToast('⬇ Downloaded! Replace your catalog.html file.', 'success');
     closeExport();
   });
 }
@@ -1256,7 +1330,7 @@ function _loadIndexHtml(callback) {
   // Try XMLHttpRequest first (works on file:// protocol)
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'index.html', true);
+    xhr.open('GET', 'catalog.html', true);
     xhr.onload = function() {
       if (xhr.status === 200 || (xhr.status === 0 && xhr.responseText.length > 100)) {
         callback(xhr.responseText);
