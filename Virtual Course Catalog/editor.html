@@ -1347,16 +1347,37 @@ function downloadCatalog() {
 }
 
 function _patchAndDownload(html) {
-  // Patch COURSES array
-  const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
-  let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
-  if (updated === html) {
-    showToast('Could not find the COURSES array in that file — is this catalog.html?', 'warn');
+  // Quick sanity check: does this even look like an HTML file?
+  const looksLikeHtml = /<!DOCTYPE\s+html|<html[\s>]/i.test(html);
+  if (!looksLikeHtml) {
+    showToast('That file doesn\'t look like an HTML file. Please pick catalog.html from your folder.', 'warn');
     return;
   }
+  // Warn if they picked the wrong HTML file (editor.html or hub.html)
+  if (/id=["']?editor-shell["']?|Catalog Editor/i.test(html) && !/const\s+COURSES\s*=\s*\[/.test(html)) {
+    showToast('That looks like editor.html, not catalog.html. Please pick the catalog.html file.', 'warn');
+    return;
+  }
+  if (/Student Resource Hub|hub-editor|id=["']?hub-shell["']?/i.test(html) && !/const\s+COURSES\s*=\s*\[/.test(html)) {
+    showToast('That looks like hub.html, not catalog.html. Please pick the catalog.html file.', 'warn');
+    return;
+  }
+  // Patch COURSES array — accept const/let/var with flexible whitespace
+  const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
+  const coursesRe = /(?:const|let|var)\s+COURSES\s*=\s*\[[\s\S]*?\];/;
+  if (!coursesRe.test(html)) {
+    showToast('That file doesn\'t contain a COURSES array. Make sure you picked catalog.html (not editor.html or hub.html).', 'warn');
+    return;
+  }
+  let updated = html.replace(coursesRe, newCourses);
   // Patch INFO object (between comment markers)
   const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
-  updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
+  const infoRe = /\/\*\s*INFO_SEED_START\s*\*\/[\s\S]*?\/\*\s*INFO_SEED_END\s*\*\//;
+  if (infoRe.test(updated)) {
+    updated = updated.replace(infoRe, newInfo);
+  } else {
+    showToast('⚠ COURSES patched but INFO markers missing. Your school info wasn\'t updated.', 'warn');
+  }
   const blob = new Blob([updated], {type: 'text/html'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
