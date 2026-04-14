@@ -37,6 +37,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 
 /* ── Layout modes ── */
 .content-area{display:flex;flex:1;overflow:hidden}
+.content-area.layout-tabs{flex-direction:column}
+.content-area.layout-split{flex-direction:row}
 
 /* Split */
 .layout-split .editor-panel{width:50%;border-right:1px solid var(--border)}
@@ -44,7 +46,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 .layout-split .tab-btns{display:none}
 
 /* Tabs */
-.layout-tabs .editor-panel,.layout-tabs .preview-panel{width:100%}
+.layout-tabs .editor-panel,.layout-tabs .preview-panel{width:100%;flex:1;min-height:0}
 .layout-tabs .preview-panel{display:none}
 .layout-tabs.show-preview .preview-panel{display:flex!important;flex-direction:column}
 .layout-tabs.show-preview .editor-panel{display:none}
