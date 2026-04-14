@@ -1225,32 +1225,59 @@ function saveCourse() {
    EXPORT — builds updated index.html (courses + info)
 ═══════════════════════════════════════════════════ */
 function downloadCatalog() {
-  fetch('index.html')
-    .then(r => r.text())
-    .then(html => {
-      // Patch COURSES array
-      const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
-      let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
-      // Patch INFO object (between comment markers)
-      const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
-      updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
-      const blob = new Blob([updated], {type: 'text/html'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'index.html';
-      a.click();
-      showToast('⬇ Downloaded! Replace your index.html file.', 'success');
-      closeExport();
-    })
-    .catch(() => {
-      const blob = new Blob([JSON.stringify({courses, info: infoData}, null, 2)], {type:'application/json'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'catalog_data.json';
-      a.click();
-      showToast('⬇ Downloaded data as JSON.', 'warn');
-      closeExport();
-    });
+  _loadIndexHtml(function(html) {
+    if (!html) {
+      showToast('Could not load index.html — download JSON data instead.', 'warn');
+      _downloadJson();
+      return;
+    }
+    // Patch COURSES array
+    const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
+    let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
+    if (updated === html) {
+      showToast('Could not patch courses in index.html — downloading JSON instead.', 'warn');
+      _downloadJson();
+      return;
+    }
+    // Patch INFO object (between comment markers)
+    const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
+    updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
+    const blob = new Blob([updated], {type: 'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'index.html';
+    a.click();
+    showToast('⬇ Downloaded! Replace your index.html file.', 'success');
+    closeExport();
+  });
+}
+
+function _loadIndexHtml(callback) {
+  // Try XMLHttpRequest first (works on file:// protocol)
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'index.html', true);
+    xhr.onload = function() {
+      if (xhr.status === 200 || (xhr.status === 0 && xhr.responseText.length > 100)) {
+        callback(xhr.responseText);
+      } else {
+        callback(null);
+      }
+    };
+    xhr.onerror = function() { callback(null); };
+    xhr.send();
+  } catch(e) {
+    callback(null);
+  }
+}
+
+function _downloadJson() {
+  const blob = new Blob([JSON.stringify({courses, info: infoData}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'catalog_data.json';
+  a.click();
+  closeExport();
 }
 
 /* ═══════════════════════════════════════════════════
