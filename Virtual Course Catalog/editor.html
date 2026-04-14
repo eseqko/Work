@@ -1301,29 +1301,68 @@ function saveCourse() {
 function downloadCatalog() {
   _loadIndexHtml(function(html) {
     if (!html) {
-      showToast('Could not load catalog.html — download JSON data instead.', 'warn');
-      _downloadJson();
+      // XHR can't reach catalog.html (file:// protocol, sandboxed iframe, etc).
+      // Fall back to a file picker so the user can pick catalog.html manually.
+      _promptForCatalogFile(function(pickedHtml){
+        if (!pickedHtml) {
+          showToast('Export cancelled. JSON fallback not used.', 'warn');
+          return;
+        }
+        _patchAndDownload(pickedHtml);
+      });
       return;
     }
-    // Patch COURSES array
-    const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
-    let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
-    if (updated === html) {
-      showToast('Could not patch courses in catalog.html — downloading JSON instead.', 'warn');
-      _downloadJson();
-      return;
-    }
-    // Patch INFO object (between comment markers)
-    const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
-    updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
-    const blob = new Blob([updated], {type: 'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'catalog.html';
-    a.click();
-    showToast('⬇ Downloaded! Replace your catalog.html file.', 'success');
-    closeExport();
+    _patchAndDownload(html);
   });
+}
+
+function _patchAndDownload(html) {
+  // Patch COURSES array
+  const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
+  let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
+  if (updated === html) {
+    showToast('Could not find the COURSES array in that file — is this catalog.html?', 'warn');
+    return;
+  }
+  // Patch INFO object (between comment markers)
+  const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
+  updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
+  const blob = new Blob([updated], {type: 'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'catalog.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  showToast('⬇ Downloaded! Replace your catalog.html file.', 'success');
+  closeExport();
+}
+
+// Open a hidden <input type="file"> so the user picks catalog.html off disk.
+// Works over file:// and inside sandboxed iframes where XHR is blocked.
+function _promptForCatalogFile(callback) {
+  let input = document.getElementById('_catalog-file-picker');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.html,text/html';
+    input.id = '_catalog-file-picker';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+  // Reset value so change fires even if same file is picked twice
+  input.value = '';
+  input.onchange = function() {
+    const file = input.files && input.files[0];
+    if (!file) { callback(null); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) { callback(e.target.result); };
+    reader.onerror = function() {
+      showToast('Could not read that file.', 'warn');
+      callback(null);
+    };
+    reader.readAsText(file);
+  };
+  showToast('Select your catalog.html file to patch.', 'info');
+  input.click();
 }
 
 function _loadIndexHtml(callback) {

@@ -322,7 +322,12 @@ function logout(){
 // ── Init auth ───────────────────────────────────────────────────────────────
 const hasPw=!!localStorage.getItem(PW_KEY);
 const hasSession=!!sessionStorage.getItem(SESSION_KEY);
-if(hasPw&&hasSession){ openEditor(); }
+if(hasPw&&hasSession){
+  // Defer to the next tick so all const/function declarations below
+  // (DEFAULTS, loadDraft, buildForm, etc.) are initialized before
+  // openEditor runs. Otherwise loadDraft hits a temporal dead zone on DEFAULTS.
+  setTimeout(openEditor, 0);
+}
 else if(hasPw){ showLogin(); }
 else{ showSetup(); }
 
