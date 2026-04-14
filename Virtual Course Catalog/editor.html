@@ -156,6 +156,26 @@ tr:hover td { background: #fafbfc; }
 .field textarea { resize: vertical; min-height: 90px; }
 .field-hint { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
 
+/* ── Rich text editor ── */
+.rich-wrap { border: 1.5px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg); transition: border-color 0.15s; }
+.rich-wrap:focus-within { border-color: var(--navy); background: #fff; }
+.rich-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 5px; background: #eef1f5; border-bottom: 1px solid var(--border); }
+.rich-toolbar button { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer; color: var(--text); min-width: 26px; line-height: 1.2; font-family: inherit; }
+.rich-toolbar button:hover { background: #fff; border-color: var(--border); }
+.rich-toolbar button:active { background: var(--gold-light); border-color: var(--gold); }
+.rich-toolbar .rt-sep { width: 1px; background: var(--border); margin: 2px 3px; align-self: stretch; }
+.rich-toolbar .rt-b { font-weight: 800; }
+.rich-toolbar .rt-i { font-style: italic; }
+.rich-toolbar .rt-u { text-decoration: underline; }
+.rich-toolbar .rt-s { text-decoration: line-through; }
+.rich-edit { min-height: 80px; max-height: 360px; overflow-y: auto; padding: 8px 11px; font-size: 0.85rem; line-height: 1.5; outline: none; font-family: inherit; color: var(--text); background: #fff; }
+.rich-edit:empty:before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; display: block; }
+.rich-edit a { color: var(--navy); text-decoration: underline; }
+.rich-edit ul, .rich-edit ol { padding-left: 1.4em; margin: 4px 0; }
+.rich-edit p { margin: 0 0 6px; }
+.rich-edit mark { background: var(--gold-light); padding: 0 2px; border-radius: 2px; }
+.rich-wrap.rich-small .rich-edit { min-height: 50px; }
+
 /* ── Checkboxes ── */
 .check-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
 .check-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--navy); }
@@ -580,7 +600,7 @@ tr:hover td { background: #fafbfc; }
           <div class="info-label">Course Requirements (one per line: "years subject")</div>
           <textarea class="info-textarea" id="ncaa-d1" rows="7" oninput="saveInfoField()" style="margin-top:4px;font-family:'Courier New',monospace;font-size:0.78rem;"></textarea>
           <div class="info-label" style="margin-top:10px;">Notes / Test Score Info</div>
-          <textarea class="info-textarea" id="ncaa-d1Notes" rows="3" oninput="saveInfoField()" style="margin-top:4px;"></textarea>
+          <div id="ncaa-d1NotesWrap" style="margin-top:4px;"></div>
         </div>
         <div>
           <div class="info-label" style="font-size:0.85rem;margin-bottom:8px;">Division II</div>
@@ -590,7 +610,7 @@ tr:hover td { background: #fafbfc; }
           <div class="info-label">Course Requirements (one per line: "years subject")</div>
           <textarea class="info-textarea" id="ncaa-d2" rows="7" oninput="saveInfoField()" style="margin-top:4px;font-family:'Courier New',monospace;font-size:0.78rem;"></textarea>
           <div class="info-label" style="margin-top:10px;">Notes / Test Score Info</div>
-          <textarea class="info-textarea" id="ncaa-d2Notes" rows="3" oninput="saveInfoField()" style="margin-top:4px;"></textarea>
+          <div id="ncaa-d2NotesWrap" style="margin-top:4px;"></div>
         </div>
       </div>
     </div>
@@ -609,7 +629,7 @@ tr:hover td { background: #fafbfc; }
       </div>
       <div style="margin-bottom:12px;">
         <div class="info-label">Allowed Reasons for Schedule Changes</div>
-        <textarea class="info-textarea" id="sch-allowedReasons" rows="2" oninput="saveInfoField()"></textarea>
+        <div id="sch-allowedReasonsWrap"></div>
       </div>
       <div style="margin-bottom:12px;">
         <div class="info-label">Conflict Resolution Steps (one per line)</div>
@@ -617,7 +637,7 @@ tr:hover td { background: #fafbfc; }
       </div>
       <div>
         <div class="info-label">AP Commitment Policy</div>
-        <textarea class="info-textarea" id="sch-apPolicy" rows="3" oninput="saveInfoField()"></textarea>
+        <div id="sch-apPolicyWrap"></div>
       </div>
     </div>
   </div>
@@ -737,7 +757,7 @@ tr:hover td { background: #fafbfc; }
         </div>
         <div class="field form-full">
           <label>Course Description <span class="req">*</span></label>
-          <textarea id="fDesc" placeholder="Describe what students will learn, major topics, skills, and outcomes…"></textarea>
+          <div id="fDescWrap"></div>
         </div>
         <div class="field form-full">
           <label>Special Flags</label>
@@ -1114,7 +1134,7 @@ function getFiltered() {
     if (status === 'active'   && c.inactive) return false;
     if (status === 'inactive' && !c.inactive) return false;
     if (q) {
-      const hay = (c.name+' '+c.desc+' '+c.code+' '+(c.prereq||'')).toLowerCase();
+      const hay = (c.name+' '+stripHtml(c.desc)+' '+c.code+' '+(c.prereq||'')).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -1214,6 +1234,16 @@ function toggleActive(id) {
 /* ═══════════════════════════════════════════════════
    ADD / EDIT FORM
 ═══════════════════════════════════════════════════ */
+// Render the rich-text description editor into its wrapper with a starting value.
+function renderCourseDescEditor(value) {
+  document.getElementById('fDescWrap').innerHTML = richEdit(
+    'fDesc',
+    'Describe what students will learn, major topics, skills, and outcomes…',
+    value || '',
+    { oninput: '' }
+  );
+}
+
 function clearForm() {
   document.getElementById('fId').value = '';
   document.getElementById('fName').value = '';
@@ -1224,7 +1254,7 @@ function clearForm() {
   document.getElementById('fCode').value = '';
   document.getElementById('fAg').value = '';
   document.getElementById('fPrereq').value = '';
-  document.getElementById('fDesc').value = '';
+  renderCourseDescEditor('');
   document.getElementById('fCollege').checked = false;
   document.getElementById('fDual').checked = false;
   document.getElementById('fFullYear').checked = false;
@@ -1251,7 +1281,7 @@ function openEditModal(id) {
   document.getElementById('fCode').value        = c.code || '';
   document.getElementById('fAg').value          = c.ag || '';
   document.getElementById('fPrereq').value      = c.prereq || '';
-  document.getElementById('fDesc').value        = c.desc;
+  renderCourseDescEditor(c.desc);
   document.getElementById('fCollege').checked   = !!c.collegeCredit;
   document.getElementById('fDual').checked      = !!c.dualEnroll;
   document.getElementById('fFullYear').checked  = !!c.fullYear;
@@ -1261,7 +1291,7 @@ function openEditModal(id) {
 
 function saveCourse() {
   const name = document.getElementById('fName').value.trim();
-  const desc = document.getElementById('fDesc').value.trim();
+  const desc = rtRead('fDesc');
   const grade = document.getElementById('fGrade').value.trim();
   if (!name) { alert('Course Name is required.'); return; }
   if (!desc)  { alert('Description is required.'); return; }
@@ -1531,19 +1561,20 @@ function readInfoFields() {
   });
   // Post-Secondary (read rendered inputs)
   infoData.postSecondary.forEach((s,i) => {
-    const t = g('ps-title-'+i), d = g('ps-text-'+i);
+    const t = g('ps-title-'+i);
     if (t) s.title = t.value;
-    if (d) s.text  = d.value;
+    const rich = rtRead('ps-text-'+i);
+    if (document.getElementById('ps-text-'+i)) s.text = rich;
   });
   // NCAA
   infoData.ncaa.d1GPA   = g('ncaa-d1GPA').value;
-  infoData.ncaa.d1Notes = g('ncaa-d1Notes').value;
+  infoData.ncaa.d1Notes = rtRead('ncaa-d1Notes');
   infoData.ncaa.d1 = g('ncaa-d1').value.split('\n').map(line => {
     const m = line.trim().match(/^(\d+)\s+(.+)$/);
     return m ? {years:m[1], subject:m[2]} : null;
   }).filter(Boolean);
   infoData.ncaa.d2GPA   = g('ncaa-d2GPA').value;
-  infoData.ncaa.d2Notes = g('ncaa-d2Notes').value;
+  infoData.ncaa.d2Notes = rtRead('ncaa-d2Notes');
   infoData.ncaa.d2 = g('ncaa-d2').value.split('\n').map(line => {
     const m = line.trim().match(/^(\d+)\s+(.+)$/);
     return m ? {years:m[1], subject:m[2]} : null;
@@ -1551,9 +1582,9 @@ function readInfoFields() {
   // Scheduling
   infoData.scheduling.deadlineFall   = g('sch-deadlineFall').value;
   infoData.scheduling.deadlineSpring = g('sch-deadlineSpring').value;
-  infoData.scheduling.allowedReasons = g('sch-allowedReasons').value;
+  infoData.scheduling.allowedReasons = rtRead('sch-allowedReasons');
   infoData.scheduling.conflictSteps  = g('sch-conflictSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  infoData.scheduling.apPolicy       = g('sch-apPolicy').value;
+  infoData.scheduling.apPolicy       = rtRead('sch-apPolicy');
   // Grad Reqs are read on each row's input event via readGradReqRow()
   // a-g Course List
   if (!infoData.agList) infoData.agList = JSON.parse(JSON.stringify(INFO_SEED.agList));
@@ -1580,21 +1611,21 @@ function renderInfoEditor() {
   ['grade9','grade10','grade11','grade12'].forEach(k => {
     g('fy-'+k).value = I.fourYear[k].join('\n');
   });
-  // Post-Secondary
+  // Post-Secondary (also mounts rich editors)
   renderPostSecBody();
   // NCAA
   g('ncaa-d1GPA').value   = I.ncaa.d1GPA;
-  g('ncaa-d1Notes').value = I.ncaa.d1Notes;
+  g('ncaa-d1NotesWrap').innerHTML = richEdit('ncaa-d1Notes', 'Test scores, eligibility notes…', I.ncaa.d1Notes, { small: true });
   g('ncaa-d1').value      = I.ncaa.d1.map(r => r.years + ' ' + r.subject).join('\n');
   g('ncaa-d2GPA').value   = I.ncaa.d2GPA;
-  g('ncaa-d2Notes').value = I.ncaa.d2Notes;
+  g('ncaa-d2NotesWrap').innerHTML = richEdit('ncaa-d2Notes', 'Test scores, eligibility notes…', I.ncaa.d2Notes, { small: true });
   g('ncaa-d2').value      = I.ncaa.d2.map(r => r.years + ' ' + r.subject).join('\n');
   // Scheduling
   g('sch-deadlineFall').value   = I.scheduling.deadlineFall;
   g('sch-deadlineSpring').value = I.scheduling.deadlineSpring;
-  g('sch-allowedReasons').value = I.scheduling.allowedReasons;
+  g('sch-allowedReasonsWrap').innerHTML = richEdit('sch-allowedReasons', 'e.g. scheduling errors, inappropriate placement…', I.scheduling.allowedReasons, { small: true });
   g('sch-conflictSteps').value  = I.scheduling.conflictSteps.join('\n');
-  g('sch-apPolicy').value       = I.scheduling.apPolicy;
+  g('sch-apPolicyWrap').innerHTML = richEdit('sch-apPolicy', 'Describe your AP commitment policy…', I.scheduling.apPolicy);
   // Counselors
   renderCounselorTable();
   // a-g Course List
@@ -1641,7 +1672,7 @@ function renderPostSecBody() {
         <input class="info-input" id="ps-title-${i}" value="${escAttr(s.title)}" placeholder="Institution type title" oninput="saveInfoField()" style="font-weight:600;">
         <button class="btn btn-danger btn-sm btn-icon" onclick="removePostSec(${i})" title="Remove section">🗑</button>
       </div>
-      <textarea class="info-textarea" id="ps-text-${i}" rows="2" oninput="saveInfoField()">${escHtml(s.text)}</textarea>
+      ${richEdit('ps-text-'+i, 'Describe this post-secondary path…', s.text)}
     </div>
   `).join('') + `<button class="btn btn-success btn-sm" onclick="addPostSec()">＋ Add Section</button>`;
 }
@@ -1730,6 +1761,104 @@ function escAttr(s) {
 }
 
 /* ═══════════════════════════════════════════════════
+   RICH TEXT EDITOR
+═══════════════════════════════════════════════════ */
+// document.execCommand powers a lightweight rich editor. Selection is bound
+// to the focused contenteditable, so the toolbar's onmousedown prevents
+// focus from shifting when a button is clicked.
+function rt(cmd, val) {
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand(cmd, false, val || null);
+  rtFireInput();
+}
+function rtHilite() {
+  document.execCommand('styleWithCSS', false, true);
+  const color = '#f5e9c0'; // --gold-light
+  if (!document.execCommand('hiliteColor', false, color)) {
+    document.execCommand('backColor', false, color);
+  }
+  rtFireInput();
+}
+function rtLink() {
+  const url = prompt('Link URL (include https://)');
+  if (!url) return;
+  document.execCommand('createLink', false, url);
+  rtFireInput();
+}
+function rtPaste(ev) {
+  ev.preventDefault();
+  const text = (ev.clipboardData || window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+}
+// Synthesize an 'input' event on whichever rich editor currently has focus,
+// so the existing oninput handler fires (e.g. saveInfoField).
+function rtFireInput() {
+  const el = document.activeElement;
+  if (!el || !el.classList || !el.classList.contains('rich-edit')) return;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Migration: legacy plain-text values used \n. If a value has no HTML tags,
+// escape it and convert newlines to <br> so the contenteditable displays lines.
+function rtInitialHtml(v) {
+  const s = String(v || '');
+  if (!s) return '';
+  if (/<[a-zA-Z][^>]*>/.test(s)) return s;
+  return escHtml(s).replace(/\n/g, '<br>');
+}
+
+// Plain-text extraction for contexts that can't render HTML (PDF, Google Doc,
+// search indexing). Block-level tags become newlines; other tags are removed.
+function stripHtml(s) {
+  const str = String(s || '');
+  if (!str) return '';
+  if (!/<[a-zA-Z][^>]*>/.test(str)) return str;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = str
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|blockquote)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ');
+  return (tmp.textContent || tmp.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Read a contenteditable's current value, normalizing empty shells to ''.
+function rtRead(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  const html = el.innerHTML.trim();
+  if (!html || html === '<br>' || html === '<p></p>' || html === '<div><br></div>') return '';
+  return html;
+}
+
+// Build a rich-text field wrapper. oninput is dispatched automatically.
+// opts: { rows (informational only), small (bool), oninput (handler name) }
+function richEdit(id, placeholder, value, opts) {
+  opts = opts || {};
+  const oninput = opts.oninput || 'saveInfoField()';
+  const smallCls = opts.small ? ' rich-small' : '';
+  const init = rtInitialHtml(value);
+  return `<div class="rich-wrap${smallCls}">
+    <div class="rich-toolbar" onmousedown="event.preventDefault()">
+      <button type="button" class="rt-b" title="Bold (Ctrl+B)" onclick="rt('bold')">B</button>
+      <button type="button" class="rt-i" title="Italic (Ctrl+I)" onclick="rt('italic')">I</button>
+      <button type="button" class="rt-u" title="Underline (Ctrl+U)" onclick="rt('underline')">U</button>
+      <button type="button" class="rt-s" title="Strikethrough" onclick="rt('strikeThrough')">S</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Highlight" onclick="rtHilite()">🖍</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Bulleted list" onclick="rt('insertUnorderedList')">• List</button>
+      <button type="button" title="Numbered list" onclick="rt('insertOrderedList')">1. List</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Add link" onclick="rtLink()">🔗</button>
+      <button type="button" title="Remove link" onclick="rt('unlink')">⛓‍💥</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Clear formatting" onclick="rt('removeFormat')">⌫</button>
+    </div>
+    <div id="${id}" class="rich-edit" contenteditable="true" data-placeholder="${escAttr(placeholder||'')}" oninput="${oninput}" onpaste="rtPaste(event)">${init}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
    TOAST
 ═══════════════════════════════════════════════════ */
 let toastTimer;
@@ -1779,7 +1908,12 @@ async function copyGDocScript() {
 
 function generateGDocsScript() {
   const ts   = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
-  const data = JSON.stringify(courses, null, 2);
+  // Course descriptions may contain rich-text HTML. Google Apps Script can't
+  // render that, so flatten to plain text for the GDoc export.
+  const coursesForExport = courses.map(c => Object.assign({}, c, {
+    desc: stripHtml(c.desc)
+  }));
+  const data = JSON.stringify(coursesForExport, null, 2);
 
   const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
   const _sn = _sc.schoolName || 'Your School';
@@ -2301,7 +2435,7 @@ function downloadCatalogPDF() {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(55, 65, 81);
-        var descLines = doc.splitTextToSize(c.desc, CW - 10);
+        var descLines = doc.splitTextToSize(stripHtml(c.desc), CW - 10);
         for (var dl = 0; dl < descLines.length; dl++) {
           checkPage(12);
           doc.text(descLines[dl], ML + 10, y);
