@@ -1184,7 +1184,8 @@ function renderInfoPages() {
     <div class="info-page" id="page-fouryear">
       <div class="info-card">
         <h2>📅 Sample Four-Year Plan</h2>
-        <p>These are <em>sample</em> plans. Build your personal four-year plan at <strong>californiacolleges.edu</strong>.</p>
+        <p>These are <em>sample</em> plans. Use them as a starting template — then build <em>your</em> personal four-year plan at CaliforniaColleges.edu, where it links to your real transcript.</p>
+        <p style="margin:10px 0"><a href="https://www.californiacolleges.edu" target="_blank" rel="noopener" style="display:inline-block;background:#1B5E3B;color:#fff;padding:9px 18px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.9rem">🧭 Build your plan at CaliforniaColleges.edu →</a></p>
         <div class="four-year-grid" style="margin-top:14px;">
           ${[{emoji:'🟢',label:'9th Grade',key:'grade9'},{emoji:'🔵',label:'10th Grade',key:'grade10'},{emoji:'🟠',label:'11th Grade',key:'grade11'},{emoji:'🔴',label:'12th Grade',key:'grade12'}]
             .map(g => `<div class="grade-block"><h3>${g.emoji} ${g.label}</h3><ol>${I.fourYear[g.key].map(c=>`<li>${esc(c)}</li>`).join('')}</ol></div>`).join('')}

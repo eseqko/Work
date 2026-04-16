@@ -87,6 +87,48 @@ html[lang="ar"]{font-family:'Noto Sans Arabic','Arabic Typesetting',Arial,sans-s
 /* Fade in on section switch */
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .main>*{animation:fadeIn .18s ease}
+
+/* ASCA domain chips */
+.domain-chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 14px}
+.dchip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.dchip.ac{background:#DBEAFE;color:#1E3A8A}
+.dchip.cc{background:#FEF3C7;color:#78350F}
+.dchip.se{background:#DCFCE7;color:#14532D}
+
+/* Tier 1 / ASCA landing banner */
+.tier-banner{background:linear-gradient(135deg,var(--brand-lt),#DBEAFE);border:1.5px solid #BFD8C7;border-radius:var(--r);padding:14px 16px;margin-bottom:16px;font-size:.86rem;line-height:1.6}
+.tier-banner .tb-top{font-weight:800;color:var(--brand);font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.tier-banner .tb-domains{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+
+/* Visual tier pyramid (simple ASCII-style) */
+.pyramid{display:flex;flex-direction:column;align-items:center;gap:4px;margin:10px auto;max-width:360px;font-size:.75rem;font-weight:700;text-align:center}
+.pyr-row{width:100%;padding:7px 10px;border-radius:6px;color:#1A1A1A;line-height:1.3}
+.pyr-3{width:48%;background:#FECACA;color:#7F1D1D}
+.pyr-2{width:72%;background:#FDE68A;color:#78350F}
+.pyr-1{width:100%;background:#BBF7D0;color:#14532D}
+.pyr-label{font-size:.65rem;opacity:.8;font-weight:600;margin-top:2px}
+
+/* CCGI / highlight card inside answers */
+.ccgi-box{background:#F8FAFC;border:1.5px solid #CBD5E1;border-left:4px solid var(--brand);border-radius:6px;padding:11px 13px;margin:10px 0;font-size:.85rem}
+[dir=rtl] .ccgi-box{border-left:1.5px solid #CBD5E1;border-right:4px solid var(--brand)}
+.cta-btn{display:inline-block;background:var(--brand);color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem;margin-top:6px}
+.cta-btn.outline{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+
+/* Numbered step list */
+.steps{counter-reset:step;list-style:none;padding:0;margin:10px 0}
+.steps>li{counter-increment:step;position:relative;padding:0 0 10px 36px;min-height:28px}
+.steps>li::before{content:counter(step);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700}
+[dir=rtl] .steps>li{padding:0 36px 10px 0}
+[dir=rtl] .steps>li::before{left:auto;right:0}
+
+/* Section card grid (used on Start Here landing) */
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:12px 0}
+.sec-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 12px;cursor:pointer;transition:all .15s;text-align:left}
+.sec-card:hover{border-color:var(--brand);background:var(--brand-lt);transform:translateY(-1px)}
+.sec-card .sc-title{font-weight:700;color:var(--text);font-size:.85rem;margin:4px 0 3px}
+.sec-card .sc-icon{font-size:1.4rem}
+.sec-card .sc-domains{display:flex;gap:3px;margin-top:4px}
+.sec-card .sc-domains .dchip{font-size:.58rem;padding:2px 6px}
 </style>
 </head>
 <body>
@@ -124,8 +166,10 @@ const LANG={
 en:{
   meta:{title:"Student Resource Hub",tag:"Know your rights. Know your options.",footer:"For your specific situation, visit the counseling office in person — we're here for you.",notice:null},
   nav:[
+    {id:"start",icon:"👋",label:"Start Here"},
     {id:"graduation",icon:"🎓",label:"Graduation"},
     {id:"college",icon:"📚",label:"College Prep"},
+    {id:"ccgi",icon:"🧭",label:"CaliforniaColleges.edu"},
     {id:"aid",icon:"💰",label:"Financial Aid"},
     {id:"rights",icon:"⚖️",label:"Your Rights"},
     {id:"advocacy",icon:"✉️",label:"Self-Advocacy"},
@@ -134,7 +178,38 @@ en:{
     {id:"catalog",icon:"📖",label:"Course Catalog"}
   ],
   sections:{
-    graduation:{title:"Graduation Requirements",desc:"What you need to earn your diploma.",items:[
+    start:{title:"Welcome — Start Here",desc:"One place for everything you need. Available to every student, any time.",domains:['ac','cc','se'],items:[
+      {q:"What is this Hub?",a:`<p>This is your <strong>one-stop shop</strong> for school information — built so that <strong>every student</strong> can find answers, make plans, and get connected to support without having to make an appointment first.</p>
+<p>We organize everything around the three areas that shape your life at school:</p>
+<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:10px 0">
+  <div class="ccgi-box" style="border-left-color:#1E3A8A"><strong>📘 Academic</strong> — Graduation requirements, A-G, course catalog, handbook policies.</div>
+  <div class="ccgi-box" style="border-left-color:#92400E"><strong>🧭 College / Career</strong> — Post-secondary options, financial aid, CaliforniaColleges.edu, career exploration.</div>
+  <div class="ccgi-box" style="border-left-color:#14532D"><strong>💚 Social / Emotional</strong> — Your rights, self-advocacy tools, crisis resources, school support.</div>
+</div>
+<p style="margin-top:10px">Every section tells you what's available, who to talk to, and how to speak up for yourself. When this isn't enough, we'll always point you to the next step.</p>`},
+      {q:"How does this fit into the bigger picture? (ASCA / MTSS)",a:`<p>Your school counseling program is organized into <strong>tiers</strong> so that everyone gets support, and students who need more get more. This Hub is the first tier — the one that's for <em>everyone</em>.</p>
+<div class="pyramid">
+  <div class="pyr-row pyr-3">TIER 3 — Individual Counseling · Referral to Resources<div class="pyr-label">FEW students</div></div>
+  <div class="pyr-row pyr-2">TIER 2 — Small Groups · Consultation<div class="pyr-label">SOME students</div></div>
+  <div class="pyr-row pyr-1">TIER 1 — This Hub · Course Catalog · CaliforniaColleges.edu<div class="pyr-label">ALL students</div></div>
+</div>
+<p><strong>Tier 1 (where this Hub lives)</strong> is <em>universal</em>. It includes Individual Student Planning (your courses, A-G, 4-year plan) and School-Wide Activities (handbook, rights, support resources). You don't need permission — you just use it.</p>
+<p><strong>Tier 2 &amp; Tier 3</strong> are where your counselor works with you one-on-one or in small groups. Every section of this Hub points to those next steps when you need them.</p>
+<div class="callout">💡 <strong>Self-advocacy starts at Tier 1.</strong> Using this Hub, checking your own progress in CaliforniaColleges.edu, and walking into meetings prepared — that <em>is</em> advocacy.</div>`},
+      {q:"Where should I start?",a:`<div class="sec-grid">
+  <div class="sec-card" onclick="go('ccgi')"><div class="sc-icon">🧭</div><div class="sc-title">CaliforniaColleges.edu</div><div class="sc-domains"><span class="dchip ac">AC</span><span class="dchip cc">CC</span><span class="dchip se">SE</span></div></div>
+  <div class="sec-card" onclick="go('graduation')"><div class="sc-icon">🎓</div><div class="sc-title">Graduation</div><div class="sc-domains"><span class="dchip ac">AC</span></div></div>
+  <div class="sec-card" onclick="go('college')"><div class="sc-icon">📚</div><div class="sc-title">College Prep &amp; A-G</div><div class="sc-domains"><span class="dchip ac">AC</span><span class="dchip cc">CC</span></div></div>
+  <div class="sec-card" onclick="go('aid')"><div class="sc-icon">💰</div><div class="sc-title">Financial Aid</div><div class="sc-domains"><span class="dchip cc">CC</span></div></div>
+  <div class="sec-card" onclick="go('advocacy')"><div class="sc-icon">✉️</div><div class="sc-title">Self-Advocacy</div><div class="sc-domains"><span class="dchip se">SE</span></div></div>
+  <div class="sec-card" onclick="go('rights')"><div class="sc-icon">⚖️</div><div class="sc-title">Your Rights</div><div class="sc-domains"><span class="dchip se">SE</span></div></div>
+  <div class="sec-card" onclick="go('support')"><div class="sc-icon">💚</div><div class="sc-title">Support</div><div class="sc-domains"><span class="dchip se">SE</span></div></div>
+  <div class="sec-card" onclick="go('handbook')"><div class="sc-icon">📋</div><div class="sc-title">Handbook</div><div class="sc-domains"><span class="dchip ac">AC</span></div></div>
+  <div class="sec-card" onclick="go('catalog')"><div class="sc-icon">📖</div><div class="sc-title">Course Catalog</div><div class="sc-domains"><span class="dchip ac">AC</span></div></div>
+</div>
+<p style="margin-top:6px;font-size:.82rem;color:#6B7280">Not sure? Start with <strong>CaliforniaColleges.edu</strong> — it's the one tool that connects all three areas.</p>`}
+    ]},
+    graduation:{title:"Graduation Requirements",desc:"What you need to earn your diploma.",domains:['ac'],items:[
       {q:"What do I need to graduate?",a:(()=>{
         const sd=getSD();
         const total=sdVal('gradTotalCredits','');
@@ -165,7 +240,7 @@ en:{
 <div class="callout">📌 Don't wait until senior year. Make a plan with your counselor now.</div>`},
       {q:"What other requirements are there?",a:`<p>Beyond credits, some schools may require a senior project, community service hours, or passing an assessment. Your school's specific requirements:</p>`+sdBlock('gradOtherRequirements','Add your school\'s non-credit graduation requirements in the editor.')}
     ]},
-    college:{title:"College Prep & A-G Requirements",desc:"Understanding your options after high school.",items:[
+    college:{title:"College Prep & A-G Requirements",desc:"Understanding your options after high school.",domains:['ac','cc'],items:[
       {q:"What are A-G requirements?",a:`<p><strong>A-G requirements</strong> are the specific courses you need to be eligible to apply to a UC or CSU. They are <em>separate</em> from graduation requirements — you can graduate without them, but you won't be UC/CSU eligible.</p>
 <div class="callout">💡 Completing A-G keeps more doors open, even if you're unsure about college now.</div>`},
       {q:"The 7 A-G subject areas",a:`<table><tr><th>Area</th><th>Subject</th><th>Required</th></tr>
@@ -184,13 +259,117 @@ en:{
 <tr><td><strong>Transfer path</strong></td><td>Can transfer from CC</td><td>Can transfer from CC</td><td>Transfers to UC/CSU</td></tr></table>
 <div class="callout">💡 Community college is a completely valid path. Many students transfer to UC/CSU after 2 years — sometimes with a guaranteed spot (TAG agreement).</div>`},
       {q:"Am I on track? How do I check?",a:`<p>Ask your counselor for a <em>graduation and A-G audit</em>. It shows which areas you've completed, which you're in, and what's still missing.</p>
+<div class="ccgi-box">🧭 <strong>Check it yourself right now</strong> — CaliforniaColleges.edu shows your real A-G progress using your actual transcript. <a href="#" onclick="go('ccgi');return false;" class="cta-btn outline" style="margin-top:8px">How to use CCGI →</a></div>
 <p><strong>General timeline:</strong></p>
 <ul><li><strong>9th:</strong> Start strong — GPA counts from day one</li>
 <li><strong>10th:</strong> Take the PSAT; check your A-G progress</li>
 <li><strong>11th:</strong> SAT/ACT if needed; visit colleges; meet with your counselor about applications</li>
 <li><strong>12th:</strong> Apply to UCs/CSUs by November 30; watch each school's deadlines</li></ul>`}
     ]},
-    aid:{title:"Financial Aid & Scholarships",desc:"How to pay for college — there's more help than you think.",items:[
+    ccgi:{title:"CaliforniaColleges.edu — Your Self-Advocacy Toolkit",desc:"One tool for all three ASCA domains. Free. Linked to your real transcript. Use it to check your own progress and walk into every meeting prepared.",domains:['ac','cc','se'],items:[
+      {q:"What is CaliforniaColleges.edu — and why is it yours?",a:`<p><strong>CaliforniaColleges.edu</strong> (sometimes called <strong>CCGI</strong>) is California's free, state-run planning platform for all 7th–12th graders in the state. Your account is <strong>already linked to your real transcript</strong> — not a copy you type in, not a screenshot, the actual course and grade data your school reports.</p>
+<p>That matters because it's the only place you can see, in one view:</p>
+<ul>
+  <li>📘 Your real-time <strong>A-G progress</strong> from the grades you've actually earned</li>
+  <li>🧭 A personal <strong>4-year plan</strong> you can update as you go</li>
+  <li>🧭 The full <strong>College Dashboard</strong> — UCs, CSUs, privates, community colleges</li>
+  <li>🧭 A <strong>Career Dashboard</strong> with interest inventories and career matches</li>
+  <li>💚 An <strong>Action Plan</strong> to track every deadline — FAFSA, CADAA, applications, scholarships</li>
+</ul>
+<div class="callout">💡 <strong>This is your account.</strong> Not your counselor's, not your school's — yours. Self-advocacy starts with knowing what's already available to you.</div>
+<p style="margin-top:10px"><a href="https://www.californiacolleges.edu" target="_blank" class="cta-btn">🧭 Go to CaliforniaColleges.edu →</a></p>`},
+      {q:"How do I sign in at our school?",a:(()=>{
+        const v=sdVal('ccgiSignIn','');
+        if(v){
+          return renderSD(v)+
+          `<div class="callout">🔒 If you get locked out or your account isn't linked yet, talk to your counselor or the CCGI point person listed below.</div>`;
+        }
+        return `<p>Most California schools connect to CaliforniaColleges.edu through your school email or district single sign-on (SSO). Try these in order:</p>
+<ol class="steps">
+  <li>Go to <strong><a href="https://www.californiacolleges.edu" target="_blank">californiacolleges.edu</a></strong> and click <strong>Sign In</strong>.</li>
+  <li>Choose "<strong>Sign in with Google</strong>" or "<strong>Clever</strong>" and use your school email.</li>
+  <li>If that doesn't work, try "<strong>Sign in with California Colleges</strong>" and use the credentials your school provided.</li>
+  <li>If you're still locked out, ask your counselor — your account just needs to be linked to your student ID.</li>
+</ol>
+<div class="callout">📌 Your counselor can add the exact sign-in steps for our school in this Hub's editor.</div>`;
+      })()},
+      {q:"📘 Academic — Check your A-G progress (the Courses tab)",a:`<p>This is the self-advocacy superpower. CCGI pulls your real transcript and shows exactly where you stand on each A-G subject area.</p>
+<ol class="steps">
+  <li>Sign in → click <strong>Dashboard</strong>.</li>
+  <li>Open the <strong>Courses</strong> tab.</li>
+  <li>Scroll through each A-G area (A through G) — you'll see every course you've taken, its grade, and whether it counts.</li>
+  <li>Look for <strong>green checks</strong> (on track), <strong>yellow</strong> (in progress), and <strong>anything missing or miscoded</strong>.</li>
+</ol>
+<p><strong>Your monthly self-check — do this at the start of every semester:</strong></p>
+<ul>
+  <li>✅ Are all my semester grades posted?</li>
+  <li>✅ Is every A-G course correctly flagged?</li>
+  <li>⚠️ Any gaps for this year? Any "D" grades that need retaking?</li>
+  <li>⚠️ Anything that should count but isn't counting?</li>
+</ul>
+<div class="callout">📌 Catch mistakes <em>early</em>. Grade miscodes happen — fixing them in November is a lot easier than in May of senior year. If you see something wrong, email your counselor with a screenshot.</div>`},
+      {q:"📘 Academic — Build your 4-year plan",a:`<p>Your 4-year plan is a living document you can update every semester. It's where you see the whole picture — not just this year.</p>
+<ol class="steps">
+  <li>Dashboard → <strong>Plan</strong> tab → "<strong>My 4-Year Plan</strong>".</li>
+  <li>Start with your completed courses (already filled in from your transcript).</li>
+  <li>Drag and drop courses into future semesters — the tool flags conflicts and A-G gaps.</li>
+  <li>Save a draft. Update it every time you pick classes for next year.</li>
+</ol>
+<div class="ccgi-box">💡 <strong>Pro tip:</strong> Open our <a href="catalog.html#4year" target="_blank">Sample Four-Year Plans</a> side-by-side with CCGI. Use the sample as your starting template, then personalize it for your pathway in CCGI.</div>`},
+      {q:"🧭 College / Career — Explore colleges (College Dashboard)",a:`<p>Search, compare, and save colleges from one place.</p>
+<ol class="steps">
+  <li>Click the <strong>College</strong> tab.</li>
+  <li>Filter by system (UC, CSU, CCC, private), location, major, size, cost.</li>
+  <li>Open any college to see admission requirements, cost of attendance, average GPA, and financial aid stats.</li>
+  <li><strong>Heart/save</strong> colleges you're interested in — they'll live in your "My Colleges" list.</li>
+</ol>
+<p><strong>Self-advocacy move:</strong> Come to your junior/senior counselor meeting with 3-5 saved colleges already. That turns a generic "let's talk college" into a specific conversation about <em>your</em> list, <em>your</em> requirements, and <em>your</em> plan.</p>`},
+      {q:"🧭 College / Career — Explore careers (Career Dashboard)",a:`<p>Not sure what you want to do? Start here.</p>
+<ol class="steps">
+  <li>Click the <strong>Career</strong> tab.</li>
+  <li>Take the <strong>interest inventory</strong> (takes ~10 minutes).</li>
+  <li>Browse your <strong>career matches</strong> — each one shows typical salary, education required, and day-in-the-life videos.</li>
+  <li>Save careers that sound interesting — you can revisit them any time.</li>
+</ol>
+<div class="callout">💡 Your career interests will change — that's normal and healthy. The point isn't to lock in an answer at 15, it's to have a few directions to explore.</div>`},
+      {q:"💰 College / Career — My Action Plan &amp; Financial Aid",a:`<p>This is where CCGI helps you <strong>not miss deadlines</strong>.</p>
+<ol class="steps">
+  <li>Dashboard → <strong>My Action Plan</strong>.</li>
+  <li>Check off each task by grade level — CCGI shows what's due this year.</li>
+  <li>The <strong>Financial Aid</strong> section walks you through FAFSA or CADAA step by step.</li>
+  <li>Application deadlines for every saved college appear in one calendar view.</li>
+</ol>
+<p>Pair this with our <a href="#" onclick="go('aid');return false;">Financial Aid section</a> in this Hub for the "why" behind each step.</p>`},
+      {q:"💚 Social / Emotional — Your data, your voice",a:(()=>{
+        const custom=sdVal('ccgiDataVoice','');
+        const base=`<p>Here's the thing schools don't always say out loud: <strong>the data in CCGI is what adults look at when they decide how you're doing.</strong> Your A-G progress, your saved colleges, your 4-year plan, your career inventory — all of that shows up in counselor conversations.</p>
+<p>That's not scary. It's <em>power</em>. Because it also means:</p>
+<ul>
+  <li>When you <strong>keep your plan current</strong>, you're literally shaping the conversation.</li>
+  <li>When you <strong>catch a miscoded A-G course</strong>, you're advocating for yourself in a way that matters on transcripts and applications.</li>
+  <li>When you <strong>walk into a meeting with CCGI open</strong>, you're showing up as a participant in your own plan — not just a passenger.</li>
+</ul>
+<div class="callout">💪 <strong>Self-advocacy isn't about being loud.</strong> It's about being prepared, being accurate, and knowing what's available. CCGI hands you all three.</div>`;
+        return base+(custom?`<div style="margin-top:10px"><strong>At our school:</strong>${renderSD(custom)}</div>`:'');
+      })()},
+      {q:"Be your own best advocate — use CCGI in meetings",a:(()=>{
+        const contact=sdVal('ccgiContactStaff','');
+        const notes=sdVal('ccgiSchoolNotes','');
+        const base=`<p>Before your next counselor meeting, spend 10 minutes in CCGI and bring 3 things:</p>
+<ol class="steps">
+  <li>🖼️ A <strong>screenshot of your A-G Courses tab</strong> (green/yellow/red at a glance)</li>
+  <li>📝 Your <strong>current 4-year plan</strong> — even if it's messy, bring it</li>
+  <li>❓ <strong>1–3 specific questions</strong> you have after reviewing both</li>
+</ol>
+<div class="callout">🗣️ <strong>Sample opener:</strong> "I looked at my CCGI Courses tab and noticed [X]. I want to make sure I'm on track for [goal]. Can we look at it together?"</div>
+<p>This turns your counselor meeting from a generic check-in into a focused working session. It respects their time and centers <em>your</em> priorities.</p>`;
+        let tail='';
+        if(contact) tail+=`<div style="margin-top:12px"><strong>CCGI point person at our school:</strong>${renderSD(contact)}</div>`;
+        if(notes) tail+=`<div style="margin-top:10px"><strong>Our school's CCGI workflow:</strong>${renderSD(notes)}</div>`;
+        return base+tail;
+      })()}
+    ]},
+    aid:{title:"Financial Aid & Scholarships",desc:"How to pay for college — there's more help than you think.",domains:['cc'],items:[
       {q:"What is FAFSA?",a:`<p><strong>FAFSA</strong> = Free Application for Federal Student Aid. It's the form that determines how much financial aid you can receive for college. It is <strong>free to submit</strong>.</p>
 <div class="callout">📌 Apply even if you think your family earns too much. Many students are surprised. There's no downside to applying.</div>
 <p><strong>Apply at:</strong> studentaid.gov &nbsp;|&nbsp; <strong>You'll need:</strong> Your SSN, parent's tax info, and an FSA ID (created at studentaid.gov — both you and a parent need one).</p>`},
@@ -211,7 +390,7 @@ en:{
 <div class="callout">⏰ Earlier = more money. Some aid is first-come, first-served.</div>`},
       {q:"Local and school scholarships",a:`<p>Free scholarship search tools: <strong>Scholarships.com</strong>, <strong>Fastweb</strong>, your college's financial aid office, and organizations tied to your heritage or career interests.</p>`+sdBlock('aidLocalScholarships','Add local scholarships with deadlines and application info in the editor.')}
     ]},
-    rights:{title:"Your Rights as a Student",desc:"You have more rights than you might know.",items:[
+    rights:{title:"Your Rights as a Student",desc:"You have more rights than you might know.",domains:['se'],items:[
       {q:"My right to a free education",a:`<p>Every student in the U.S. has the right to a free public education <strong>regardless of immigration status</strong>. This was established by the Supreme Court in <em>Plyler v. Doe</em> (1982).</p>
 <p>Schools <strong>cannot</strong> ask about your immigration status, require a Social Security Number for enrollment, or deny you enrollment based on where you're from.</p>
 <div class="callout">🔒 If anyone at school asks about your immigration status, you don't have to answer. You can speak with your counselor confidentially.</div>`},
@@ -229,7 +408,7 @@ en:{
       {q:"My rights around discipline",a:`<p>Before being suspended, schools must: tell you what you're accused of, give you a chance to share your side, and notify your parents or guardians.</p>
 <p>California law restricts suspensions for "willful defiance." If you believe you were disciplined unfairly: ask for a copy of the disciplinary record, request a meeting with a parent/guardian, and ask your counselor about the appeals process.</p>`}
     ]},
-    advocacy:{title:"Self-Advocacy",desc:"How to speak up, ask for help, and get what you need.",items:[
+    advocacy:{title:"Self-Advocacy",desc:"How to speak up, ask for help, and get what you need.",domains:['se'],items:[
       {q:"How to email a teacher",a:`<p>A good email is short, respectful, and specific. Copy and adapt this template:</p>
 <div class="tbox">Subject: Question about [Class Name] — [Your Name], Period [X]
 
@@ -263,7 +442,7 @@ Thank you for your time.
 <li>Key documents must be translated into your home language upon request</li>
 <li>The school cannot require you to bring your own interpreter</li></ul>`+sdBlock('advocacyBilingualContact','Add your bilingual staff or parent/student liaison contact info in the editor.')}
     ]},
-    handbook:{title:"School Handbook",desc:"Key school policies in plain language.",items:[
+    handbook:{title:"School Handbook",desc:"Key school policies in plain language.",domains:['ac'],items:[
       {q:"About this section",a:(()=>{
       const sd=getSD();
       const fields=[['handbookAttendance','Attendance & tardies'],['handbookCellPhone','Cell phone policy'],['handbookDressCode','Dress code'],['handbookAcademicHonesty','Academic honesty'],['handbookGrading','Grading & appeals'],['handbookDiscipline','Discipline procedures'],['handbookScheduleChange','Schedule changes'],['handbookCampusAccess','Campus access']];
@@ -272,7 +451,7 @@ Thank you for your time.
       return filled.map(([k,label])=>`<div style="margin-bottom:12px"><strong>${label}:</strong>${renderSD(sd[k])}</div>`).join('');
     })()}
     ]},
-    support:{title:"Support & Resources",desc:"You don't have to go through hard things alone.",items:[
+    support:{title:"Support & Resources",desc:"You don't have to go through hard things alone.",domains:['se'],items:[
       {q:"Crisis resources — if you need help right now",a:`<p>If someone is in immediate danger, <strong>call 911</strong>.</p>
 <table><tr><th>Resource</th><th>Contact</th><th>Hours</th></tr>
 <tr><td><strong>988 Suicide &amp; Crisis Lifeline</strong></td><td>Call or text <strong>988</strong></td><td>24/7</td></tr>
@@ -296,7 +475,7 @@ Thank you for your time.
 <ul><li>Stress about grades, college, or the future</li><li>Family stress or conflict at home</li><li>Feeling like you don't belong or that people don't get you</li><li>Grief, loss, or big changes</li><li>Questions about who you are or what you want</li></ul>
 <p><strong>Your counselor's job is to support you — not to judge you.</strong></p>`}
     ]},
-    catalog:{title:"Course Catalog",desc:"Browse all courses offered at our school.",items:[
+    catalog:{title:"Course Catalog",desc:"Browse all courses offered at our school.",domains:['ac'],items:[
       {q:"Open the Course Catalog",a:`<p>The Course Catalog lets you browse all available classes by department — including descriptions, prerequisites, and A-G information.</p>
 <p style="margin-top:12px"><a href="catalog.html" target="_blank" style="display:inline-block;background:var(--brand);color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.9rem">📖 Open Course Catalog →</a></p>
 <p style="margin-top:10px;font-size:.85rem;color:#6B7280">Opens in a new tab. Use the back button to return here.</p>`}
@@ -305,17 +484,17 @@ Thank you for your time.
 },
 es:{
   meta:{title:"Centro de Recursos para Estudiantes",tag:"Conoce tus derechos. Conoce tus opciones.",footer:"Para tu situación específica, visita la oficina de consejería en persona — estamos aquí para ti.",notice:"Algunas secciones aún no han sido traducidas al español. Se muestra el contenido en inglés por ahora."},
-  nav:[{id:"graduation",icon:"🎓",label:"Graduación"},{id:"college",icon:"📚",label:"Preparación Universitaria"},{id:"aid",icon:"💰",label:"Ayuda Financiera"},{id:"rights",icon:"⚖️",label:"Tus Derechos"},{id:"advocacy",icon:"✉️",label:"Autodefensa"},{id:"handbook",icon:"📋",label:"Reglamento Escolar"},{id:"support",icon:"💚",label:"Apoyo"},{id:"catalog",icon:"📖",label:"Catálogo de Cursos"}],
+  nav:[{id:"start",icon:"👋",label:"Empezar Aquí"},{id:"graduation",icon:"🎓",label:"Graduación"},{id:"college",icon:"📚",label:"Preparación Universitaria"},{id:"ccgi",icon:"🧭",label:"CaliforniaColleges.edu"},{id:"aid",icon:"💰",label:"Ayuda Financiera"},{id:"rights",icon:"⚖️",label:"Tus Derechos"},{id:"advocacy",icon:"✉️",label:"Autodefensa"},{id:"handbook",icon:"📋",label:"Reglamento Escolar"},{id:"support",icon:"💚",label:"Apoyo"},{id:"catalog",icon:"📖",label:"Catálogo de Cursos"}],
   sections:{}
 },
 ar:{
   meta:{title:"مركز موارد الطلاب",tag:"اعرف حقوقك. اعرف خياراتك.",footer:"للحصول على مساعدة في وضعك الخاص، قم بزيارة مكتب المرشد الطلابي شخصيًا — نحن هنا من أجلك.",notice:"بعض الأقسام لم تُترجم إلى العربية بعد. يتم عرض المحتوى الإنجليزي في الوقت الحالي."},
-  nav:[{id:"graduation",icon:"🎓",label:"التخرج"},{id:"college",icon:"📚",label:"الاستعداد للجامعة"},{id:"aid",icon:"💰",label:"المساعدات المالية"},{id:"rights",icon:"⚖️",label:"حقوقك"},{id:"advocacy",icon:"✉️",label:"المناصرة الذاتية"},{id:"handbook",icon:"📋",label:"دليل المدرسة"},{id:"support",icon:"💚",label:"الدعم والموارد"},{id:"catalog",icon:"📖",label:"دليل المقررات"}],
+  nav:[{id:"start",icon:"👋",label:"ابدأ هنا"},{id:"graduation",icon:"🎓",label:"التخرج"},{id:"college",icon:"📚",label:"الاستعداد للجامعة"},{id:"ccgi",icon:"🧭",label:"CaliforniaColleges.edu"},{id:"aid",icon:"💰",label:"المساعدات المالية"},{id:"rights",icon:"⚖️",label:"حقوقك"},{id:"advocacy",icon:"✉️",label:"المناصرة الذاتية"},{id:"handbook",icon:"📋",label:"دليل المدرسة"},{id:"support",icon:"💚",label:"الدعم والموارد"},{id:"catalog",icon:"📖",label:"دليل المقررات"}],
   sections:{}
 },
 fil:{
   meta:{title:"Student Resource Hub",tag:"Alamin ang iyong mga karapatan. Alamin ang iyong mga pagpipilian.",footer:"Para sa iyong partikular na sitwasyon, bisitahin ang opisina ng counseling — nandito kami para sa iyo.",notice:"Ang ilang seksyon ay hindi pa naisalin sa Filipino. Ang English na nilalaman ay ipinapakita sa ngayon."},
-  nav:[{id:"graduation",icon:"🎓",label:"Graduation"},{id:"college",icon:"📚",label:"Paghahanda sa Kolehiyo"},{id:"aid",icon:"💰",label:"Tulong Pinansyal"},{id:"rights",icon:"⚖️",label:"Ang Iyong mga Karapatan"},{id:"advocacy",icon:"✉️",label:"Self-Advocacy"},{id:"handbook",icon:"📋",label:"Handbook ng Paaralan"},{id:"support",icon:"💚",label:"Suporta"},{id:"catalog",icon:"📖",label:"Katalogo ng Kurso"}],
+  nav:[{id:"start",icon:"👋",label:"Magsimula Dito"},{id:"graduation",icon:"🎓",label:"Graduation"},{id:"college",icon:"📚",label:"Paghahanda sa Kolehiyo"},{id:"ccgi",icon:"🧭",label:"CaliforniaColleges.edu"},{id:"aid",icon:"💰",label:"Tulong Pinansyal"},{id:"rights",icon:"⚖️",label:"Ang Iyong mga Karapatan"},{id:"advocacy",icon:"✉️",label:"Self-Advocacy"},{id:"handbook",icon:"📋",label:"Handbook ng Paaralan"},{id:"support",icon:"💚",label:"Suporta"},{id:"catalog",icon:"📖",label:"Katalogo ng Kurso"}],
   sections:{}
 }
 };
@@ -443,8 +622,21 @@ function sdBlock(key,placeholderHtml){
   return renderSD(v);
 }
 
+// ASCA domain chip labels
+const DOMAIN_META={
+  ac:{label:'Academic',cls:'ac'},
+  cc:{label:'College / Career',cls:'cc'},
+  se:{label:'Social / Emotional',cls:'se'}
+};
+function domainChips(domains){
+  if(!domains||!domains.length) return '';
+  return `<div class="domain-chips">${domains.map(d=>{
+    const m=DOMAIN_META[d]; return m?`<span class="dchip ${m.cls}">${m.label}</span>`:'';
+  }).join('')}</div>`;
+}
+
 // State
-let S={lang:'en',sec:'graduation',open:new Set(['graduation-0'])};
+let S={lang:'en',sec:'start',open:new Set(['start-0'])};
 
 function L(){return LANG[S.lang]}
 function sec(id){
@@ -511,7 +703,7 @@ function renderMain(){
   const l=L();
   let html='';
   if(fallback&&l.meta.notice) html+=`<div class="t-note">🌐 ${l.meta.notice}</div>`;
-  html+=`<div class="sec-title">${s.title}</div><div class="sec-desc">${s.desc}</div><div class="acc">`;
+  html+=`<div class="sec-title">${s.title}</div><div class="sec-desc">${s.desc}</div>${domainChips(s.domains)}<div class="acc">`;
   s.items.forEach((item,i)=>{
     const key=`${S.sec}-${i}`;
     const open=S.open.has(key);
