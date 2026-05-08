@@ -509,12 +509,15 @@ Thank you for your time.
 <li>The school cannot require you to bring your own interpreter</li></ul>`+sdBlock('advocacyBilingualContact','Add your bilingual staff or parent/student liaison contact info in the editor.')}
     ]},
     handbook:{title:"School Handbook",desc:"Key school policies in plain language.",domains:['ac'],items:[
-      {q:"About this section",a:(()=>{
+      {q:"Open the full Student Handbook",a:`<p>The Student Handbook contains all school policies, schedules, and important information in one searchable document.</p>
+<p style="margin-top:12px"><a href="handbook.html" target="_blank" class="cta-btn">📋 Open Student Handbook →</a></p>
+<p style="margin-top:10px;font-size:.82rem;color:#6B7280">Opens in a new tab. Use the back button to return here.</p>`},
+      {q:"Quick reference — key policies",a:(()=>{
       const sd=getSD();
-      const fields=[['handbookAttendance','Attendance & tardies'],['handbookCellPhone','Cell phone policy'],['handbookDressCode','Dress code'],['handbookAcademicHonesty','Academic honesty'],['handbookGrading','Grading & appeals'],['handbookDiscipline','Discipline procedures'],['handbookScheduleChange','Schedule changes'],['handbookCampusAccess','Campus access']];
+      const fields=[['handbookAttendance','Attendance & tardies'],['handbookCellPhone','Technology policy'],['handbookDressCode','Dress code'],['handbookAcademicHonesty','Academic integrity'],['handbookGrading','Grading & appeals'],['handbookDiscipline','Discipline procedures'],['handbookScheduleChange','Schedule changes'],['handbookCampusAccess','Campus access']];
       const filled=fields.filter(([k])=>sdVal(k,''));
-      if(!filled.length) return '<div class="callout">📌 Handbook policies not filled in yet. Use the editor to add your school\'s key policies.</div>';
-      return filled.map(([k,label])=>`<div style="margin-bottom:12px"><strong>${label}:</strong>${renderSD(sd[k])}</div>`).join('');
+      if(!filled.length) return '<div class="callout">📌 Handbook policies not filled in yet. Use the editor to add your school\'s key policies, or open the full handbook above.</div>';
+      return '<p>Quick summaries of key policies (see the full handbook for complete details):</p>'+filled.map(([k,label])=>`<div style="margin-bottom:12px"><strong>${label}:</strong>${renderSD(sd[k])}</div>`).join('');
     })()}
     ]},
     support:{title:"Support & Resources",desc:"You don't have to go through hard things alone.",domains:['se'],items:[

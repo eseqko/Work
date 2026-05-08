@@ -82,5 +82,22 @@ const SCHOOL_DATA = {
   "supportWellness": "",
   "supportSocialWorker": "",
   "supportCheckIn": "",
-  "supportCommunity": ""
+  "supportCommunity": "",
+  "ccgiSignIn": "",
+  "ccgiDistrictCode": "",
+  "ccgiContactStaff": "",
+  "ccgiSchoolNotes": "",
+  "ccgiDataVoice": "",
+  "handbookContacts": "",
+  "handbookBellSchedule": "",
+  "handbookCounseling": "",
+  "handbookHomework": "",
+  "handbookHealth": "",
+  "handbookActivities": "",
+  "handbookAthletics": "",
+  "handbookTransportation": "",
+  "handbookDistrictPolicies": "",
+  "handbookParentsCommunity": "",
+  "handbookAIPolicy": "",
+  "handbookGeneralRules": ""
 };
