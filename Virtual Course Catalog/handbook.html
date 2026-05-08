@@ -122,7 +122,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <script src="school-data.js"></script>
 
 <div id="hdr"></div>
-<div id="tabs"></div>
+<div class="tabs" id="tabs"></div>
 <div class="wrap">
   <nav class="side" id="side"></nav>
   <main class="main" id="main"></main>
@@ -148,11 +148,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 })();
 
 function getSD(){
+  const base=(typeof SCHOOL_DATA!=='undefined')?Object.assign({},SCHOOL_DATA):{};
   try{
     const raw=localStorage.getItem('grizznet_draft');
-    if(raw){const d=JSON.parse(raw);if(d&&typeof d==='object')return d;}
+    if(raw){const d=JSON.parse(raw);if(d&&typeof d==='object'){
+      for(const k in d){if(!isBlank(d[k]))base[k]=d[k];}
+    }}
   }catch(e){}
-  return (typeof SCHOOL_DATA!=='undefined')?SCHOOL_DATA:{};
+  return base;
 }
 
 function isBlank(v){
