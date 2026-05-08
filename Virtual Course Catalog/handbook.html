@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Student Handbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#0F2044;--brand-mid:#1B3468;--brand-lt:#E2E8F3;
+  --accent:#C8A64A;--accent-dk:#9A7B2E;--accent-lt:#F5EDD0;
+  --gold-shine:linear-gradient(135deg,#D4B04A 0%,#E8D48B 45%,#C8A64A 75%,#A68A3A 100%);
+  --bg:#FAF7F0;--surface:#FFFEF8;--text:#0F1B2D;--muted:#5C6B82;
+  --border:#D4C9A8;--border-gold:#C8A64A33;
+  --r:10px;--sw:230px;
+  --font-d:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-b:'Cal Sans','DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-ui:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --sh-card:0 1px 3px rgba(15,32,68,.06),0 4px 14px rgba(15,32,68,.04);
+  --sh-lift:0 2px 6px rgba(15,32,68,.1),0 10px 28px rgba(15,32,68,.07);
+  --sh-inset:inset 0 2px 4px rgba(15,32,68,.05);
+  --sh-gold:0 0 0 1px var(--accent),0 0 0 3px var(--surface),0 0 0 4px var(--border)
+}
+@font-face{font-family:'Cal Sans';font-synthesis:none}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font-b);background:var(--bg);color:var(--text);font-size:16px;line-height:1.65;font-synthesis:none}
+strong,b{font-family:var(--font-d);font-weight:700}
+
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.022;
+  background-image:url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.hdr{background:linear-gradient(180deg,var(--brand) 0%,#0A1830 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;top:0;z-index:100;
+  box-shadow:0 3px 12px rgba(15,32,68,.25),inset 0 -1px 0 var(--accent);
+  border-bottom:2.5px solid var(--accent)}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.hdr-title{font-family:var(--font-d);font-size:1.1rem;font-weight:700;line-height:1.2;letter-spacing:.3px}
+.hdr-tag{font-size:.7rem;opacity:.65;font-weight:400;font-style:italic;font-family:var(--font-b)}
+.hdr-links{display:flex;gap:8px;flex-shrink:0}
+.hdr-btn{background:rgba(255,255,255,.08);border:1px solid rgba(200,166,74,.35);color:rgba(255,255,255,.8);border-radius:6px;padding:5px 12px;font-family:var(--font-ui);font-size:.72rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;white-space:nowrap}
+.hdr-btn:hover{background:rgba(200,166,74,.15);color:#fff;border-color:var(--accent)}
+
+.wrap{display:flex;min-height:calc(100vh - 58px)}
+
+.side{width:var(--sw);background:var(--surface);border-right:1.5px solid var(--border);padding:14px 0;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;flex-shrink:0;
+  box-shadow:inset -6px 0 12px -6px rgba(15,32,68,.04);
+  background-image:linear-gradient(180deg,#FFFDF5 0%,#F8F4E8 100%)}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-family:var(--font-ui);font-size:.8rem;font-weight:500;color:var(--muted);border-left:3.5px solid transparent;transition:all .2s;user-select:none;position:relative}
+.ni:hover{background:var(--brand-lt);color:var(--brand)}
+.ni.on{background:linear-gradient(90deg,var(--brand-lt),transparent);color:var(--brand);border-left-color:var(--accent);font-weight:700;font-family:var(--font-d)}
+.ni.on::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--accent);border-radius:3px 0 0 3px;opacity:.4}
+.ni-icon{font-size:1rem;flex-shrink:0}
+
+.main{flex:1;padding:30px 32px 60px;max-width:780px;min-width:0}
+
+.handbook-section{margin-bottom:40px;scroll-margin-top:70px}
+.handbook-section:last-child{margin-bottom:20px}
+.sec-title{font-family:var(--font-d);font-size:1.4rem;font-weight:700;color:var(--brand);margin-bottom:2px;letter-spacing:.1px}
+.sec-title::after{content:'';display:block;width:48px;height:3px;background:var(--gold-shine);border-radius:2px;margin-top:6px}
+.sec-icon{margin-right:8px}
+
+.handbook-content{font-size:.88rem;line-height:1.75;margin-top:14px}
+.handbook-content p{margin-bottom:10px}
+.handbook-content p:last-child{margin-bottom:0}
+.handbook-content ul,.handbook-content ol{padding-left:1.3em;margin:6px 0 10px}
+.handbook-content li{margin:4px 0}
+.handbook-content li::marker{color:var(--accent)}
+.handbook-content strong{font-weight:700;color:var(--brand)}
+.handbook-content a{color:var(--brand-mid);text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:2px;transition:color .15s}
+.handbook-content a:hover{color:var(--accent-dk)}
+.handbook-content table{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem;margin:10px 0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--sh-inset)}
+.handbook-content th{background:var(--brand);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-family:var(--font-d);font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--accent)}
+.handbook-content td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.handbook-content tr:last-child td{border-bottom:none}
+.handbook-content tr:nth-child(even) td{background:rgba(200,166,74,.04)}
+.handbook-content tr:hover td{background:rgba(200,166,74,.08)}
+.handbook-content h3,.handbook-content h4{font-family:var(--font-d);color:var(--brand);margin:16px 0 6px}
+.handbook-content h3{font-size:1rem;font-weight:700}
+.handbook-content h4{font-size:.9rem;font-weight:600}
+
+.sub-title{font-family:var(--font-d);font-size:1.05rem;font-weight:700;color:var(--brand-mid);margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--border)}
+.sub-title:first-of-type{margin-top:12px;padding-top:0;border-top:none}
+
+.callout{background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);border-left:4px solid var(--accent);padding:11px 14px;border-radius:0 var(--r) var(--r) 0;margin:14px 0;font-size:.83rem;color:#5A4506;
+  box-shadow:var(--sh-card);position:relative}
+.callout::before{content:'';position:absolute;left:-4px;top:0;bottom:0;width:4px;background:var(--gold-shine);border-radius:4px 0 0 4px}
+
+.gold-rule{border:none;height:1.5px;background:var(--gold-shine);margin:16px 0;opacity:.5}
+
+.foot{background:var(--brand);border-top:2.5px solid var(--accent);padding:13px 20px;font-size:.8rem;color:rgba(255,255,255,.75);text-align:center;font-family:var(--font-b);font-style:italic;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.15)}
+
+.tabs{display:none;overflow-x:auto;background:linear-gradient(180deg,var(--surface),#F8F4E8);border-bottom:2px solid var(--accent);position:sticky;top:58px;z-index:90;scrollbar-width:none;padding:0 6px;
+  box-shadow:0 2px 8px rgba(15,32,68,.06)}
+.tabs::-webkit-scrollbar{display:none}
+.ti{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;font-family:var(--font-ui);font-size:.64rem;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;flex-shrink:0;transition:all .15s}
+.ti.on{color:var(--brand);border-bottom-color:var(--accent);font-weight:700;font-family:var(--font-d)}
+.ti-icon{font-size:.9rem}
+
+@media(max-width:640px){
+  .side{display:none}
+  .tabs{display:flex}
+  .wrap{flex-direction:column}
+  .main{padding:16px 14px 40px}
+  .sec-title{font-size:1.2rem}
+  .hdr-links{display:none}
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.main>*{animation:fadeIn .22s ease}
+
+@media print{
+  .hdr,.side,.tabs,.foot{display:none!important}
+  body::before{display:none!important}
+  .wrap{display:block}
+  .main{max-width:100%;padding:0}
+  .handbook-section{break-inside:avoid;page-break-inside:avoid;margin-bottom:24px}
+}
+</style>
+</head>
+<body>
+<script src="school-config.js"></script>
+<script src="school-data.js"></script>
+
+<div id="hdr"></div>
+<div id="tabs"></div>
+<div class="wrap">
+  <nav class="side" id="side"></nav>
+  <main class="main" id="main"></main>
+</div>
+<div id="foot"></div>
+
+<script>
+(function(){
+  if(window.SchoolConfig){
+    SchoolConfig.init();
+    const cfg=SchoolConfig.load();
+    if(cfg.colors&&cfg.colors.primary){
+      document.documentElement.style.setProperty('--brand',cfg.colors.primary);
+      document.documentElement.style.setProperty('--brand-mid',SchoolConfig.colorUtils.darken(cfg.colors.primary,8));
+    }
+    if(cfg.colors&&cfg.colors.secondary){
+      document.documentElement.style.setProperty('--accent',cfg.colors.secondary);
+    }
+    if(cfg.setupComplete){
+      document.title=(cfg.shortName||cfg.schoolName)+' Student Handbook';
+    }
+  }
+})();
+
+function getSD(){
+  try{
+    const raw=localStorage.getItem('grizznet_draft');
+    if(raw){const d=JSON.parse(raw);if(d&&typeof d==='object')return d;}
+  }catch(e){}
+  return (typeof SCHOOL_DATA!=='undefined')?SCHOOL_DATA:{};
+}
+
+function isBlank(v){
+  if(v==null) return true;
+  if(typeof v==='string') return !v.trim();
+  if(Array.isArray(v)) return !v.length||v.every(r=>Array.isArray(r)?r.every(c=>!c||!String(c).trim()):!r||!String(r).trim());
+  return false;
+}
+
+function sdVal(key,fallback){
+  const sd=getSD();
+  if(!isBlank(sd[key])) return sd[key];
+  return fallback;
+}
+
+function renderSD(v){
+  const s=String(v||'');
+  if(!s) return '';
+  if(/<[a-zA-Z][^>]*>/.test(s)) return s;
+  const esc=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<p>'+esc.replace(/\n/g,'<br>')+'</p>';
+}
+
+const SECTIONS=[
+  {id:'contacts',icon:'📞',title:'Contact Information & Communication',short:'Contacts',
+   key:'handbookContacts'},
+  {id:'bell-schedule',icon:'🔔',title:'Bell Schedule',short:'Schedule',
+   key:'handbookBellSchedule'},
+  {id:'attendance',icon:'📋',title:'Attendance Policies & Procedures',short:'Attendance',
+   key:'handbookAttendance'},
+  {id:'counseling',icon:'🤝',title:'School Counseling Services',short:'Counseling',
+   key:'handbookCounseling'},
+  {id:'schedule-change',icon:'🔄',title:'Schedule Changes',short:'Sched. Changes',
+   key:'handbookScheduleChange'},
+  {id:'homework',icon:'📝',title:'Homework & Makeup Procedures',short:'Homework',
+   key:'handbookHomework'},
+  {id:'grading',icon:'📊',title:'Grading & Grade Appeals',short:'Grading',
+   key:'handbookGrading'},
+  {id:'academic-integrity',icon:'🎓',title:'Academic Integrity',short:'Integrity',
+   keys:[
+     {key:'handbookAcademicHonesty',subtitle:'Academic Honesty Policy'},
+     {key:'handbookAIPolicy',subtitle:'AI / Technology Use in Academics'}
+   ]},
+  {id:'activities',icon:'🎉',title:'Student Activities',short:'Activities',
+   key:'handbookActivities'},
+  {id:'athletics',icon:'🏆',title:'Athletics',short:'Athletics',
+   key:'handbookAthletics'},
+  {id:'health',icon:'🏥',title:'Health & Wellness',short:'Health',
+   key:'handbookHealth'},
+  {id:'technology',icon:'💻',title:'Technology & Internet Use Policy',short:'Tech Policy',
+   key:'handbookCellPhone'},
+  {id:'general-rules',icon:'📏',title:'General Rules & Regulations',short:'Rules',
+   keys:[
+     {key:'handbookGeneralRules',subtitle:'General Rules'},
+     {key:'handbookDressCode',subtitle:'Dress Code'},
+     {key:'handbookCampusAccess',subtitle:'Campus Access'}
+   ]},
+  {id:'transportation',icon:'🚗',title:'Transportation & Parking',short:'Transport',
+   key:'handbookTransportation'},
+  {id:'district-policies',icon:'⚖️',title:'District Policies',short:'District',
+   keys:[
+     {key:'handbookDiscipline',subtitle:'Discipline Procedures'},
+     {key:'handbookDistrictPolicies',subtitle:'Nondiscrimination, Bullying & Harassment'}
+   ]},
+  {id:'parents-community',icon:'👨‍👩‍👧',title:'Parents & Community',short:'Parents',
+   key:'handbookParentsCommunity'}
+];
+
+let activeSec=SECTIONS[0].id;
+
+function getSchoolName(){
+  if(window.SchoolConfig){
+    const cfg=SchoolConfig.load();
+    if(cfg.setupComplete) return cfg.schoolName||cfg.shortName||'Your School';
+  }
+  return 'Your School';
+}
+
+function renderHdr(){
+  const name=getSchoolName();
+  document.getElementById('hdr').innerHTML=`
+  <div class="hdr">
+    <div class="hdr-left">
+      <div><div class="hdr-title">${name} Student Handbook</div>
+      <div class="hdr-tag">Your guide to policies, resources, and expectations.</div></div>
+    </div>
+    <div class="hdr-links">
+      <a class="hdr-btn" href="hub.html">← Student Hub</a>
+      <a class="hdr-btn" href="index.html">Dashboard</a>
+    </div>
+  </div>`;
+}
+
+function renderSide(){
+  document.getElementById('side').innerHTML=SECTIONS.map(s=>
+    `<div class="ni${activeSec===s.id?' on':''}" data-sec="${s.id}" onclick="scrollToSec('${s.id}')">
+      <span class="ni-icon">${s.icon}</span><span>${s.title}</span>
+    </div>`
+  ).join('');
+}
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=SECTIONS.map(s=>
+    `<div class="ti${activeSec===s.id?' on':''}" data-sec="${s.id}" onclick="scrollToSec('${s.id}')">
+      <span class="ti-icon">${s.icon}</span><span>${s.short}</span>
+    </div>`
+  ).join('');
+}
+
+function renderContent(sec){
+  const val=sdVal(sec.key,'');
+  if(val) return '<div class="handbook-content">'+renderSD(val)+'</div>';
+  return '<div class="callout">📌 <strong>Not filled in yet.</strong> Use the Hub Editor to add content for this section.</div>';
+}
+
+function renderComposite(sec){
+  let html='';
+  sec.keys.forEach(sub=>{
+    const val=sdVal(sub.key,'');
+    html+='<h3 class="sub-title">'+sub.subtitle+'</h3>';
+    if(val) html+='<div class="handbook-content">'+renderSD(val)+'</div>';
+    else html+='<div class="callout">📌 <strong>Not filled in yet.</strong> Use the Hub Editor to add content for "'+sub.subtitle+'".</div>';
+  });
+  return html;
+}
+
+function renderMain(){
+  let html='';
+  SECTIONS.forEach(sec=>{
+    html+='<section id="sec-'+sec.id+'" class="handbook-section">';
+    html+='<div class="sec-title"><span class="sec-icon">'+sec.icon+'</span>'+sec.title+'</div>';
+    if(sec.keys){
+      html+=renderComposite(sec);
+    }else{
+      html+=renderContent(sec);
+    }
+    html+='</section>';
+  });
+  document.getElementById('main').innerHTML=html;
+}
+
+function renderFoot(){
+  const name=getSchoolName();
+  document.getElementById('foot').innerHTML=`<div class="foot">${name} — Student Handbook</div>`;
+}
+
+function scrollToSec(id){
+  const el=document.getElementById('sec-'+id);
+  if(el){
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    activeSec=id;
+    updateNav();
+  }
+}
+
+function updateNav(){
+  document.querySelectorAll('.ni').forEach(n=>{
+    n.classList.toggle('on',n.dataset.sec===activeSec);
+  });
+  document.querySelectorAll('.ti').forEach(t=>{
+    t.classList.toggle('on',t.dataset.sec===activeSec);
+  });
+  const activeTab=document.querySelector('.ti.on');
+  if(activeTab) activeTab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+function initScrollspy(){
+  if(typeof IntersectionObserver==='undefined') return;
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id=e.target.id.replace('sec-','');
+        if(id!==activeSec){
+          activeSec=id;
+          updateNav();
+        }
+      }
+    });
+  },{rootMargin:'-80px 0px -55% 0px',threshold:0});
+  SECTIONS.forEach(s=>{
+    const el=document.getElementById('sec-'+s.id);
+    if(el) observer.observe(el);
+  });
+}
+
+renderHdr();
+renderSide();
+renderTabs();
+renderMain();
+renderFoot();
+initScrollspy();
+</script>
+</body>
+</html>

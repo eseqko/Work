@@ -156,6 +156,26 @@ tr:hover td { background: #fafbfc; }
 .field textarea { resize: vertical; min-height: 90px; }
 .field-hint { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
 
+/* ── Rich text editor ── */
+.rich-wrap { border: 1.5px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg); transition: border-color 0.15s; }
+.rich-wrap:focus-within { border-color: var(--navy); background: #fff; }
+.rich-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 5px; background: #eef1f5; border-bottom: 1px solid var(--border); }
+.rich-toolbar button { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer; color: var(--text); min-width: 26px; line-height: 1.2; font-family: inherit; }
+.rich-toolbar button:hover { background: #fff; border-color: var(--border); }
+.rich-toolbar button:active { background: var(--gold-light); border-color: var(--gold); }
+.rich-toolbar .rt-sep { width: 1px; background: var(--border); margin: 2px 3px; align-self: stretch; }
+.rich-toolbar .rt-b { font-weight: 800; }
+.rich-toolbar .rt-i { font-style: italic; }
+.rich-toolbar .rt-u { text-decoration: underline; }
+.rich-toolbar .rt-s { text-decoration: line-through; }
+.rich-edit { min-height: 80px; max-height: 360px; overflow-y: auto; padding: 8px 11px; font-size: 0.85rem; line-height: 1.5; outline: none; font-family: inherit; color: var(--text); background: #fff; }
+.rich-edit:empty:before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; display: block; }
+.rich-edit a { color: var(--navy); text-decoration: underline; }
+.rich-edit ul, .rich-edit ol { padding-left: 1.4em; margin: 4px 0; }
+.rich-edit p { margin: 0 0 6px; }
+.rich-edit mark { background: var(--gold-light); padding: 0 2px; border-radius: 2px; }
+.rich-wrap.rich-small .rich-edit { min-height: 50px; }
+
 /* ── Checkboxes ── */
 .check-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
 .check-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--navy); }
@@ -323,6 +343,7 @@ tr:hover td { background: #fafbfc; }
 </head>
 <body>
 
+
 <header>
   <div class="hdr-left">
     <span style="font-size:24px;" data-school-emoji>🐾</span>
@@ -333,7 +354,8 @@ tr:hover td { background: #fafbfc; }
   </div>
   <div class="hdr-actions">
     <button class="btn btn-white" onclick="openImportModal()" title="Import catalog from file">📥 Import</button>
-    <a href="index.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
+    <a href="index.html" class="btn btn-white" title="Back to Dashboard">← Dashboard</a>
+    <a href="catalog.html" target="_blank" class="btn btn-white">👁 Preview Catalog</a>
     <button class="btn btn-gdoc" onclick="openGDocModal()">📄 → Google Doc</button>
     <button class="btn btn-pdf" onclick="downloadCatalogPDF()">📕 → PDF</button>
     <button class="btn btn-gold" onclick="openExportModal()">⬇ Export &amp; Save</button>
@@ -506,7 +528,7 @@ tr:hover td { background: #fafbfc; }
           <div class="info-label">Course Requirements (one per line: "years subject")</div>
           <textarea class="info-textarea" id="ncaa-d1" rows="7" oninput="saveInfoField()" style="margin-top:4px;font-family:'Courier New',monospace;font-size:0.78rem;"></textarea>
           <div class="info-label" style="margin-top:10px;">Notes / Test Score Info</div>
-          <textarea class="info-textarea" id="ncaa-d1Notes" rows="3" oninput="saveInfoField()" style="margin-top:4px;"></textarea>
+          <div id="ncaa-d1NotesWrap" style="margin-top:4px;"></div>
         </div>
         <div>
           <div class="info-label" style="font-size:0.85rem;margin-bottom:8px;">Division II</div>
@@ -516,7 +538,7 @@ tr:hover td { background: #fafbfc; }
           <div class="info-label">Course Requirements (one per line: "years subject")</div>
           <textarea class="info-textarea" id="ncaa-d2" rows="7" oninput="saveInfoField()" style="margin-top:4px;font-family:'Courier New',monospace;font-size:0.78rem;"></textarea>
           <div class="info-label" style="margin-top:10px;">Notes / Test Score Info</div>
-          <textarea class="info-textarea" id="ncaa-d2Notes" rows="3" oninput="saveInfoField()" style="margin-top:4px;"></textarea>
+          <div id="ncaa-d2NotesWrap" style="margin-top:4px;"></div>
         </div>
       </div>
     </div>
@@ -535,7 +557,7 @@ tr:hover td { background: #fafbfc; }
       </div>
       <div style="margin-bottom:12px;">
         <div class="info-label">Allowed Reasons for Schedule Changes</div>
-        <textarea class="info-textarea" id="sch-allowedReasons" rows="2" oninput="saveInfoField()"></textarea>
+        <div id="sch-allowedReasonsWrap"></div>
       </div>
       <div style="margin-bottom:12px;">
         <div class="info-label">Conflict Resolution Steps (one per line)</div>
@@ -543,7 +565,7 @@ tr:hover td { background: #fafbfc; }
       </div>
       <div>
         <div class="info-label">AP Commitment Policy</div>
-        <textarea class="info-textarea" id="sch-apPolicy" rows="3" oninput="saveInfoField()"></textarea>
+        <div id="sch-apPolicyWrap"></div>
       </div>
     </div>
   </div>
@@ -663,7 +685,7 @@ tr:hover td { background: #fafbfc; }
         </div>
         <div class="field form-full">
           <label>Course Description <span class="req">*</span></label>
-          <textarea id="fDesc" placeholder="Describe what students will learn, major topics, skills, and outcomes…"></textarea>
+          <div id="fDescWrap"></div>
         </div>
         <div class="field form-full">
           <label>Special Flags</label>
@@ -709,18 +731,18 @@ tr:hover td { background: #fafbfc; }
     </div>
     <div class="modal-body">
       <div class="export-box">
-        Your edits are saved in this browser tab. To make them permanent in the catalog, download the updated <strong>index.html</strong> file and replace the current one in your project folder.
+        Your edits are saved in this browser tab. To make them permanent in the catalog, download the updated <strong>catalog.html</strong> file and replace the current one in your project folder.
       </div>
       <ol class="export-steps">
-        <li>Click <strong>Download index.html</strong> below.</li>
+        <li>Click <strong>Download catalog.html</strong> below.</li>
         <li>Go to your project folder (where the catalog files live).</li>
-        <li>Replace the existing <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">index.html</code> with the downloaded file.</li>
+        <li>Replace the existing <code style="background:var(--bg);padding:1px 5px;border-radius:4px;">catalog.html</code> with the downloaded file.</li>
         <li>Re-embed in Google Sites if needed.</li>
       </ol>
     </div>
     <div class="modal-footer">
       <button class="btn btn-white" style="border:1.5px solid var(--border);color:var(--muted);background:#fff;" onclick="closeExport()">Cancel</button>
-      <button class="btn btn-gold" onclick="downloadCatalog()">⬇ Download index.html</button>
+      <button class="btn btn-gold" onclick="downloadCatalog()">⬇ Download catalog.html</button>
     </div>
   </div>
 </div>
@@ -1040,7 +1062,7 @@ function getFiltered() {
     if (status === 'active'   && c.inactive) return false;
     if (status === 'inactive' && !c.inactive) return false;
     if (q) {
-      const hay = (c.name+' '+c.desc+' '+c.code+' '+(c.prereq||'')).toLowerCase();
+      const hay = (c.name+' '+stripHtml(c.desc)+' '+c.code+' '+(c.prereq||'')).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -1140,6 +1162,16 @@ function toggleActive(id) {
 /* ═══════════════════════════════════════════════════
    ADD / EDIT FORM
 ═══════════════════════════════════════════════════ */
+// Render the rich-text description editor into its wrapper with a starting value.
+function renderCourseDescEditor(value) {
+  document.getElementById('fDescWrap').innerHTML = richEdit(
+    'fDesc',
+    'Describe what students will learn, major topics, skills, and outcomes…',
+    value || '',
+    { oninput: '' }
+  );
+}
+
 function clearForm() {
   document.getElementById('fId').value = '';
   document.getElementById('fName').value = '';
@@ -1150,7 +1182,7 @@ function clearForm() {
   document.getElementById('fCode').value = '';
   document.getElementById('fAg').value = '';
   document.getElementById('fPrereq').value = '';
-  document.getElementById('fDesc').value = '';
+  renderCourseDescEditor('');
   document.getElementById('fCollege').checked = false;
   document.getElementById('fDual').checked = false;
   document.getElementById('fFullYear').checked = false;
@@ -1177,7 +1209,7 @@ function openEditModal(id) {
   document.getElementById('fCode').value        = c.code || '';
   document.getElementById('fAg').value          = c.ag || '';
   document.getElementById('fPrereq').value      = c.prereq || '';
-  document.getElementById('fDesc').value        = c.desc;
+  renderCourseDescEditor(c.desc);
   document.getElementById('fCollege').checked   = !!c.collegeCredit;
   document.getElementById('fDual').checked      = !!c.dualEnroll;
   document.getElementById('fFullYear').checked  = !!c.fullYear;
@@ -1187,7 +1219,7 @@ function openEditModal(id) {
 
 function saveCourse() {
   const name = document.getElementById('fName').value.trim();
-  const desc = document.getElementById('fDesc').value.trim();
+  const desc = rtRead('fDesc');
   const grade = document.getElementById('fGrade').value.trim();
   if (!name) { alert('Course Name is required.'); return; }
   if (!desc)  { alert('Description is required.'); return; }
@@ -1222,41 +1254,101 @@ function saveCourse() {
 }
 
 /* ═══════════════════════════════════════════════════
-   EXPORT — builds updated index.html (courses + info)
+   EXPORT — builds updated catalog.html (courses + info)
 ═══════════════════════════════════════════════════ */
 function downloadCatalog() {
   _loadIndexHtml(function(html) {
     if (!html) {
-      showToast('Could not load index.html — download JSON data instead.', 'warn');
-      _downloadJson();
+      // XHR can't reach catalog.html (file:// protocol, sandboxed iframe, etc).
+      // Fall back to a file picker so the user can pick catalog.html manually.
+      _promptForCatalogFile(function(pickedHtml){
+        if (!pickedHtml) {
+          showToast('Export cancelled. JSON fallback not used.', 'warn');
+          return;
+        }
+        _patchAndDownload(pickedHtml);
+      });
       return;
     }
-    // Patch COURSES array
-    const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
-    let updated = html.replace(/const COURSES = \[[\s\S]*?\];/, newCourses);
-    if (updated === html) {
-      showToast('Could not patch courses in index.html — downloading JSON instead.', 'warn');
-      _downloadJson();
-      return;
-    }
-    // Patch INFO object (between comment markers)
-    const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
-    updated = updated.replace(/\/\* INFO_SEED_START \*\/[\s\S]*?\/\* INFO_SEED_END \*\//, newInfo);
-    const blob = new Blob([updated], {type: 'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'index.html';
-    a.click();
-    showToast('⬇ Downloaded! Replace your index.html file.', 'success');
-    closeExport();
+    _patchAndDownload(html);
   });
+}
+
+function _patchAndDownload(html) {
+  // Quick sanity check: does this even look like an HTML file?
+  const looksLikeHtml = /<!DOCTYPE\s+html|<html[\s>]/i.test(html);
+  if (!looksLikeHtml) {
+    showToast('That file doesn\'t look like an HTML file. Please pick catalog.html from your folder.', 'warn');
+    return;
+  }
+  // Warn if they picked the wrong HTML file (editor.html or hub.html)
+  if (/id=["']?editor-shell["']?|Catalog Editor/i.test(html) && !/const\s+COURSES\s*=\s*\[/.test(html)) {
+    showToast('That looks like editor.html, not catalog.html. Please pick the catalog.html file.', 'warn');
+    return;
+  }
+  if (/Student Resource Hub|hub-editor|id=["']?hub-shell["']?/i.test(html) && !/const\s+COURSES\s*=\s*\[/.test(html)) {
+    showToast('That looks like hub.html, not catalog.html. Please pick the catalog.html file.', 'warn');
+    return;
+  }
+  // Patch COURSES array — accept const/let/var with flexible whitespace
+  const newCourses = 'const COURSES = ' + JSON.stringify(courses, null, 2) + ';';
+  const coursesRe = /(?:const|let|var)\s+COURSES\s*=\s*\[[\s\S]*?\];/;
+  if (!coursesRe.test(html)) {
+    showToast('That file doesn\'t contain a COURSES array. Make sure you picked catalog.html (not editor.html or hub.html).', 'warn');
+    return;
+  }
+  let updated = html.replace(coursesRe, newCourses);
+  // Patch INFO object (between comment markers)
+  const newInfo = '/* INFO_SEED_START */\nconst INFO = ' + JSON.stringify(infoData, null, 2) + ';\n/* INFO_SEED_END */';
+  const infoRe = /\/\*\s*INFO_SEED_START\s*\*\/[\s\S]*?\/\*\s*INFO_SEED_END\s*\*\//;
+  if (infoRe.test(updated)) {
+    updated = updated.replace(infoRe, newInfo);
+  } else {
+    showToast('⚠ COURSES patched but INFO markers missing. Your school info wasn\'t updated.', 'warn');
+  }
+  const blob = new Blob([updated], {type: 'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'catalog.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  showToast('⬇ Downloaded! Replace your catalog.html file.', 'success');
+  closeExport();
+}
+
+// Open a hidden <input type="file"> so the user picks catalog.html off disk.
+// Works over file:// and inside sandboxed iframes where XHR is blocked.
+function _promptForCatalogFile(callback) {
+  let input = document.getElementById('_catalog-file-picker');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.html,text/html';
+    input.id = '_catalog-file-picker';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+  }
+  // Reset value so change fires even if same file is picked twice
+  input.value = '';
+  input.onchange = function() {
+    const file = input.files && input.files[0];
+    if (!file) { callback(null); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) { callback(e.target.result); };
+    reader.onerror = function() {
+      showToast('Could not read that file.', 'warn');
+      callback(null);
+    };
+    reader.readAsText(file);
+  };
+  showToast('Select your catalog.html file to patch.', 'info');
+  input.click();
 }
 
 function _loadIndexHtml(callback) {
   // Try XMLHttpRequest first (works on file:// protocol)
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'index.html', true);
+    xhr.open('GET', 'catalog.html', true);
     xhr.onload = function() {
       if (xhr.status === 200 || (xhr.status === 0 && xhr.responseText.length > 100)) {
         callback(xhr.responseText);
@@ -1418,19 +1510,20 @@ function readInfoFields() {
   });
   // Post-Secondary (read rendered inputs)
   infoData.postSecondary.forEach((s,i) => {
-    const t = g('ps-title-'+i), d = g('ps-text-'+i);
+    const t = g('ps-title-'+i);
     if (t) s.title = t.value;
-    if (d) s.text  = d.value;
+    const rich = rtRead('ps-text-'+i);
+    if (document.getElementById('ps-text-'+i)) s.text = rich;
   });
   // NCAA
   infoData.ncaa.d1GPA   = g('ncaa-d1GPA').value;
-  infoData.ncaa.d1Notes = g('ncaa-d1Notes').value;
+  infoData.ncaa.d1Notes = rtRead('ncaa-d1Notes');
   infoData.ncaa.d1 = g('ncaa-d1').value.split('\n').map(line => {
     const m = line.trim().match(/^(\d+)\s+(.+)$/);
     return m ? {years:m[1], subject:m[2]} : null;
   }).filter(Boolean);
   infoData.ncaa.d2GPA   = g('ncaa-d2GPA').value;
-  infoData.ncaa.d2Notes = g('ncaa-d2Notes').value;
+  infoData.ncaa.d2Notes = rtRead('ncaa-d2Notes');
   infoData.ncaa.d2 = g('ncaa-d2').value.split('\n').map(line => {
     const m = line.trim().match(/^(\d+)\s+(.+)$/);
     return m ? {years:m[1], subject:m[2]} : null;
@@ -1438,9 +1531,9 @@ function readInfoFields() {
   // Scheduling
   infoData.scheduling.deadlineFall   = g('sch-deadlineFall').value;
   infoData.scheduling.deadlineSpring = g('sch-deadlineSpring').value;
-  infoData.scheduling.allowedReasons = g('sch-allowedReasons').value;
+  infoData.scheduling.allowedReasons = rtRead('sch-allowedReasons');
   infoData.scheduling.conflictSteps  = g('sch-conflictSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  infoData.scheduling.apPolicy       = g('sch-apPolicy').value;
+  infoData.scheduling.apPolicy       = rtRead('sch-apPolicy');
   // Grad Reqs are read on each row's input event via readGradReqRow()
   // a-g Course List
   if (!infoData.agList) infoData.agList = JSON.parse(JSON.stringify(INFO_SEED.agList));
@@ -1467,21 +1560,21 @@ function renderInfoEditor() {
   ['grade9','grade10','grade11','grade12'].forEach(k => {
     g('fy-'+k).value = I.fourYear[k].join('\n');
   });
-  // Post-Secondary
+  // Post-Secondary (also mounts rich editors)
   renderPostSecBody();
   // NCAA
   g('ncaa-d1GPA').value   = I.ncaa.d1GPA;
-  g('ncaa-d1Notes').value = I.ncaa.d1Notes;
+  g('ncaa-d1NotesWrap').innerHTML = richEdit('ncaa-d1Notes', 'Test scores, eligibility notes…', I.ncaa.d1Notes, { small: true });
   g('ncaa-d1').value      = I.ncaa.d1.map(r => r.years + ' ' + r.subject).join('\n');
   g('ncaa-d2GPA').value   = I.ncaa.d2GPA;
-  g('ncaa-d2Notes').value = I.ncaa.d2Notes;
+  g('ncaa-d2NotesWrap').innerHTML = richEdit('ncaa-d2Notes', 'Test scores, eligibility notes…', I.ncaa.d2Notes, { small: true });
   g('ncaa-d2').value      = I.ncaa.d2.map(r => r.years + ' ' + r.subject).join('\n');
   // Scheduling
   g('sch-deadlineFall').value   = I.scheduling.deadlineFall;
   g('sch-deadlineSpring').value = I.scheduling.deadlineSpring;
-  g('sch-allowedReasons').value = I.scheduling.allowedReasons;
+  g('sch-allowedReasonsWrap').innerHTML = richEdit('sch-allowedReasons', 'e.g. scheduling errors, inappropriate placement…', I.scheduling.allowedReasons, { small: true });
   g('sch-conflictSteps').value  = I.scheduling.conflictSteps.join('\n');
-  g('sch-apPolicy').value       = I.scheduling.apPolicy;
+  g('sch-apPolicyWrap').innerHTML = richEdit('sch-apPolicy', 'Describe your AP commitment policy…', I.scheduling.apPolicy);
   // Counselors
   renderCounselorTable();
   // a-g Course List
@@ -1528,7 +1621,7 @@ function renderPostSecBody() {
         <input class="info-input" id="ps-title-${i}" value="${escAttr(s.title)}" placeholder="Institution type title" oninput="saveInfoField()" style="font-weight:600;">
         <button class="btn btn-danger btn-sm btn-icon" onclick="removePostSec(${i})" title="Remove section">🗑</button>
       </div>
-      <textarea class="info-textarea" id="ps-text-${i}" rows="2" oninput="saveInfoField()">${escHtml(s.text)}</textarea>
+      ${richEdit('ps-text-'+i, 'Describe this post-secondary path…', s.text)}
     </div>
   `).join('') + `<button class="btn btn-success btn-sm" onclick="addPostSec()">＋ Add Section</button>`;
 }
@@ -1617,6 +1710,104 @@ function escAttr(s) {
 }
 
 /* ═══════════════════════════════════════════════════
+   RICH TEXT EDITOR
+═══════════════════════════════════════════════════ */
+// document.execCommand powers a lightweight rich editor. Selection is bound
+// to the focused contenteditable, so the toolbar's onmousedown prevents
+// focus from shifting when a button is clicked.
+function rt(cmd, val) {
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand(cmd, false, val || null);
+  rtFireInput();
+}
+function rtHilite() {
+  document.execCommand('styleWithCSS', false, true);
+  const color = '#f5e9c0'; // --gold-light
+  if (!document.execCommand('hiliteColor', false, color)) {
+    document.execCommand('backColor', false, color);
+  }
+  rtFireInput();
+}
+function rtLink() {
+  const url = prompt('Link URL (include https://)');
+  if (!url) return;
+  document.execCommand('createLink', false, url);
+  rtFireInput();
+}
+function rtPaste(ev) {
+  ev.preventDefault();
+  const text = (ev.clipboardData || window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+}
+// Synthesize an 'input' event on whichever rich editor currently has focus,
+// so the existing oninput handler fires (e.g. saveInfoField).
+function rtFireInput() {
+  const el = document.activeElement;
+  if (!el || !el.classList || !el.classList.contains('rich-edit')) return;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Migration: legacy plain-text values used \n. If a value has no HTML tags,
+// escape it and convert newlines to <br> so the contenteditable displays lines.
+function rtInitialHtml(v) {
+  const s = String(v || '');
+  if (!s) return '';
+  if (/<[a-zA-Z][^>]*>/.test(s)) return s;
+  return escHtml(s).replace(/\n/g, '<br>');
+}
+
+// Plain-text extraction for contexts that can't render HTML (PDF, Google Doc,
+// search indexing). Block-level tags become newlines; other tags are removed.
+function stripHtml(s) {
+  const str = String(s || '');
+  if (!str) return '';
+  if (!/<[a-zA-Z][^>]*>/.test(str)) return str;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = str
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|blockquote)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ');
+  return (tmp.textContent || tmp.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Read a contenteditable's current value, normalizing empty shells to ''.
+function rtRead(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  const html = el.innerHTML.trim();
+  if (!html || html === '<br>' || html === '<p></p>' || html === '<div><br></div>') return '';
+  return html;
+}
+
+// Build a rich-text field wrapper. oninput is dispatched automatically.
+// opts: { rows (informational only), small (bool), oninput (handler name) }
+function richEdit(id, placeholder, value, opts) {
+  opts = opts || {};
+  const oninput = opts.oninput || 'saveInfoField()';
+  const smallCls = opts.small ? ' rich-small' : '';
+  const init = rtInitialHtml(value);
+  return `<div class="rich-wrap${smallCls}">
+    <div class="rich-toolbar" onmousedown="event.preventDefault()">
+      <button type="button" class="rt-b" title="Bold (Ctrl+B)" onclick="rt('bold')">B</button>
+      <button type="button" class="rt-i" title="Italic (Ctrl+I)" onclick="rt('italic')">I</button>
+      <button type="button" class="rt-u" title="Underline (Ctrl+U)" onclick="rt('underline')">U</button>
+      <button type="button" class="rt-s" title="Strikethrough" onclick="rt('strikeThrough')">S</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Highlight" onclick="rtHilite()">🖍</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Bulleted list" onclick="rt('insertUnorderedList')">• List</button>
+      <button type="button" title="Numbered list" onclick="rt('insertOrderedList')">1. List</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Add link" onclick="rtLink()">🔗</button>
+      <button type="button" title="Remove link" onclick="rt('unlink')">⛓‍💥</button>
+      <span class="rt-sep"></span>
+      <button type="button" title="Clear formatting" onclick="rt('removeFormat')">⌫</button>
+    </div>
+    <div id="${id}" class="rich-edit" contenteditable="true" data-placeholder="${escAttr(placeholder||'')}" oninput="${oninput}" onpaste="rtPaste(event)">${init}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
    TOAST
 ═══════════════════════════════════════════════════ */
 let toastTimer;
@@ -1666,7 +1857,12 @@ async function copyGDocScript() {
 
 function generateGDocsScript() {
   const ts   = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
-  const data = JSON.stringify(courses, null, 2);
+  // Course descriptions may contain rich-text HTML. Google Apps Script can't
+  // render that, so flatten to plain text for the GDoc export.
+  const coursesForExport = courses.map(c => Object.assign({}, c, {
+    desc: stripHtml(c.desc)
+  }));
+  const data = JSON.stringify(coursesForExport, null, 2);
 
   const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
   const _sn = _sc.schoolName || 'Your School';
@@ -2188,7 +2384,7 @@ function downloadCatalogPDF() {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(55, 65, 81);
-        var descLines = doc.splitTextToSize(c.desc, CW - 10);
+        var descLines = doc.splitTextToSize(stripHtml(c.desc), CW - 10);
         for (var dl = 0; dl < descLines.length; dl++) {
           checkPage(12);
           doc.text(descLines[dl], ML + 10, y);

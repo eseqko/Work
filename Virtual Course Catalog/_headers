@@ -1,0 +1,4 @@
+# Headers for all pages
+/*
+  Content-Security-Policy: frame-ancestors *
+  X-Frame-Options: ALLOWALL

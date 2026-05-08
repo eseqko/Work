@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Student Hub Editor</title>
+<script src="school-config.js"></script>
+<style>
+:root{--brand:#1B5E3B;--brand-lt:#E8F5EE;--accent:#F59E0B;--accent-lt:#FEF3C7;--bg:#F3F4F6;--surface:#fff;--text:#1A1A1A;--muted:#6B7280;--border:#E5E7EB;--r:10px;--danger:#DC2626}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+
+/* ── App shell ── */
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* ── Toolbar ── */
+.toolbar{background:var(--brand);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.toolbar h1{font-size:.95rem;font-weight:700;flex:1}
+.tbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:6px 14px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s}
+.tbtn:hover{background:rgba(255,255,255,.25)}
+.tbtn.accent{background:var(--accent);border-color:var(--accent);color:#1A1A1A}
+.tbtn.accent:hover{background:#d97706}
+.saved-badge{font-size:.75rem;opacity:.7;margin-left:4px}
+
+/* ── Layout modes ── */
+.content-area{display:flex;flex:1;overflow:hidden}
+.content-area.layout-tabs{flex-direction:column}
+.content-area.layout-split{flex-direction:row}
+
+/* Split */
+.layout-split .editor-panel{width:50%;border-right:1px solid var(--border)}
+.layout-split .preview-panel{width:50%;display:flex!important;flex-direction:column}
+.layout-split .tab-btns{display:none}
+
+/* Tabs */
+.layout-tabs .editor-panel,.layout-tabs .preview-panel{width:100%;flex:1;min-height:0}
+.layout-tabs .preview-panel{display:none}
+.layout-tabs.show-preview .preview-panel{display:flex!important;flex-direction:column}
+.layout-tabs.show-preview .editor-panel{display:none}
+.layout-tabs .tab-btns{display:flex}
+
+.tab-btns{background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-btns button{padding:10px 20px;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent}
+.tab-btns button.on{color:var(--brand);border-bottom-color:var(--brand)}
+
+/* ── Editor panel ── */
+.editor-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.editor-scroll{flex:1;overflow-y:auto;padding:20px}
+
+.section-group{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.section-group summary{padding:13px 16px;font-size:.9rem;font-weight:700;color:var(--brand);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:8px}
+.section-group summary::-webkit-details-marker{display:none}
+.section-group summary::before{content:'▸';font-size:.8rem;color:var(--muted);transition:transform .2s}
+.section-group[open] summary::before{transform:rotate(90deg)}
+.section-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+
+.field label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:.88rem;font-family:inherit;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus{border-color:var(--brand)}
+.field textarea{resize:vertical;min-height:90px}
+.field .hint{font-size:.75rem;color:var(--muted);margin-top:3px}
+
+/* Grad requirements table editor */
+.req-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:6px}
+.req-table th{background:var(--brand-lt);color:var(--brand);padding:6px 9px;text-align:left;font-weight:700;border:1px solid var(--border)}
+.req-table td{border:1px solid var(--border);padding:2px 4px}
+.req-table td input{border:none;width:100%;padding:6px 7px;font-size:.84rem;background:transparent;outline:none}
+.req-table td input:focus{background:var(--brand-lt)}
+.req-del{background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:.9rem;padding:0 4px;line-height:1;border-radius:4px;flex-shrink:0}
+.req-del:hover{color:var(--danger);background:#FEE2E2}
+.req-th-wrap{display:flex;align-items:center;gap:4px}
+.req-th-wrap input{background:transparent;border:none;font-weight:700;color:var(--brand);font-size:.85rem;padding:2px 4px;width:100%;outline:none;min-width:60px}
+.req-th-wrap input:focus{background:rgba(255,255,255,.6);border-radius:3px}
+.req-add-row{margin-top:8px;background:none;border:1.5px dashed var(--border);border-radius:7px;padding:6px 14px;font-size:.82rem;color:var(--muted);cursor:pointer;width:100%;transition:all .15s}
+.req-add-row:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-lt)}
+.req-add-col-th{background:var(--brand-lt);border:1px solid var(--border);padding:4px}
+.req-add-col-btn{background:none;border:none;cursor:pointer;color:var(--brand);font-size:1rem;font-weight:700;padding:2px 8px;border-radius:4px}
+.req-add-col-btn:hover{background:rgba(27,94,59,.15)}
+
+/* ── Rich text editor ── */
+.rich-wrap{border:1.5px solid var(--border);border-radius:7px;overflow:hidden;background:#fff;transition:border-color .15s}
+.rich-wrap:focus-within{border-color:var(--brand)}
+.rich-toolbar{display:flex;flex-wrap:wrap;gap:2px;padding:4px 5px;background:var(--bg);border-bottom:1px solid var(--border)}
+.rich-toolbar button{background:transparent;border:1px solid transparent;border-radius:5px;padding:4px 8px;font-size:.82rem;cursor:pointer;color:var(--text);min-width:28px;line-height:1.2;font-family:inherit}
+.rich-toolbar button:hover{background:#fff;border-color:var(--border)}
+.rich-toolbar button:active{background:var(--brand-lt);border-color:var(--brand)}
+.rich-toolbar .rt-sep{width:1px;background:var(--border);margin:2px 3px;align-self:stretch}
+.rich-toolbar .rt-b{font-weight:800}
+.rich-toolbar .rt-i{font-style:italic}
+.rich-toolbar .rt-u{text-decoration:underline}
+.rich-toolbar .rt-s{text-decoration:line-through}
+.rich-edit{min-height:90px;max-height:400px;overflow-y:auto;padding:9px 11px;font-size:.88rem;line-height:1.5;outline:none;font-family:inherit;color:var(--text)}
+.rich-edit:empty:before{content:attr(data-placeholder);color:#9CA3AF;pointer-events:none;display:block}
+.rich-edit a{color:var(--brand);text-decoration:underline}
+.rich-edit ul,.rich-edit ol{padding-left:1.4em;margin:4px 0}
+.rich-edit p{margin:0 0 6px}
+.rich-edit mark{background:var(--accent-lt);padding:0 2px;border-radius:2px}
+
+/* ── Preview panel ── */
+.preview-panel{background:#e5e7eb;overflow:hidden}
+.preview-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);flex-shrink:0}
+.preview-bar strong{color:var(--text)}
+#preview-iframe{width:100%;flex:1;border:none}
+
+/* ── Translate modal ── */
+#tr-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+#tr-modal.on{display:flex}
+.tr-card{background:var(--surface);border-radius:14px;width:100%;max-width:540px;max-height:90vh;overflow:auto;padding:26px 28px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.tr-card h2{font-size:1.15rem;font-weight:800;color:var(--brand);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.tr-card .tr-sub{font-size:.82rem;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.tr-card .tr-sub a{color:var(--brand)}
+.tr-row{margin-bottom:14px}
+.tr-row label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.tr-row input[type=text],.tr-row input[type=password]{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:.88rem;font-family:inherit;outline:none}
+.tr-row input:focus{border-color:var(--brand)}
+.tr-checks{display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.tr-checks label{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;font-weight:500;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer;margin:0;padding:6px 10px;background:var(--bg);border-radius:7px}
+.tr-checks input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--brand)}
+#tr-log{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:10px 12px;font-size:.72rem;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;max-height:160px;overflow:auto;margin:12px 0;display:none;line-height:1.55}
+#tr-log.on{display:block}
+#tr-log .log-ok{color:#86EFAC}
+#tr-log .log-err{color:#FCA5A5}
+#tr-log .log-info{color:#93C5FD}
+.tr-bar-wrap{background:#E5E7EB;border-radius:8px;height:8px;overflow:hidden;margin:10px 0 4px;display:none}
+.tr-bar-wrap.on{display:block}
+#tr-bar{background:var(--brand);height:100%;width:0;transition:width .3s}
+#tr-status{font-size:.78rem;color:var(--muted);text-align:center;min-height:1.1em}
+.tr-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.tr-btn{background:var(--brand);color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:.85rem;font-weight:700;cursor:pointer}
+.tr-btn:hover{background:#144d2f}
+.tr-btn:disabled{background:#9CA3AF;cursor:not-allowed}
+.tr-btn.secondary{background:#E5E7EB;color:var(--text)}
+.tr-btn.secondary:hover{background:#D1D5DB}
+.tr-btn.accent{background:var(--accent);color:#1A1A1A}
+.tr-btn.accent:hover{background:#d97706}
+.tr-hint{font-size:.75rem;color:var(--muted);margin-top:3px}
+.tr-warn{background:var(--accent-lt);border:1px solid var(--accent);border-radius:8px;padding:9px 12px;font-size:.78rem;color:#78350F;margin-top:10px}
+</style>
+</head>
+<body>
+
+<script>
+// Apply school colors from SchoolConfig (overrides Grizzly green defaults)
+(function(){
+  if (!window.SchoolConfig) return;
+  const cfg = SchoolConfig.load();
+  if (cfg.colors && cfg.colors.primary) {
+    const root = document.documentElement.style;
+    root.setProperty('--brand', cfg.colors.primary);
+    root.setProperty('--brand-lt', SchoolConfig.colorUtils.lighten(cfg.colors.primary, 45));
+  }
+  if (cfg.colors && cfg.colors.secondary) {
+    document.documentElement.style.setProperty('--accent', cfg.colors.secondary);
+    document.documentElement.style.setProperty('--accent-lt', SchoolConfig.colorUtils.lighten(cfg.colors.secondary, 35));
+  }
+  if (cfg.setupComplete && (cfg.shortName || cfg.schoolName)) {
+    document.title = (cfg.shortName || cfg.schoolName) + ' — Student Hub Editor';
+  }
+})();
+</script>
+
+<!-- App -->
+<div id="app">
+  <div class="toolbar">
+    <h1>🛠 Student Hub Editor <span class="saved-badge" id="saved-badge"></span></h1>
+    <a class="tbtn" href="index.html" style="text-decoration:none">← Dashboard</a>
+    <a class="tbtn" href="editor.html" style="text-decoration:none">📖 Catalog Editor</a>
+    <a class="tbtn" href="handbook.html" target="_blank" style="text-decoration:none">📋 Preview Handbook</a>
+    <button class="tbtn" id="layout-btn" onclick="toggleLayout()">⇄ Side by Side</button>
+    <button class="tbtn" onclick="saveNow()">💾 Save</button>
+    <button class="tbtn" onclick="openTranslate()">🌐 Translate</button>
+    <button class="tbtn accent" onclick="downloadData()">⬇ Download school-data.js</button>
+  </div>
+
+  <div class="content-area layout-tabs" id="content-area">
+
+    <!-- Tab buttons (tabs mode only) -->
+    <div class="tab-btns" id="tab-btns">
+      <button class="on" id="tab-edit" onclick="showTab('edit')">✏️ Edit</button>
+      <button id="tab-preview" onclick="showTab('preview')">👁 Preview</button>
+    </div>
+
+    <!-- Editor panel -->
+    <div class="editor-panel">
+      <div class="editor-scroll" id="editor-scroll">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <!-- Preview panel -->
+    <div class="preview-panel">
+      <div class="preview-bar">
+        <strong>Live Preview</strong> — reflects your saved changes &nbsp;
+        <button class="tbtn" style="padding:3px 10px;font-size:.72rem" onclick="refreshPreview()">↺ Refresh</button>
+      </div>
+      <iframe id="preview-iframe" src="hub.html"></iframe>
+    </div>
+
+  </div>
+</div>
+
+<!-- Translate modal -->
+<div id="tr-modal" onclick="if(event.target.id==='tr-modal')closeTranslate()">
+  <div class="tr-card">
+    <h2>🌐 Translate Hub with DeepL</h2>
+    <p class="tr-sub">Uses DeepL's free API (500,000 characters / month). Need a key?
+      <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener">Sign up for DeepL API Free</a>.
+      Translations are saved to your browser for preview, then you can download a baked <code>hub.html</code>.</p>
+
+    <div class="tr-row">
+      <label for="tr-key">DeepL API Key</label>
+      <input type="password" id="tr-key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx" autocomplete="off"/>
+      <div class="tr-hint">Stored locally in your browser only. Free-tier keys end in <code>:fx</code>.</div>
+    </div>
+
+    <div class="tr-row">
+      <label>Translate to</label>
+      <div class="tr-checks">
+        <label><input type="checkbox" id="tr-es" checked/> Spanish</label>
+        <label><input type="checkbox" id="tr-ar" checked/> Arabic</label>
+      </div>
+      <div class="tr-hint">Filipino is not supported by DeepL. English is the source.</div>
+    </div>
+
+    <div class="tr-bar-wrap" id="tr-bar-wrap"><div id="tr-bar"></div></div>
+    <div id="tr-status"></div>
+    <div id="tr-log"></div>
+
+    <div class="tr-warn" id="tr-warn" style="display:none">
+      ⚠️ Translate runs against the <strong>English content currently showing</strong> in the preview panel.
+      Save any edits and refresh the preview first for the most accurate translation.
+    </div>
+
+    <div class="tr-actions">
+      <button class="tr-btn secondary" onclick="closeTranslate()">Close</button>
+      <button class="tr-btn accent" id="tr-download" onclick="downloadTranslatedHub()" style="display:none">⬇ Download translated hub.html</button>
+      <button class="tr-btn" id="tr-start" onclick="startTranslate()">Start Translation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Init ─────────────────────────────────────────────────────────────────────
+setTimeout(openEditor, 0);
+
+// ── Draft data ───────────────────────────────────────────────────────────────
+const DRAFT_KEY='grizznet_draft';
+
+// Empty defaults — on first open, the hub auto-pulls grad reqs and
+// counselors from the Course Catalog. Users add entries here only to
+// override or supplement catalog data.
+const DEFAULTS={
+  gradTotalCredits:'',
+  gradColumns:['Subject Area','Credits Required'],
+  gradRequirements:[],
+  gradOtherRequirements:'',gradCreditCheck:'',
+  aidLocalScholarships:'',
+  advocacyBilingualContact:'',
+  handbookContacts:'',handbookBellSchedule:'',handbookCounseling:'',
+  handbookAttendance:'',handbookCellPhone:'',handbookDressCode:'',
+  handbookAcademicHonesty:'',handbookGrading:'',handbookDiscipline:'',
+  handbookScheduleChange:'',handbookCampusAccess:'',
+  handbookHomework:'',handbookHealth:'',handbookActivities:'',
+  handbookAthletics:'',handbookTransportation:'',handbookDistrictPolicies:'',
+  handbookParentsCommunity:'',handbookAIPolicy:'',handbookGeneralRules:'',
+  supportCounselors:'',supportPsychologist:'',supportWellness:'',
+  supportSocialWorker:'',supportCheckIn:'',supportCommunity:'',
+  ccgiSignIn:'',ccgiDistrictCode:'',ccgiContactStaff:'',ccgiSchoolNotes:'',ccgiDataVoice:''
+};
+
+function loadDraft(){
+  try{const d=localStorage.getItem(DRAFT_KEY);return d?JSON.parse(d):JSON.parse(JSON.stringify(DEFAULTS));}
+  catch(e){return JSON.parse(JSON.stringify(DEFAULTS));}
+}
+
+function saveDraft(data){
+  localStorage.setItem(DRAFT_KEY,JSON.stringify(data));
+  const b=document.getElementById('saved-badge');
+  if(b){b.textContent='✓ Saved';setTimeout(()=>{b.textContent=''},2000);}
+}
+
+let saveTimer=null;
+function autosave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveNow(),800);
+}
+
+function saveNow(){
+  saveDraft(collectForm());
+  refreshPreview();
+}
+
+// Keys that use the rich-text editor (contenteditable). Read .innerHTML, not .value.
+const RICH_KEYS=['gradOtherRequirements','gradCreditCheck',
+  'aidLocalScholarships','advocacyBilingualContact',
+  'handbookContacts','handbookBellSchedule','handbookCounseling',
+  'handbookAttendance','handbookCellPhone','handbookDressCode','handbookAcademicHonesty',
+  'handbookGrading','handbookDiscipline','handbookScheduleChange','handbookCampusAccess',
+  'handbookHomework','handbookHealth','handbookActivities','handbookAthletics',
+  'handbookTransportation','handbookDistrictPolicies','handbookParentsCommunity',
+  'handbookAIPolicy','handbookGeneralRules',
+  'supportCounselors','supportPsychologist','supportWellness','supportSocialWorker',
+  'supportCheckIn','supportCommunity',
+  'ccgiSignIn','ccgiContactStaff','ccgiSchoolNotes','ccgiDataVoice'];
+
+function collectForm(){
+  const data=JSON.parse(JSON.stringify(DEFAULTS));
+  // Plain text/number fields
+  const plainKeys=['gradTotalCredits','ccgiDistrictCode'];
+  plainKeys.forEach(k=>{const el=document.getElementById('f_'+k);if(el)data[k]=el.value;});
+  // Rich text fields — read innerHTML, but normalize empty contenteditable to ''
+  RICH_KEYS.forEach(k=>{
+    const el=document.getElementById('f_'+k);
+    if(!el) return;
+    const html=el.innerHTML.trim();
+    // contenteditable can leave behind <br> or empty <p> when cleared
+    if(!html || html==='<br>' || html==='<p></p>' || html==='<div><br></div>') data[k]='';
+    else data[k]=html;
+  });
+  // Grad requirements table — dynamic columns and rows
+  const colInputs=document.querySelectorAll('.req-col-header');
+  const dataRows=document.querySelectorAll('.req-data-row');
+  if(colInputs.length){
+    data.gradColumns=[...colInputs].map(i=>i.value);
+    data.gradRequirements=[...dataRows].map(tr=>[...tr.querySelectorAll('.req-cell')].map(i=>i.value));
+  }
+  return data;
+}
+
+function downloadData(){
+  const data=collectForm();
+  const js=`// school-data.js — Student Hub School Configuration\n// Generated by the editor. Upload this file to your GitHub repo.\n\nconst SCHOOL_DATA = ${JSON.stringify(data,null,2)};\n`;
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([js],{type:'text/javascript'})),download:'school-data.js'});
+  a.click();
+}
+
+// ── Dynamic requirement table ─────────────────────────────────────────────────
+function normalizeReqData(d){
+  // Migrate old {subject,credits} object format to arrays
+  const cols=d.gradColumns||['Subject Area','Credits Required'];
+  const rows=(d.gradRequirements||[]).map(r=>{
+    if(Array.isArray(r)) return r;
+    return [r.subject||'',r.credits||''];
+  });
+  return {cols,rows};
+}
+
+function renderReqTable(){
+  const d=loadDraft();
+  const {cols,rows}=normalizeReqData(d);
+  const numCols=cols.length;
+
+  const thCells=cols.map((col,j)=>`
+    <th style="padding:0;border:1px solid var(--border)">
+      <div class="req-th-wrap">
+        <input class="req-col-header" value="${escAttr(col)}" oninput="autosave()" title="Edit column name"/>
+        <button class="req-del" onclick="removeReqCol(${j})" title="Delete column">×</button>
+      </div>
+    </th>`).join('')+
+    `<th class="req-add-col-th"><button class="req-add-col-btn" onclick="addReqCol()" title="Add column">＋</button></th>
+     <th style="width:28px;background:var(--brand-lt);border:1px solid var(--border)"></th>`;
+
+  const dataRows=rows.map((row,i)=>{
+    const cells=Array.from({length:numCols},(_,j)=>`
+      <td style="border:1px solid var(--border);padding:2px 4px">
+        <input class="req-cell" value="${escAttr(row[j]||'')}" oninput="autosave()"/>
+      </td>`).join('');
+    return `<tr class="req-data-row">${cells}
+      <td style="border:1px solid var(--border);padding:2px 4px;text-align:center;width:28px"></td>
+      <td style="border:1px solid var(--border);padding:2px;text-align:center;width:28px">
+        <button class="req-del" onclick="removeReqRow(${i})" title="Delete row">×</button>
+      </td></tr>`;
+  }).join('');
+
+  document.getElementById('req-table-wrap').innerHTML=
+    `<table class="req-table"><thead><tr>${thCells}</tr></thead><tbody>${dataRows}</tbody></table>`;
+}
+
+function addReqRow(){
+  const data=collectForm();
+  const numCols=(data.gradColumns||[]).length||2;
+  data.gradRequirements.push(Array(numCols).fill(''));
+  saveDraft(data);
+  renderReqTable();
+}
+
+function removeReqRow(i){
+  const data=collectForm();
+  data.gradRequirements.splice(i,1);
+  saveDraft(data);
+  renderReqTable();
+}
+
+function addReqCol(){
+  const data=collectForm();
+  data.gradColumns=data.gradColumns||['Subject Area','Credits Required'];
+  data.gradColumns.push('New Column');
+  data.gradRequirements=(data.gradRequirements||[]).map(r=>[...r,'']);
+  saveDraft(data);
+  renderReqTable();
+}
+
+function removeReqCol(j){
+  const data=collectForm();
+  if((data.gradColumns||[]).length<=1){alert('Table must have at least one column.');return;}
+  data.gradColumns.splice(j,1);
+  data.gradRequirements=(data.gradRequirements||[]).map(r=>{r.splice(j,1);return r;});
+  saveDraft(data);
+  renderReqTable();
+}
+
+// ── Form builder ─────────────────────────────────────────────────────────────
+function field(key,label,hint,type='text'){
+  const tag=type==='textarea'?'textarea':'input';
+  const extra=type==='textarea'?'':'type="text"';
+  return `<div class="field"><label>${label}</label><${tag} id="f_${key}" ${extra} oninput="autosave()" placeholder="${hint}"></${tag==='textarea'?'textarea':'input'}></div>`;
+}
+
+// ── Rich-text editor helpers ────────────────────────────────────────────────
+// Use document.execCommand (still universally supported in evergreen browsers)
+// to power a lightweight rich editor. The user's Hub only needs basic formatting.
+function rt(cmd,val){
+  // Refocus the editor before the command so selection stays with the target
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand(cmd, false, val||null);
+  autosave();
+}
+function rtHilite(btn){
+  // Find the contenteditable that contains the current selection's anchor.
+  // Chrome/Edge accept 'hiliteColor'; Firefox uses 'backColor' with styleWithCSS.
+  document.execCommand('styleWithCSS', false, true);
+  const color='#FEF3C7';
+  if(!document.execCommand('hiliteColor', false, color)){
+    document.execCommand('backColor', false, color);
+  }
+  autosave();
+}
+function rtLink(){
+  const url=prompt('Link URL (include https://)');
+  if(!url) return;
+  document.execCommand('createLink', false, url);
+  autosave();
+}
+function rtPaste(ev){
+  // Strip formatting on paste so the editor doesn't accumulate heavy markup
+  ev.preventDefault();
+  const text=(ev.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+}
+
+// Migration: old drafts saved plain text with \n. If the value has no HTML tags,
+// convert newlines to <br> so the contenteditable renders them as separate lines.
+function rtInitialHtml(v){
+  const s=String(v||'');
+  if(!s) return '';
+  if(/<[a-zA-Z][^>]*>/.test(s)) return s; // already HTML
+  return escHtml(s).replace(/\n/g,'<br>');
+}
+
+function richField(key,label,value,placeholder,hint,minHeight){
+  const init=rtInitialHtml(value);
+  const mh=minHeight?`style="min-height:${minHeight}px"`:'';
+  const hintHtml=hint?`<div class="hint"${hint.color?` style="margin-top:4px;color:${hint.color}"`:''}>${hint.text||hint}</div>`:'';
+  return `<div class="field"><label>${label}</label>
+    <div class="rich-wrap">
+      <div class="rich-toolbar" onmousedown="event.preventDefault()">
+        <button type="button" class="rt-b" title="Bold (Ctrl+B)" onclick="rt('bold')">B</button>
+        <button type="button" class="rt-i" title="Italic (Ctrl+I)" onclick="rt('italic')">I</button>
+        <button type="button" class="rt-u" title="Underline (Ctrl+U)" onclick="rt('underline')">U</button>
+        <button type="button" class="rt-s" title="Strikethrough" onclick="rt('strikeThrough')">S</button>
+        <span class="rt-sep"></span>
+        <button type="button" title="Highlight" onclick="rtHilite(this)">🖍</button>
+        <span class="rt-sep"></span>
+        <button type="button" title="Bulleted list" onclick="rt('insertUnorderedList')">• List</button>
+        <button type="button" title="Numbered list" onclick="rt('insertOrderedList')">1. List</button>
+        <span class="rt-sep"></span>
+        <button type="button" title="Add link" onclick="rtLink()">🔗</button>
+        <button type="button" title="Remove link" onclick="rt('unlink')">⛓‍💥</button>
+        <span class="rt-sep"></span>
+        <button type="button" title="Clear formatting" onclick="rt('removeFormat')">⌫</button>
+      </div>
+      <div id="f_${key}" class="rich-edit" contenteditable="true" data-placeholder="${escAttr(placeholder||'')}" ${mh} oninput="autosave()" onpaste="rtPaste(event)">${init}</div>
+    </div>${hintHtml}</div>`;
+}
+
+function buildForm(){
+  const d=loadDraft();
+  document.getElementById('editor-scroll').innerHTML=`
+
+  <details class="section-group" open>
+    <summary>🎓 Graduation Requirements</summary>
+    <div class="section-body">
+      <div class="field"><label>Total Credits to Graduate</label>
+        <input id="f_gradTotalCredits" type="text" value="${escAttr(d.gradTotalCredits)}" oninput="autosave()" placeholder="e.g. 230"/></div>
+      <div class="field"><label>Subject Area Requirements</label>
+        <div id="req-table-wrap"></div>
+        <button class="req-add-row" onclick="addReqRow()">＋ Add Row</button>
+        <div class="hint" style="margin-top:6px">Edit cells directly. Use ＋ buttons to add rows or columns; × to remove them.</div>
+        <div class="hint" style="margin-top:4px;color:#1B5E3B">💡 Leave this blank to use the grad requirements table from the Course Catalog (imported via the DOCX importer).</div></div>
+      ${richField('gradOtherRequirements','Other Requirements (beyond credits)',d.gradOtherRequirements,'e.g. Senior project, 20 hours community service, passing writing assessment...')}
+      ${richField('gradCreditCheck','How Students Check Their Credits',d.gradCreditCheck,'e.g. Log in to Aeries/StudentVUE → Transcript tab, or ask for a credit audit at the counseling office.')}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>💰 Financial Aid</summary>
+    <div class="section-body">
+      ${richField('aidLocalScholarships','Local & School Scholarships',d.aidLocalScholarships,'List scholarships with name, deadline, amount, and how to apply. One per line or paragraph.','Students will see this in the Financial Aid → Local Scholarships section.',140)}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>✉️ Self-Advocacy</summary>
+    <div class="section-body">
+      ${richField('advocacyBilingualContact','Bilingual Staff / Parent Liaison Contact',d.advocacyBilingualContact,'e.g. Bilingual Parent Liaison: Maria Gomez, Room 101, mgomez@school.edu, available Mon–Fri 7:30–3:30pm')}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>📋 Handbook — School Info & Schedule</summary>
+    <div class="section-body">
+      <div class="hint" style="margin-bottom:10px;color:#1B5E3B">💡 These fields populate the standalone <strong>Student Handbook</strong> page. Open <a href="handbook.html" target="_blank">handbook.html</a> to preview.</div>
+      ${richField('handbookContacts','Contact Information & Communication',d.handbookContacts,'Main office phone, key staff contacts, website, communication channels...')}
+      ${richField('handbookBellSchedule','Bell Schedule',d.handbookBellSchedule,'Period times, minimum days, rally schedules, early release days...')}
+      ${richField('handbookAttendance','Attendance & Tardy Policy',d.handbookAttendance,"Paste or summarize your school's attendance policy...")}
+      ${richField('handbookCounseling','School Counseling Services',d.handbookCounseling,'School Counselors, Wellness Counselors, School Social Worker — names, caseloads, how to access services...')}
+      ${richField('handbookScheduleChange','How to Request a Schedule Change',d.handbookScheduleChange,'')}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>📋 Handbook — Academics & Activities</summary>
+    <div class="section-body">
+      ${richField('handbookHomework','Homework & Makeup Procedures',d.handbookHomework,'Homework expectations, makeup work policy, long-term absence procedures...')}
+      ${richField('handbookGrading','Grading & Grade Appeals',d.handbookGrading,'')}
+      ${richField('handbookAcademicHonesty','Academic Integrity',d.handbookAcademicHonesty,'Cheating, plagiarism definitions, procedures, consequences...')}
+      ${richField('handbookAIPolicy','AI / Technology Use in Academics',d.handbookAIPolicy,'AI tools policy, citation requirements, acceptable use in coursework...')}
+      ${richField('handbookActivities','Student Activities',d.handbookActivities,'Clubs, student government, dances, spirit events, ID cards...')}
+      ${richField('handbookAthletics','Athletics',d.handbookAthletics,'Sports offered, eligibility requirements, tryout info, CIF rules...')}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>📋 Handbook — Policies & Community</summary>
+    <div class="section-body">
+      ${richField('handbookHealth','Health & Wellness',d.handbookHealth,'Immunizations, medications, health office, illness policy, screenings...')}
+      ${richField('handbookCellPhone','Technology & Internet Use Policy',d.handbookCellPhone,'Device rules, acceptable use, digital citizenship, consequences...')}
+      ${richField('handbookDressCode','Dress Code',d.handbookDressCode,'')}
+      ${richField('handbookGeneralRules','General Rules & Regulations',d.handbookGeneralRules,'Behavior standards, prohibited items, property rules, open campus policy...')}
+      ${richField('handbookCampusAccess','Campus Access Rules',d.handbookCampusAccess,'')}
+      ${richField('handbookTransportation','Transportation & Parking',d.handbookTransportation,'Drop-off zones, bike rules, parking permits, bus routes...')}
+      ${richField('handbookDiscipline','Discipline Procedures',d.handbookDiscipline,'')}
+      ${richField('handbookDistrictPolicies','District Policies',d.handbookDistrictPolicies,'Nondiscrimination, bullying prevention, harassment, Title IX, complaint procedures...')}
+      ${richField('handbookParentsCommunity','Parents & Community',d.handbookParentsCommunity,'PTA/PTSA, volunteer programs, parent involvement, booster groups...')}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>💚 Support & Resources</summary>
+    <div class="section-body">
+      ${richField('supportCounselors','School Counselor(s)',d.supportCounselors,'Name, caseload (A–L), room number, office hours — e.g. Ms. Rivera (A–L), Room 204, Tue/Thu 7:30–8am & lunch',{text:'💡 Leave blank to use counselors from the Course Catalog importer.',color:'#1B5E3B'})}
+      ${richField('supportPsychologist','School Psychologist',d.supportPsychologist,'Name, how to make an appointment')}
+      ${richField('supportWellness','Wellness Center / Wellness Room',d.supportWellness,'Location, hours, what students can access there')}
+      ${richField('supportSocialWorker','Social Worker',d.supportSocialWorker,'Name and how to reach them (if applicable)')}
+      ${richField('supportCheckIn','How to Request a Confidential Check-In',d.supportCheckIn,'e.g. Fill out the form in the counseling office, or email your counselor directly.')}
+      ${richField('supportCommunity','Community Resources',d.supportCommunity,'Local mental health clinics, county resources, food/housing help, youth programs...',null,140)}
+    </div>
+  </details>
+
+  <details class="section-group">
+    <summary>🧭 CaliforniaColleges.edu</summary>
+    <div class="section-body">
+      <div class="hint" style="margin-bottom:10px;color:#1B5E3B">💡 This section appears as <strong>CaliforniaColleges.edu — Your Self-Advocacy Toolkit</strong> in the Hub. The four fields below let you customize it for your school. Leave any field blank to use the default generic content.</div>
+      ${richField('ccgiSignIn','How students sign in at our school',d.ccgiSignIn,"e.g. Use your @district.org email to sign in with Google, or click \"Clever\" and pick our school. If you're locked out, visit the counseling office.")}
+      <div class="field">
+        <label for="f_ccgiDistrictCode">District Code (optional)</label>
+        <input type="text" id="f_ccgiDistrictCode" value="${escAttr(d.ccgiDistrictCode||'')}" placeholder="Only if your district still uses a code for sign-in" oninput="autosave()">
+      </div>
+      ${richField('ccgiContactStaff','CCGI point person at our school',d.ccgiContactStaff,'Name, role, room, email, office hours — e.g. Ms. Rivera, College & Career Counselor, Room 204, rivera@district.org, Tue/Thu lunch')}
+      ${richField('ccgiSchoolNotes','Our school\'s CCGI workflow (optional)',d.ccgiSchoolNotes,'e.g. We run a CCGI lesson in Advisory Week 3 of each semester. All 10th graders complete the interest inventory in the fall. Seniors check their A-G progress monthly.')}
+      ${richField('ccgiDataVoice','"Your data, your voice" — school-specific framing (optional)',d.ccgiDataVoice,"e.g. At our school, your CCGI data informs your Spring counselor meetings and is used in SST / 504 discussions when appropriate.")}
+    </div>
+  </details>`;
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
+
+// ── Layout toggle ────────────────────────────────────────────────────────────
+let isSplit=false;
+function toggleLayout(){
+  isSplit=!isSplit;
+  const ca=document.getElementById('content-area');
+  const btn=document.getElementById('layout-btn');
+  if(isSplit){
+    ca.classList.remove('layout-tabs');ca.classList.add('layout-split');
+    btn.textContent='☰ Tabbed View';
+  } else {
+    ca.classList.remove('layout-split');ca.classList.add('layout-tabs');
+    btn.textContent='⇄ Side by Side';
+    showTab('edit');
+  }
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function showTab(tab){
+  const ca=document.getElementById('content-area');
+  const te=document.getElementById('tab-edit');
+  const tp=document.getElementById('tab-preview');
+  if(tab==='preview'){
+    ca.classList.add('show-preview');
+    te.classList.remove('on');tp.classList.add('on');
+    refreshPreview();
+  } else {
+    ca.classList.remove('show-preview');
+    te.classList.add('on');tp.classList.remove('on');
+  }
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+function refreshPreview(){
+  const f=document.getElementById('preview-iframe');
+  if(f) f.src='hub.html?t='+Date.now();
+}
+
+// ── Open editor ───────────────────────────────────────────────────────────────
+function openEditor(){
+  buildForm();
+  renderReqTable();
+  // Deep-link: #handbook scrolls to and opens the first handbook section
+  if(location.hash==='#handbook'){
+    const groups=document.querySelectorAll('details.section-group');
+    let firstHandbook=null;
+    groups.forEach(g=>{
+      const sum=g.querySelector('summary');
+      if(sum && /Handbook/i.test(sum.textContent)){
+        g.open=true;
+        if(!firstHandbook) firstHandbook=g;
+      }
+    });
+    if(firstHandbook && firstHandbook.scrollIntoView) setTimeout(()=>firstHandbook.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  }
+}
+
+// ── DeepL Translation ─────────────────────────────────────────────────────────
+const DEEPL_KEY_STORE='deepl_api_key';
+const TRANSLATIONS_STORE='grizznet_translations';
+const DEEPL_ENDPOINT='https://api-free.deepl.com/v2/translate';
+
+function openTranslate(){
+  document.getElementById('tr-modal').classList.add('on');
+  const savedKey=localStorage.getItem(DEEPL_KEY_STORE)||'';
+  document.getElementById('tr-key').value=savedKey;
+  document.getElementById('tr-warn').style.display='block';
+  // If previously translated, show the download button
+  if(localStorage.getItem(TRANSLATIONS_STORE)){
+    document.getElementById('tr-download').style.display='inline-block';
+  }
+}
+
+function closeTranslate(){
+  document.getElementById('tr-modal').classList.remove('on');
+}
+
+function trLog(msg, kind){
+  const el=document.getElementById('tr-log');
+  el.classList.add('on');
+  const line=document.createElement('div');
+  line.className='log-'+(kind||'info');
+  line.textContent=msg;
+  el.appendChild(line);
+  el.scrollTop=el.scrollHeight;
+}
+
+function trStatus(msg){ document.getElementById('tr-status').textContent=msg||''; }
+function trProgress(pct){
+  const wrap=document.getElementById('tr-bar-wrap');
+  wrap.classList.add('on');
+  document.getElementById('tr-bar').style.width=Math.max(0,Math.min(100,pct))+'%';
+}
+
+// Walk LANG.en and collect translatable strings, tagging HTML vs plain.
+function collectStrings(src){
+  const items=[]; // {path:[...], value:string, isHtml:boolean}
+  function add(path,value,isHtml){
+    if(value==null) return;
+    const s=String(value);
+    if(!s.trim()) return;
+    items.push({path,value:s,isHtml:!!isHtml});
+  }
+  if(src.meta){
+    add(['meta','title'], src.meta.title, false);
+    add(['meta','tag'], src.meta.tag, false);
+    add(['meta','footer'], src.meta.footer, false);
+  }
+  if(Array.isArray(src.nav)){
+    src.nav.forEach((n,i)=>add(['nav',i,'label'], n.label, false));
+  }
+  if(src.sections){
+    Object.keys(src.sections).forEach(secId=>{
+      const sec=src.sections[secId];
+      if(!sec) return;
+      add(['sections',secId,'title'], sec.title, false);
+      add(['sections',secId,'desc'], sec.desc, false);
+      if(Array.isArray(sec.items)){
+        sec.items.forEach((item,i)=>{
+          add(['sections',secId,'items',i,'q'], item.q, false);
+          add(['sections',secId,'items',i,'a'], item.a, true);
+        });
+      }
+    });
+  }
+  return items;
+}
+
+// Build an empty target-language skeleton that mirrors LANG.en's structure
+// (ids/icons preserved; strings will be filled in by the translation pass).
+function buildSkeleton(src){
+  const skel={meta:{}, nav:[], sections:{}};
+  if(src.meta){
+    skel.meta={
+      title:'', tag:'', footer:'', notice:null
+    };
+  }
+  if(Array.isArray(src.nav)){
+    skel.nav=src.nav.map(n=>({id:n.id, icon:n.icon, label:''}));
+  }
+  if(src.sections){
+    Object.keys(src.sections).forEach(secId=>{
+      const sec=src.sections[secId]||{};
+      skel.sections[secId]={
+        title:'', desc:'',
+        items:(sec.items||[]).map(()=>({q:'', a:''}))
+      };
+    });
+  }
+  return skel;
+}
+
+function setAtPath(obj, path, value){
+  let ref=obj;
+  for(let i=0;i<path.length-1;i++){
+    const key=path[i];
+    if(ref[key]==null) ref[key]={};
+    ref=ref[key];
+  }
+  ref[path[path.length-1]]=value;
+}
+
+// Call DeepL for a batch of texts. DeepL accepts multiple text[] params (up to 50).
+async function deeplBatch(key, texts, targetLang, isHtml){
+  const params=new URLSearchParams();
+  params.append('auth_key', key);
+  texts.forEach(t=>params.append('text', t));
+  params.append('target_lang', targetLang);
+  params.append('source_lang', 'EN');
+  if(isHtml){
+    params.append('tag_handling', 'html');
+    // Preserve <br> as a line break
+    params.append('split_sentences', '1');
+  }
+  let res;
+  try{
+    res=await fetch(DEEPL_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:params.toString()
+    });
+  }catch(e){
+    throw new Error('Network error calling DeepL. Check your internet connection. ('+e.message+')');
+  }
+  if(!res.ok){
+    let detail='';
+    try{ detail=await res.text(); }catch(e){}
+    if(res.status===403) throw new Error('DeepL: invalid API key (403). Free-tier keys end in :fx.');
+    if(res.status===456) throw new Error('DeepL: monthly character quota exceeded (456).');
+    if(res.status===429) throw new Error('DeepL: rate limit hit (429). Try again in a moment.');
+    throw new Error('DeepL error '+res.status+' '+detail.slice(0,200));
+  }
+  const json=await res.json();
+  return (json.translations||[]).map(t=>t.text);
+}
+
+const TR_STATE={busy:false};
+
+async function startTranslate(){
+  if(TR_STATE.busy) return;
+
+  const key=document.getElementById('tr-key').value.trim();
+  if(!key){ alert('Please enter your DeepL API key.'); return; }
+  localStorage.setItem(DEEPL_KEY_STORE, key);
+
+  const targets=[];
+  if(document.getElementById('tr-es').checked) targets.push({code:'es', dl:'ES', name:'Spanish'});
+  if(document.getElementById('tr-ar').checked) targets.push({code:'ar', dl:'AR', name:'Arabic'});
+  if(!targets.length){ alert('Select at least one target language.'); return; }
+
+  const iframe=document.getElementById('preview-iframe');
+  let src=null;
+  try{ src=iframe && iframe.contentWindow && iframe.contentWindow.LANG && iframe.contentWindow.LANG.en; }catch(e){}
+  if(!src){
+    alert('Preview not loaded yet — open the Preview tab or wait a moment, then try again.');
+    return;
+  }
+
+  const items=collectStrings(src);
+  if(!items.length){ alert('No strings found to translate.'); return; }
+
+  TR_STATE.busy=true;
+  const startBtn=document.getElementById('tr-start');
+  startBtn.disabled=true; startBtn.textContent='Translating…';
+  document.getElementById('tr-log').innerHTML='';
+  trProgress(0);
+  trStatus('Preparing…');
+  trLog('Collected '+items.length+' English strings to translate.','info');
+
+  // Partition into HTML and plain — DeepL handles them with different modes.
+  const htmlItems=items.filter(x=>x.isHtml);
+  const plainItems=items.filter(x=>!x.isHtml);
+  trLog('  • '+plainItems.length+' plain strings','info');
+  trLog('  • '+htmlItems.length+' HTML strings','info');
+
+  // Load existing translations so partial re-runs merge cleanly
+  let merged={};
+  try{ const raw=localStorage.getItem(TRANSLATIONS_STORE); if(raw) merged=JSON.parse(raw); }catch(e){}
+
+  const totalCalls=targets.length*(Math.ceil(plainItems.length/30)+Math.ceil(htmlItems.length/30));
+  let callsDone=0;
+
+  try{
+    for(const target of targets){
+      trLog('→ Translating to '+target.name+' ('+target.dl+')…','info');
+      const out=buildSkeleton(src);
+      const CHUNK=30;
+
+      // Plain strings
+      for(let i=0;i<plainItems.length;i+=CHUNK){
+        const batch=plainItems.slice(i, i+CHUNK);
+        trStatus(target.name+': plain '+(i+1)+'–'+Math.min(i+CHUNK,plainItems.length)+' / '+plainItems.length);
+        const results=await deeplBatch(key, batch.map(b=>b.value), target.dl, false);
+        batch.forEach((b,j)=>setAtPath(out, b.path, results[j]));
+        callsDone++;
+        trProgress(callsDone/totalCalls*100);
+      }
+
+      // HTML strings
+      for(let i=0;i<htmlItems.length;i+=CHUNK){
+        const batch=htmlItems.slice(i, i+CHUNK);
+        trStatus(target.name+': html '+(i+1)+'–'+Math.min(i+CHUNK,htmlItems.length)+' / '+htmlItems.length);
+        const results=await deeplBatch(key, batch.map(b=>b.value), target.dl, true);
+        batch.forEach((b,j)=>setAtPath(out, b.path, results[j]));
+        callsDone++;
+        trProgress(callsDone/totalCalls*100);
+      }
+
+      // Keep the existing "partial translation" notice localized per target
+      if(target.code==='es'){
+        out.meta.notice=null; // full translation, clear the notice
+      } else if(target.code==='ar'){
+        out.meta.notice=null;
+      }
+
+      merged[target.code]=out;
+      trLog('✓ '+target.name+' done','ok');
+    }
+
+    localStorage.setItem(TRANSLATIONS_STORE, JSON.stringify(merged));
+    trProgress(100);
+    trStatus('All translations saved. Refreshing preview…');
+    trLog('✓ Saved to browser. Click Refresh on the preview to see results.','ok');
+    refreshPreview();
+    document.getElementById('tr-download').style.display='inline-block';
+  }catch(e){
+    trLog('✗ '+e.message,'err');
+    trStatus('Failed.');
+    alert('Translation failed:\n\n'+e.message);
+  }finally{
+    TR_STATE.busy=false;
+    startBtn.disabled=false; startBtn.textContent='Re-run Translation';
+  }
+}
+
+// Fetch hub.html from disk (works over file:// via XMLHttpRequest)
+function fetchHubText(){
+  return new Promise((resolve,reject)=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('GET','hub.html?t='+Date.now(),true);
+    xhr.onload=()=>{
+      if((xhr.status>=200 && xhr.status<300) || xhr.status===0) resolve(xhr.responseText);
+      else reject(new Error('HTTP '+xhr.status));
+    };
+    xhr.onerror=()=>reject(new Error('Network error fetching hub.html'));
+    xhr.send();
+  });
+}
+
+async function downloadTranslatedHub(){
+  const raw=localStorage.getItem(TRANSLATIONS_STORE);
+  if(!raw){ alert('No translations saved yet. Run the translation first.'); return; }
+
+  let hubHtml;
+  try{ hubHtml=await fetchHubText(); }
+  catch(e){ alert('Could not read hub.html ('+e.message+'). Try running this from the same folder as hub.html.'); return; }
+
+  const START='/* TRANSLATIONS_START */';
+  const END='/* TRANSLATIONS_END */';
+  const i1=hubHtml.indexOf(START);
+  const i2=hubHtml.indexOf(END);
+  if(i1<0||i2<0||i2<=i1){
+    alert('Could not find TRANSLATIONS markers in hub.html. The file may be out of date.');
+    return;
+  }
+
+  // Pretty-print the translations so the file diff is readable
+  let pretty;
+  try{ pretty=JSON.stringify(JSON.parse(raw), null, 2); }catch(e){ pretty=raw; }
+
+  const injected=hubHtml.slice(0,i1)
+    + START
+    + '\nconst TRANSLATIONS = ' + pretty + ';\n'
+    + hubHtml.slice(i2);
+
+  const blob=new Blob([injected],{type:'text/html'});
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(blob),
+    download:'hub.html'
+  });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  trLog('⬇ Downloaded hub.html with baked translations.','ok');
+}
+</script>
+</body>
+</html>

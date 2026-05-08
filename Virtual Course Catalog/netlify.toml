@@ -1,0 +1,4 @@
+[build]
+  publish = "."      # Serve files from the repo root
+
+# No build command needed — pure static HTML

@@ -1,0 +1,3058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jefferson High School – Course Catalog 2026–2027</title>
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS & RESET
+═══════════════════════════════════════════ */
+:root {
+  --navy:       #1a3a5c;
+  --navy-dark:  #122844;
+  --gold:       #c8a227;
+  --gold-light: #f5e9c0;
+  --bg:         #f4f6f9;
+  --white:      #ffffff;
+  --text:       #1e2428;
+  --muted:      #6b7280;
+  --border:     #dde1e7;
+  --sidebar-w:  260px;
+  --r:          8px;
+  --shadow:     0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.13);
+  --ap-color:   #7c3aed;
+  --cp-color:   #0369a1;
+  --eld-color:  #065f46;
+  --sp-color:   #9a3412;
+  --header-h:   60px;
+  --transition: 0.22s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER  (no sticky — plays nice in iframes)
+═══════════════════════════════════════════ */
+header {
+  background: var(--navy);
+  color: #fff;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.22);
+  position: relative;
+  z-index: 200;
+}
+
+/* Hamburger */
+.ham-btn {
+  background: none; border: none; cursor: pointer;
+  color: #fff; padding: 6px; border-radius: 6px;
+  display: flex; flex-direction: column; gap: 5px;
+  flex-shrink: 0; transition: background var(--transition);
+}
+.ham-btn:hover { background: rgba(255,255,255,0.12); }
+.ham-btn span {
+  display: block; width: 22px; height: 2px;
+  background: #fff; border-radius: 2px;
+  transition: transform var(--transition), opacity var(--transition);
+}
+body.nav-open .ham-btn span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+body.nav-open .ham-btn span:nth-child(2) { opacity: 0; }
+body.nav-open .ham-btn span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Brand */
+.header-brand {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.paw { font-size: 24px; line-height: 1; }
+.brand-text h1 {
+  font-size: 0.95rem; font-weight: 700; line-height: 1.2; white-space: nowrap;
+}
+.brand-text p {
+  font-size: 0.65rem; color: var(--gold); font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+}
+
+/* Search in header */
+.header-search-wrap {
+  flex: 1; display: flex; align-items: center;
+  background: rgba(255,255,255,0.13);
+  border-radius: 24px; padding: 0 14px; height: 36px; gap: 8px;
+  min-width: 0;
+}
+.header-search-wrap input {
+  background: none; border: none; outline: none;
+  color: #fff; font-size: 0.88rem; width: 100%; min-width: 0;
+}
+.header-search-wrap input::placeholder { color: rgba(255,255,255,0.45); }
+.search-icon { font-size: 14px; flex-shrink: 0; opacity: 0.6; }
+
+.result-badge {
+  background: rgba(255,255,255,0.18);
+  border-radius: 12px; padding: 2px 9px;
+  font-size: 0.7rem; color: rgba(255,255,255,0.8);
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.layout {
+  display: flex;
+  min-height: calc(100vh - var(--header-h));
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════
+   OVERLAY (mobile drawer backdrop)
+═══════════════════════════════════════════ */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.42);
+  z-index: 150; backdrop-filter: blur(2px);
+}
+body.nav-open .overlay { display: block; }
+
+/* ═══════════════════════════════════════════
+   SIDEBAR / DRAWER
+═══════════════════════════════════════════ */
+aside {
+  width: var(--sidebar-w);
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform var(--transition);
+}
+
+/* Sticky sidebar label at top */
+.sidebar-top {
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--white); z-index: 2;
+}
+.sidebar-top-title {
+  font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); font-weight: 700;
+}
+
+.sidebar-label {
+  font-size: 0.63rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); font-weight: 700;
+  padding: 14px 16px 4px;
+}
+.sidebar-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 16px; font-size: 0.82rem; color: var(--text);
+  text-decoration: none; border-radius: 0; cursor: pointer;
+  border: none; background: none; width: 100%; text-align: left;
+  transition: background var(--transition); position: relative;
+}
+.sidebar-link:hover { background: var(--bg); }
+.sidebar-link.active {
+  background: var(--gold-light); color: var(--navy); font-weight: 600;
+}
+.sidebar-link.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--navy); border-radius: 0 2px 2px 0;
+}
+.sidebar-link .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.sidebar-link .cnt {
+  margin-left: auto; font-size: 0.68rem; background: var(--border);
+  border-radius: 10px; padding: 1px 7px; color: var(--muted);
+}
+.sidebar-divider { height: 1px; background: var(--border); margin: 6px 16px; }
+
+/* Scrollbar */
+aside::-webkit-scrollbar { width: 3px; }
+aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Mobile: sidebar becomes a fixed drawer ── */
+@media (max-width: 900px) {
+  aside {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100dvh;
+    z-index: 160;
+    transform: translateX(-100%);
+    box-shadow: none;
+    width: min(var(--sidebar-w), 88vw);
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  body.nav-open aside {
+    transform: translateX(0);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════ */
+main {
+  flex: 1; padding: 20px 20px 48px;
+  min-width: 0; overflow-x: hidden;
+}
+
+@media (max-width: 600px) {
+  main { padding: 14px 12px 80px; }
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════════ */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  z-index: 140;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+}
+.bottom-nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; cursor: pointer;
+  font-size: 0.62rem; color: var(--muted); padding: 6px 10px;
+  border-radius: 10px; transition: color var(--transition), background var(--transition);
+  flex: 1; max-width: 80px;
+}
+.bottom-nav-btn .bn-icon { font-size: 20px; line-height: 1; }
+.bottom-nav-btn.active { color: var(--navy); background: var(--gold-light); }
+.bottom-nav-btn.active .bn-icon { transform: scale(1.1); }
+
+@media (max-width: 900px) {
+  .bottom-nav { display: flex; }
+}
+
+/* ═══════════════════════════════════════════
+   FILTER BAR
+═══════════════════════════════════════════ */
+.filters-bar {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 16px; align-items: center;
+}
+
+/* On mobile: scroll filters horizontally */
+@media (max-width: 600px) {
+  .filters-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  .filters-bar::-webkit-scrollbar { display: none; }
+  .filter-group { flex-wrap: nowrap; flex-shrink: 0; }
+  .filter-label { flex-shrink: 0; }
+  .filters-reset { flex-shrink: 0; }
+}
+
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+.chip {
+  padding: 5px 13px; border-radius: 20px;
+  font-size: 0.77rem; border: 1.5px solid var(--border);
+  background: white; cursor: pointer; white-space: nowrap;
+  transition: all var(--transition); font-weight: 500; color: var(--muted);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.chip:hover { border-color: var(--navy); color: var(--navy); }
+.chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+.chip.ap-chip.active  { background: var(--ap-color);  border-color: var(--ap-color);  }
+.chip.cp-chip.active  { background: var(--cp-color);  border-color: var(--cp-color);  }
+.chip.eld-chip.active { background: var(--eld-color); border-color: var(--eld-color); }
+.filters-reset {
+  margin-left: auto; font-size: 0.75rem; color: var(--muted);
+  cursor: pointer; text-decoration: underline; background: none;
+  border: none; white-space: nowrap; padding: 4px 0;
+}
+
+/* ═══════════════════════════════════════════
+   SECTION HEADING
+═══════════════════════════════════════════ */
+.section-heading {
+  display: flex; align-items: center; gap: 10px;
+  margin: 28px 0 12px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.section-heading:first-child { margin-top: 0; }
+.section-icon { font-size: 1.3rem; }
+.section-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); }
+.section-pill {
+  font-size: 0.68rem; background: var(--navy); color: white;
+  border-radius: 10px; padding: 2px 9px;
+}
+
+/* ═══════════════════════════════════════════
+   COURSE GRID
+═══════════════════════════════════════════ */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .course-grid { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* ═══════════════════════════════════════════
+   COURSE CARD
+═══════════════════════════════════════════ */
+.course-card {
+  background: white; border-radius: var(--r);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  transition: box-shadow var(--transition), transform var(--transition);
+  overflow: hidden; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.course-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.course-card:active { transform: scale(0.99); }
+.course-card.expanded .card-body { display: block; }
+
+.card-header { padding: 13px 14px 10px; border-left: 4px solid var(--navy); }
+.card-title-row {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px;
+}
+.card-title { font-size: 0.86rem; font-weight: 700; color: var(--navy); line-height: 1.35; }
+.expand-btn {
+  color: var(--muted); font-size: 11px; flex-shrink: 0;
+  margin-top: 3px; transition: transform var(--transition);
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--bg);
+}
+.course-card.expanded .expand-btn { transform: rotate(180deg); }
+
+.card-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.badge {
+  font-size: 0.63rem; padding: 2px 7px; border-radius: 10px;
+  font-weight: 600; letter-spacing: 0.03em; white-space: nowrap;
+}
+.badge-ap      { background: #ede9fe; color: var(--ap-color); }
+.badge-cp      { background: #e0f2fe; color: var(--cp-color); }
+.badge-eld     { background: #d1fae5; color: var(--eld-color); }
+.badge-sp      { background: #ffedd5; color: var(--sp-color); }
+.badge-ag      { background: var(--gold-light); color: #78450f; }
+.badge-grade   { background: #f3f4f6; color: var(--muted); }
+.badge-credits { background: #f3f4f6; color: var(--muted); }
+.badge-dual    { background: #fce7f3; color: #9d174d; }
+.badge-college { background: #fef3c7; color: #92400e; }
+
+.card-prereq { font-size: 0.71rem; color: var(--muted); margin-top: 5px; }
+.card-prereq em { color: #b45309; font-style: normal; font-weight: 600; }
+
+.card-body {
+  display: none; padding: 12px 14px 14px;
+  border-top: 1px solid var(--bg);
+  animation: slideDown 0.18s ease;
+}
+@keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+
+.card-desc { font-size: 0.8rem; line-height: 1.65; color: #374151; }
+.card-meta {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4px 14px; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--bg);
+}
+.card-meta-item { font-size: 0.71rem; color: var(--muted); }
+.card-meta-item strong { color: var(--text); display: block; }
+
+/* ═══════════════════════════════════════════
+   INFO PAGES
+═══════════════════════════════════════════ */
+.info-page { display: none; }
+.info-page.active { display: block; }
+
+.info-card {
+  background: white; border-radius: var(--r);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  padding: 20px; margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .info-card { padding: 16px; }
+}
+
+.info-card h2 {
+  font-size: 1rem; font-weight: 700; color: var(--navy);
+  margin-bottom: 12px; line-height: 1.3;
+}
+.info-card h3 {
+  font-size: 0.86rem; font-weight: 700; color: var(--navy);
+  margin: 16px 0 6px;
+}
+.info-card p  { font-size: 0.82rem; line-height: 1.7; color: #374151; margin-bottom: 6px; }
+.info-card ul { padding-left: 18px; }
+.info-card ul li { font-size: 0.81rem; line-height: 1.7; color: #374151; margin-bottom: 3px; }
+.info-card ol { padding-left: 18px; }
+.info-card ol li { font-size: 0.81rem; line-height: 1.7; color: #374151; margin-bottom: 3px; }
+
+/* Responsive table — wrap on small screens */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.req-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 500px; }
+.req-table th {
+  background: var(--navy); color: white;
+  padding: 8px 12px; text-align: left; font-size: 0.73rem;
+}
+.req-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.req-table tr:last-child td { border-bottom: none; }
+.req-table tr:nth-child(even) td { background: var(--bg); }
+
+.ag-badge {
+  display: inline-flex; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--navy); color: white; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; margin-right: 4px; flex-shrink: 0;
+}
+
+.apex-tag {
+  display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em;
+  background: #fff3cd; color: #856404; border: 1px solid #ffc107;
+  border-radius: 3px; padding: 1px 5px; margin-left: 5px; vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Four-year grid: 2 cols on tablet+, 1 col on phone */
+.four-year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px,100%), 1fr));
+  gap: 12px;
+}
+.grade-block { background: var(--bg); border-radius: 8px; padding: 14px; }
+.grade-block h3 {
+  color: var(--navy); font-size: 0.85rem; font-weight: 700;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.grade-block ol { padding-left: 18px; }
+.grade-block ol li { font-size: 0.78rem; line-height: 1.7; color: #374151; }
+
+/* Counselors */
+.counselor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px,100%), 1fr));
+  gap: 12px; margin-top: 10px;
+}
+.counselor-card {
+  background: var(--bg); border-radius: 8px; padding: 14px;
+  border-left: 3px solid var(--gold);
+}
+.counselor-card h3 { font-size: 0.83rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.counselor-card p  { font-size: 0.75rem; color: var(--muted); margin-bottom: 3px; }
+.counselor-card a  { color: var(--navy); word-break: break-all; }
+
+/* ═══════════════════════════════════════════
+   NO RESULTS
+═══════════════════════════════════════════ */
+.no-results { text-align: center; padding: 60px 20px; color: var(--muted); }
+.no-results .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+.no-results p { font-size: 0.9rem; }
+
+/* ═══════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════ */
+.hidden { display: none !important; }
+.courses-view.hidden { display: none !important; }
+
+/* ── Desktop: no drawer, just static sidebar ── */
+@media (min-width: 901px) {
+  .ham-btn { display: none; }
+  .bottom-nav { display: none !important; }
+  .overlay { display: none !important; }
+  aside {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    /* allow sidebar to scroll independently */
+    transform: none !important;
+  }
+}
+
+/* ── Tablet tweak ── */
+@media (min-width: 601px) and (max-width: 900px) {
+  :root { --sidebar-w: 240px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <button class="ham-btn" id="hamBtn" aria-label="Toggle navigation" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="header-brand">
+    <span class="paw" data-school-emoji>🐾</span>
+    <div class="brand-text">
+      <h1 data-school-name>Jefferson High School</h1>
+      <p>Course Catalog <span data-school-year>2026–2027</span></p>
+    </div>
+  </div>
+  <div class="header-search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search courses…" autocomplete="off" inputmode="search">
+  </div>
+  <span class="result-badge hidden" id="resultCount"></span>
+</header>
+
+<!-- ── OVERLAY ── -->
+<div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-top-title" data-school-mascot>🐾 Go Grizzlies!</div>
+    </div>
+
+    <div class="sidebar-label">Information</div>
+    <button class="sidebar-link active" id="sl-home"         onclick="showPage('home','sl-home')">🏠 Overview &amp; Planning</button>
+    <button class="sidebar-link"        id="sl-requirements" onclick="showPage('requirements','sl-requirements')">📋 Grad Requirements</button>
+    <button class="sidebar-link"        id="sl-ag"           onclick="showPage('ag','sl-ag')">✅ a-g Courses</button>
+    <button class="sidebar-link"        id="sl-fouryear"     onclick="showPage('fouryear','sl-fouryear')">📅 Four-Year Plan</button>
+    <button class="sidebar-link"        id="sl-postsecondary"onclick="showPage('postsecondary','sl-postsecondary')">🎓 Post-Secondary</button>
+    <button class="sidebar-link"        id="sl-ncaa"         onclick="showPage('ncaa','sl-ncaa')">🏈 NCAA Eligibility</button>
+    <button class="sidebar-link"        id="sl-scheduling"   onclick="showPage('scheduling','sl-scheduling')">📆 Scheduling &amp; Contacts</button>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">Course Departments</div>
+
+    <button class="sidebar-link" id="sl-all"          onclick="filterDept('all','sl-all')">
+      <span class="dot" style="background:#1a3a5c"></span> All Courses
+      <span class="cnt" id="cnt-all">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-social-science" onclick="filterDept('social-science','sl-social-science')">
+      <span class="dot" style="background:#dc2626"></span> Social Science
+      <span class="cnt" id="cnt-social-science">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-english"      onclick="filterDept('english','sl-english')">
+      <span class="dot" style="background:#ea580c"></span> English
+      <span class="cnt" id="cnt-english">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-mathematics"  onclick="filterDept('mathematics','sl-mathematics')">
+      <span class="dot" style="background:#d97706"></span> Mathematics
+      <span class="cnt" id="cnt-mathematics">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-science"      onclick="filterDept('science','sl-science')">
+      <span class="dot" style="background:#16a34a"></span> Science
+      <span class="cnt" id="cnt-science">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-lote"         onclick="filterDept('lote','sl-lote')">
+      <span class="dot" style="background:#0284c7"></span> Languages (LOTE)
+      <span class="cnt" id="cnt-lote">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-vpa"          onclick="filterDept('vpa','sl-vpa')">
+      <span class="dot" style="background:#7c3aed"></span> Visual &amp; Performing Arts
+      <span class="cnt" id="cnt-vpa">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-cte"          onclick="filterDept('cte','sl-cte')">
+      <span class="dot" style="background:#be185d"></span> Career Technical Ed
+      <span class="cnt" id="cnt-cte">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-pe"           onclick="filterDept('pe','sl-pe')">
+      <span class="dot" style="background:#0f766e"></span> PE &amp; Health
+      <span class="cnt" id="cnt-pe">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-electives"    onclick="filterDept('electives','sl-electives')">
+      <span class="dot" style="background:#6366f1"></span> Interdisciplinary Electives
+      <span class="cnt" id="cnt-electives">0</span>
+    </button>
+    <button class="sidebar-link" id="sl-special-ed"   onclick="filterDept('special-ed','sl-special-ed')">
+      <span class="dot" style="background:#92400e"></span> Special Education
+      <span class="cnt" id="cnt-special-ed">0</span>
+    </button>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main id="mainContent">
+
+    <!-- ══ INFO PAGES (rendered by renderInfoPages() from INFO constant) ══ -->
+    <div id="infoPages"></div>
+
+    <!-- ══ COURSES VIEW ══ -->
+    <div class="courses-view hidden" id="coursesView">
+      <div class="filters-bar" id="filtersBar">
+        <div class="filter-group">
+          <span class="filter-label">Grade:</span>
+          <div class="chip active" data-grade="all"  onclick="toggleGrade(this,'all')">All</div>
+          <div class="chip"        data-grade="9"    onclick="toggleGrade(this,'9')">9th</div>
+          <div class="chip"        data-grade="10"   onclick="toggleGrade(this,'10')">10th</div>
+          <div class="chip"        data-grade="11"   onclick="toggleGrade(this,'11')">11th</div>
+          <div class="chip"        data-grade="12"   onclick="toggleGrade(this,'12')">12th</div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Type:</span>
+          <div class="chip ap-chip"  data-type="ap"  onclick="toggleType(this,'ap')">AP</div>
+          <div class="chip cp-chip"  data-type="cp"  onclick="toggleType(this,'cp')">CP</div>
+          <div class="chip eld-chip" data-type="eld" onclick="toggleType(this,'eld')">ELD/ELA</div>
+        </div>
+        <button class="filters-reset" onclick="resetFilters()">Reset</button>
+      </div>
+      <div id="courseContainer"></div>
+      <div class="no-results hidden" id="noResults">
+        <div class="emoji">🔍</div>
+        <p>No courses match your search or filters.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── BOTTOM NAV (mobile) ── -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-btn active" id="bn-home" onclick="showPage('home','sl-home');setBN('bn-home')">
+    <span class="bn-icon">🏠</span>Home
+  </button>
+  <button class="bottom-nav-btn" id="bn-courses" onclick="filterDept('all','sl-all');setBN('bn-courses')">
+    <span class="bn-icon">📚</span>Courses
+  </button>
+  <button class="bottom-nav-btn" id="bn-plan" onclick="showPage('fouryear','sl-fouryear');setBN('bn-plan')">
+    <span class="bn-icon">📅</span>Plan
+  </button>
+  <button class="bottom-nav-btn" id="bn-more" onclick="toggleNav()">
+    <span class="bn-icon">☰</span>Menu
+  </button>
+</nav>
+
+<script src="school-config.js"></script>
+<script>
+/* ── Boot check: redirect to setup if not configured ── */
+if (typeof SchoolConfig !== 'undefined') {
+  SchoolConfig.requireSetup();
+  SchoolConfig.applyTheme();
+}
+const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
+
+/* ═══════════════════════════════════════════════════
+   INFO PAGE DATA  (edit via editor.html → Info Pages tab)
+═══════════════════════════════════════════════════ */
+/* INFO_SEED_START */
+const INFO = {
+  "overview": {
+    "tagline": "",
+    "diplomaCredits": 225,
+    "agMin": 15,
+    "agByJunior": 11,
+    "ucGPA": "3.0",
+    "csuGPA": "2.5"
+  },
+  "gradReqs": [
+    {
+      "area": "a",
+      "subject": "History / Social Science",
+      "juhsd": "30 credits",
+      "note": "World History (10), US History (11), Gov/Econ (12)",
+      "ucCsu": "20 credits"
+    },
+    {
+      "area": "b",
+      "subject": "English",
+      "juhsd": "40 credits",
+      "note": "",
+      "ucCsu": "40 credits"
+    },
+    {
+      "area": "c",
+      "subject": "Mathematics",
+      "juhsd": "30 credits (incl. Math Course 1)",
+      "note": "",
+      "ucCsu": "30 credits (40 recommended)"
+    },
+    {
+      "area": "d",
+      "subject": "Laboratory Science",
+      "juhsd": "20 credits (bio + physical)",
+      "note": "",
+      "ucCsu": "20 credits (30 recommended)"
+    },
+    {
+      "area": "e",
+      "subject": "Language Other Than English",
+      "juhsd": "10 credits",
+      "note": "",
+      "ucCsu": "20 credits of same language (30 recommended)"
+    },
+    {
+      "area": "f",
+      "subject": "Visual & Performing Arts",
+      "juhsd": "10 credits",
+      "note": "",
+      "ucCsu": "10 credits"
+    },
+    {
+      "area": "g",
+      "subject": "Electives",
+      "juhsd": "60 credits",
+      "note": "",
+      "ucCsu": "10 credits"
+    },
+    {
+      "area": "—",
+      "subject": "Health Education",
+      "juhsd": "5 credits",
+      "note": "",
+      "ucCsu": "N/A"
+    },
+    {
+      "area": "—",
+      "subject": "Physical Education",
+      "juhsd": "20 credits",
+      "note": "",
+      "ucCsu": "N/A"
+    },
+    {
+      "area": "—",
+      "subject": "Career Technical Education",
+      "juhsd": "10 credits",
+      "note": "",
+      "ucCsu": "N/A"
+    }
+  ],
+  "fourYear": {
+    "grade9": [
+      "English 9 CP",
+      "Math Course 1 or 2 CP",
+      "Health / College & Career CP",
+      "Biology CP",
+      "PE",
+      "Ethnic Studies",
+      "LOTE CP",
+      "Visual / Performing Arts CP / CTE"
+    ],
+    "grade10": [
+      "English 10 CP",
+      "Math Course 2 or 3 CP",
+      "World or AP World History",
+      "Chemistry CP",
+      "PE",
+      "LOTE CP",
+      "CTE CP",
+      "Elective CP"
+    ],
+    "grade11": [
+      "English 11 CP or AP English Language",
+      "Math Course 3 CP or Trig/Pre-Calc CP",
+      "US History or AP US History",
+      "CP or AP Lab Science",
+      "LOTE CP",
+      "CTE CP (capstone)",
+      "Elective CP",
+      "Elective CP"
+    ],
+    "grade12": [
+      "AP English Lit or Film as Lit CP or ERWC CP",
+      "Statistics CP or Intro to Calculus CP or AP Calculus",
+      "AP Government/Econ or Econ CP / American Gov CP",
+      "CP or AP Lab Science",
+      "LOTE CP",
+      "Elective CP",
+      "Elective CP",
+      "Elective CP"
+    ]
+  },
+  "postSecondary": [
+    {
+      "title": "University of California (UC)",
+      "text": "The UC system serves the top 12.5% of high school graduates in the state of California. There are 9, four-year universities within the system offering a variety of Bachelor of Arts (BA) and Bachelor of Science (BS) degrees. Master and Doctoral postgraduate programs are also available. To qualify for admission as a Freshman, students must earn a high school diploma. Students must follow a college preparatory program and must successfully complete all “a-g” courses with a “C” grade or better each semester. Students must have a high school grade point average of 3.0 or higher to be eligible for the UC system. GPA requirements and subject requirements may vary depending on major and campus selected."
+    },
+    {
+      "title": "California State University (CSU)",
+      "text": "The CSU system is designed to accommodate the top 1/3 of all high school graduates in the state. There are 23 CSU campuses throughout the state. The CSU system offers a variety of BA and BS programs. Master degree programs are also available. To qualify for entrance as a Freshman, students must have a high school diploma. Students must follow a college preparatory program and must successfully complete all “a-g” courses with a grade of “C” or better.  Students must have a high school grade point average of 2.5 (supplemental admission criteria will be used for students with a 2.0-2.49 GPA) or higher to be eligible for the CSU system. GPA requirements and subject requirements may vary depending on major and campus selected."
+    },
+    {
+      "title": "Private Colleges",
+      "text": "There are 86 private colleges and universities in California. Entrance requirements for private colleges are similar to those of the University of California or the California State University systems. Consult the individual college for specific admission requirements."
+    },
+    {
+      "title": "Community Colleges",
+      "text": "One hundred and sixteen college campuses in California are part of the California    Community College system. These campuses offer two-year Associate of Arts (AA) or Associate of Science (AS) degrees, certificate programs and training in specific trades and technical fields, and transfer programs where classes taken at the community college can be transferred to the University of California, California State University, and other colleges and universities."
+    },
+    {
+      "title": "Technical, Trade & Business Schools",
+      "text": "These schools offer certificates for training in a variety of vocational occupations. Most of these schools require a high school diploma or equivalent. Students who take advantage of high school preparation courses can complete training in a minimum amount of time."
+    },
+    {
+      "title": "Apprenticeship Programs",
+      "text": "Apprenticeship programs combine classroom instruction with on-the-job training. Generally, to be eligible for an apprenticeship, students must be at least 18 years of age, have a high school diploma or GED certificate and be able to perform the work of the trade"
+    }
+  ],
+  "ncaa": {
+    "d1GPA": "2.3",
+    "d1Notes": "Complete 10 core courses, including seven in English, math or natural/physical science, before your seventh semester (senior year). Once you begin your seventh semester, you may not repeat or replace any of those 10 courses to improve your core-course GPA. Test Scores- Earn the ACT/SAT score matching your core-course GPA on the Division I sliding scale.  Refer to:  ncaa.org/student-athletes/future/test-scores",
+    "d1": [
+      {
+        "years": "4",
+        "subject": "English"
+      },
+      {
+        "years": "3",
+        "subject": "mathematics (Algebra 1 or higher)"
+      },
+      {
+        "years": "2",
+        "subject": "natural science/physical science (1 year of lab science)"
+      },
+      {
+        "years": "1",
+        "subject": "additional English, math, or natural/physical science"
+      },
+      {
+        "years": "2",
+        "subject": "social science"
+      },
+      {
+        "years": "4",
+        "subject": "additional courses (from any area above, foreign language or comparative religion/philosophy)"
+      }
+    ],
+    "d2GPA": "2.2",
+    "d2Notes": "Test Scores- Earn the ACT/SAT score matching your core-course GPA on the Division II full qualifier sliding scale.  Refer to:  ncaa.org/student-athletes/future/test-scores.  When registering for the SAT or ACT, use the Eligibility Center code of 9999 to make sure the score is reported to the Eligibility Center",
+    "d2": [
+      {
+        "years": "3",
+        "subject": "English"
+      },
+      {
+        "years": "2",
+        "subject": "mathematics (Algebra 1 or higher)"
+      },
+      {
+        "years": "2",
+        "subject": "natural science/physical science (1 year of lab science)"
+      },
+      {
+        "years": "3",
+        "subject": "additional English, math, or natural/physical science"
+      },
+      {
+        "years": "2",
+        "subject": "social science"
+      },
+      {
+        "years": "4",
+        "subject": "additional courses (from any area above, foreign language or comparative religion/philosophy)"
+      }
+    ]
+  },
+  "scheduling": {
+    "deadlineFall": "first two weeks of the start of the fall semester",
+    "deadlineSpring": "first two weeks of the start of the fall semester, and first week of the spring semester",
+    "allowedReasons": "obvious scheduling errors, summer coursework, inappropriate placement, incomplete prerequisites, or administrative directive",
+    "conflictSteps": [
+      "At the first sign of difficulty, the student will contact the teacher. This will make the teacher aware of the student’s concerns or frustrations and will facilitate getting additional help from the teacher.",
+      "If the student feels he/she has tried the suggestions of the teacher and continues to struggle, a parent conference should be scheduled. Appointments can be scheduled directly with the teacher by phone or email for a parent/teacher/ student conference. Counselor/parent/teacher/student conferences can also be scheduled by contacting the student’s counselor.",
+      "If both student and teacher have tried to improve the student’s progress in the class, the parent can appeal for administrative action with the Vice Principal. The Vice Principal will then meet with the parent, student, teacher, and counselor to determine if there is anything else that can be done to resolve the conflict in class.",
+      "If the Vice Principal determines that a class change is appropriate, the student will be allowed to transfer to a different class. This process is designed with the intent of placing responsibility with the student. We hope that the parent and teacher conference will improve communication and create a more positive learning environment for all students."
+    ],
+    "apPolicy": "All students who choose to enroll in an AP course must meet with the AP teacher to fully understand the requirements of the course. Students in AP classes are expected to remain in the classes for the entire term. Additionally students are strongly encouraged to take the AP exam in May. In the rare incident that a student needs to drop an AP class, the student must receive approval from the Vice Principal."
+  },
+  "counselors": [
+    {
+      "name": "Regina Biagini",
+      "caseload": "Last Names: A – Gac",
+      "phone": "(650) 550-7789",
+      "email": "rbiagi@jeffersonunion.net"
+    },
+    {
+      "name": "Jasmine Genove",
+      "caseload": "Last Names: Gaj – Orta",
+      "phone": "(650) 550-7788",
+      "email": "jgenove@jeffersonunion.net"
+    },
+    {
+      "name": "Shannon Paras",
+      "caseload": "Last Names: Ortega – Z",
+      "phone": "(650) 550-7786",
+      "email": "sparas@jeffersonunion.net"
+    },
+    {
+      "name": "Jose Villalobos",
+      "caseload": "English Language Learner Students",
+      "phone": "(650) 550-7798",
+      "email": "jvillalobos@jeffersonunion.net"
+    }
+  ],
+  "agList": {
+    "_apexCourses": [
+      "U.S. Government and Politics",
+      "United States History and Geography",
+      "World History, Culture and Geography",
+      "English 9",
+      "English 10",
+      "English 11",
+      "English 12",
+      "APEX Precalculus",
+      "Apex Statistics & Probability",
+      "Mathematics I",
+      "Mathematics II",
+      "Mathematics III",
+      "Biology",
+      "Chemistry",
+      "Physics in the Universe",
+      "Apex Spanish 3",
+      "Spanish I",
+      "Spanish II",
+      "Music Appreciation (Apex)",
+      "Apex Geography & World Cultures",
+      "Apex Sociology",
+      "Business Applications (Apex)",
+      "Economics",
+      "Ethnic Studies (Apex)",
+      "Information Technology Applications (Apex)"
+    ],
+    "a": {
+      "label": "History / Social Science",
+      "required": "2 years required",
+      "courses": [
+        "American Government CP",
+        "AP African American Studies",
+        "AP Government and Politics United States",
+        "AP United States History",
+        "AP World History",
+        "U.S. Government and Politics",
+        "U.S. History CP",
+        "United States History and Geography",
+        "World History, Culture & Geography CP",
+        "World History, Culture and Geography"
+      ]
+    },
+    "b": {
+      "label": "English",
+      "required": "4 years required",
+      "courses": [
+        "AP English Language and Composition",
+        "AP English Literature and Composition",
+        "CSU Expository Reading and Writing",
+        "ELD 3 Grammar CP",
+        "English 10",
+        "English 10 CP",
+        "English 10 Enriched CP",
+        "English 11",
+        "English 11 CP",
+        "English 12",
+        "English 9",
+        "English 9 CP",
+        "Film as Literature CP",
+        "Ghost Stories in Film and Literature CP"
+      ]
+    },
+    "c": {
+      "label": "Mathematics",
+      "required": "3 years required, 4 recommended",
+      "courses": [
+        "AP Calculus AB",
+        "APEX Precalculus",
+        "Apex Statistics & Probability",
+        "Explorations in Data Science CP",
+        "Introduction to Calculus",
+        "Math Course 1 CP",
+        "Math Course 2 CP",
+        "Math Course 3 CP",
+        "Mathematics I",
+        "Mathematics II",
+        "Mathematics III",
+        "Statistics CP",
+        "Trig/Precalculus CP"
+      ]
+    },
+    "d": {
+      "label": "Laboratory Science",
+      "required": "2 years required, 3 recommended",
+      "courses": [
+        "Advanced Biology",
+        "AP Biology",
+        "AP Chemistry",
+        "Biology",
+        "Biology: The Living Earth",
+        "Chemistry",
+        "Chemistry in the Earth System",
+        "Environmental Science-LS CP",
+        "Physics in the Universe",
+        "Physics in the Universe CP",
+        "Physiology CP",
+        "PLTW Digital Electronics",
+        "PLTW Principles of Engineering"
+      ]
+    },
+    "e": {
+      "label": "Language Other Than English",
+      "required": "2 years required, 3 recommended",
+      "courses": [
+        "AP Spanish Language and Culture",
+        "Apex Spanish 3",
+        "Filipino 2 - Intermediate Tagalog",
+        "Filipino 3",
+        "Filipino Language",
+        "Spanish 1 CP",
+        "Spanish 2 CP",
+        "Spanish 3 CP",
+        "Spanish 4 CP",
+        "Spanish for Spanish Speakers 1 CP",
+        "Spanish for Spanish Speakers 2 CP",
+        "Spanish I",
+        "Spanish II"
+      ]
+    },
+    "f": {
+      "label": "Visual & Performing Arts",
+      "required": "1 year required",
+      "courses": [
+        "AP 2D Art and Design",
+        "AP 3D Art and Design",
+        "AP Drawing",
+        "Art 1 CP",
+        "Art 2 CP",
+        "Ceramics 1 CP",
+        "Ceramics 2 CP",
+        "Concert Band CP",
+        "Dance Composition CP",
+        "Dance Production CP",
+        "Digital Art 1",
+        "Digital Art 2",
+        "Drawing and Painting 2",
+        "Drawing and Painting CP",
+        "Fashion Design",
+        "Guitar I CP",
+        "Jewelry CP",
+        "Mural Design",
+        "Music Appreciation (Apex)",
+        "Piano",
+        "Sculpture CP",
+        "Symphonic Band CP",
+        "Theater Arts 2 CP",
+        "Theatre Arts 1 CP"
+      ]
+    },
+    "g": {
+      "label": "College-Preparatory Electives",
+      "required": "1 year required",
+      "courses": [
+        "Advanced Argument CP",
+        "Advanced CTE Work Experience",
+        "Advanced Journalism: Editing, Design & Management CP",
+        "American History Through Film",
+        "AP Macroeconomics",
+        "Apex Geography & World Cultures",
+        "Apex Sociology",
+        "Argument and Debate CP",
+        "Business Applications (Apex)",
+        "College and Career Exploration CP",
+        "Controversial Issues in American Society CP",
+        "Creative Problem Solving CP",
+        "Culinary Arts",
+        "Economics",
+        "Economics CP",
+        "Ethnic Studies (Apex)",
+        "Ethnic Studies (YR) CP",
+        "Examining Diversity through Media Study CP",
+        "Exploring Computer Science",
+        "Financial Literacy CP",
+        "Food and Nutrition",
+        "Graphic Novels and Identity",
+        "History of American Sports CP",
+        "Information Technology Applications (Apex)",
+        "Intro to Robotics",
+        "Newcomer Academy CP",
+        "Psychology CP",
+        "Social Justice Movements",
+        "Team Sports: Anatomy in Motion",
+        "Yoga: Anatomy in Motion"
+      ]
+    }
+  }
+};
+/* INFO_SEED_END */
+
+/* ═══════════════════════════════════════════════════
+   INFO PAGE RENDERER
+═══════════════════════════════════════════════════ */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Rich-text values from the editor may contain HTML (bold, lists, links, etc.).
+// Older plain-text values just have \n line breaks. Render either faithfully —
+// HTML inline; plain text wrapped in <p> with <br> for newlines.
+function rich(s) {
+  const str = String(s || '');
+  if (!str) return '';
+  if (/<[a-zA-Z][^>]*>/.test(str)) return str; // already HTML
+  return `<p>${esc(str).replace(/\n/g, '<br>')}</p>`;
+}
+
+// Like rich(), but for content interpolated inline into a sentence or list item:
+// strips outer block wrappers so it flows without causing an unexpected paragraph break.
+function richInline(s) {
+  const html = rich(s);
+  if (!html) return '';
+  // Drop a single wrapping <p>...</p> or <div>...</div> if that's all there is
+  const m = html.match(/^<(p|div)(\s[^>]*)?>([\s\S]*)<\/\1>\s*$/i);
+  if (m && !m[3].match(/<(p|div)[\s>]/i)) return m[3];
+  return html;
+}
+
+function renderInfoPages() {
+  const I = INFO;
+  document.getElementById('infoPages').innerHTML = `
+    <div class="info-page active" id="page-home">
+      <div class="info-card">
+        <h2>🎓 Welcome to ${esc(_sc.schoolName || 'Your School')} Course Catalog ${esc(_sc.schoolYear || '')}</h2>
+        <p><em>"${esc(I.overview.tagline)}"</em> — ${esc(_sc.schoolName || 'Our school')} offers a full range of college-preparatory courses designed to prepare every ${esc(_sc.mascot ? _sc.mascot.replace(/s$/,'y') : 'student')} for success in college and beyond.</p>
+        <h3>Diploma Requirements</h3>
+        <ul>
+          <li>Earn a minimum of <strong>${esc(I.overview.diplomaCredits)} credits</strong></li>
+          <li>Pass all specific subject requirements (see Graduation Requirements)</li>
+        </ul>
+        <h3>UC/CSU Eligibility</h3>
+        <ul>
+          <li>Complete a minimum of <strong>${esc(I.overview.agMin)} "a-g" courses</strong> with a C or better — at least ${esc(I.overview.agByJunior)} by end of junior year</li>
+          <li>Maintain a competitive GPA — UC minimum ${esc(I.overview.ucGPA)}, CSU minimum ${esc(I.overview.csuGPA)}</li>
+          <li>SAT/ACT no longer required by UC/CSU, but may be required by private or out-of-state colleges</li>
+        </ul>
+        <h3>How to Use This Catalog</h3>
+        <p>Tap a <strong>department</strong> in the menu (☰) to browse, or use the <strong>search bar</strong> to find any course. Filter by grade level or course type. Tap any card to read its full description.</p>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-requirements">
+      <div class="info-card">
+        <h2>📋 Graduation &amp; A-G Requirements</h2>
+        <div class="table-wrap">
+          <table class="req-table">
+            <tr><th>Area</th><th>Subject</th><th>JUHSD Grad Req.</th><th>CSU/UC Req.</th></tr>
+            ${I.gradReqs.map(r => `<tr>
+              <td>${r.area === '—' ? '—' : `<span class="ag-badge">${esc(r.area)}</span>`}</td>
+              <td>${esc(r.subject)}</td>
+              <td>${esc(r.juhsd)}${r.note ? `<br><small>${esc(r.note)}</small>` : ''}</td>
+              <td>${esc(r.ucCsu)}</td>
+            </tr>`).join('')}
+          </table>
+        </div>
+        <h3>Weighted / Honors Credit</h3>
+        <p>Courses in <strong>BOLD</strong> on the a-g list carry weighted honors credit: <strong>A=5, B=4, C=3</strong>. Students may earn a maximum of 8 points of honors credit for CSU/UC.</p>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-ag">
+      <div class="info-card">
+        <h2>✅ UC/CSU "a-g" Certified Course List 2026–2027</h2>
+        <p style="color:var(--muted);font-size:0.9em;margin-bottom:8px;">Official UC-approved list for ${esc(_sc.schoolName || 'your school')}. Weighted (honors) courses earn A=5, B=4, C=3. Maximum 8 honors points toward CSU/UC GPA.</p>
+        <p style="font-size:0.88em;margin-bottom:16px;display:flex;align-items:center;gap:6px;"><span class="apex-tag">APEX</span> <span style="color:var(--muted);">= Online course — completed outside of the regular school day through an online platform.</span></p>
+        ${Object.entries(I.agList).filter(([k])=>k!=='_apexCourses').map(([key,area]) => {
+          const apexList = I.agList._apexCourses || [];
+          return `
+          <h3 style="color:var(--navy);margin-top:18px;margin-bottom:6px;">
+            <span class="ag-badge" style="font-size:1rem;padding:3px 10px;margin-right:8px;">${key}</span>
+            ${esc(area.label)} <small style="font-weight:400;color:var(--muted);font-size:0.82em;">— ${esc(area.required)}</small>
+          </h3>
+          <ul style="margin:0 0 4px 0;padding-left:20px;columns:2;column-gap:24px;">
+            ${area.courses.map(c => {
+              const isApex = /apex/i.test(c) || apexList.includes(c);
+              return `<li style="break-inside:avoid;margin-bottom:2px;font-size:0.92em;">${esc(c)}${isApex ? ' <span class="apex-tag">APEX</span>' : ''}</li>`;
+            }).join('')}
+          </ul>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="info-page" id="page-fouryear">
+      <div class="info-card">
+        <h2>📅 Sample Four-Year Plan</h2>
+        <p>These are <em>sample</em> plans. Use them as a starting template — then build <em>your</em> personal four-year plan at CaliforniaColleges.edu, where it links to your real transcript.</p>
+        <p style="margin:10px 0"><a href="https://www.californiacolleges.edu" target="_blank" rel="noopener" style="display:inline-block;background:#0F2044;color:#fff;padding:9px 18px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.9rem;box-shadow:0 2px 6px rgba(15,32,68,.2)">🧭 Build your plan at CaliforniaColleges.edu →</a></p>
+        <div class="four-year-grid" style="margin-top:14px;">
+          ${[{emoji:'🟢',label:'9th Grade',key:'grade9'},{emoji:'🔵',label:'10th Grade',key:'grade10'},{emoji:'🟠',label:'11th Grade',key:'grade11'},{emoji:'🔴',label:'12th Grade',key:'grade12'}]
+            .map(g => `<div class="grade-block"><h3>${g.emoji} ${g.label}</h3><ol>${I.fourYear[g.key].map(c=>`<li>${esc(c)}</li>`).join('')}</ol></div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-postsecondary">
+      <div class="info-card">
+        <h2>🎓 Post-Secondary Opportunities</h2>
+        ${I.postSecondary.map(s=>`<h3>${esc(s.title)}</h3>${rich(s.text)}`).join('')}
+      </div>
+    </div>
+
+    <div class="info-page" id="page-ncaa">
+      <div class="info-card">
+        <h2>🏈 NCAA Freshman Eligibility Standards</h2>
+        <h3>Division I — 16 Core-Course Rule</h3>
+        <ul>
+          ${I.ncaa.d1.map(r=>`<li>${esc(r.years)} year${r.years!=='1'?'s':''} ${esc(r.subject)}</li>`).join('')}
+          <li>${richInline(I.ncaa.d1Notes)}</li>
+          <li><strong>GPA:</strong> At least ${esc(I.ncaa.d1GPA)} in core courses</li>
+        </ul>
+        <h3>Division II — 16 Core-Course Rule</h3>
+        <ul>
+          ${I.ncaa.d2.map(r=>`<li>${esc(r.years)} year${r.years!=='1'?'s':''} ${esc(r.subject)}</li>`).join('')}
+          <li><strong>GPA:</strong> At least ${esc(I.ncaa.d2GPA)} in core courses</li>
+          <li>${richInline(I.ncaa.d2Notes)}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-page" id="page-scheduling">
+      <div class="info-card">
+        <h2>📆 Scheduling Procedures</h2>
+        <h3>Class Changes</h3>
+        <p>No schedule changes based on teacher preference, time preference, or desire for easier classes. Changes allowed for: ${richInline(I.scheduling.allowedReasons)}.</p>
+        <p>Requests must be made within the <strong>${esc(I.scheduling.deadlineFall)}</strong> or <strong>${esc(I.scheduling.deadlineSpring)}</strong>.</p>
+        <h3>Conflict Resolution Steps</h3>
+        <ol>${I.scheduling.conflictSteps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+        <h3>AP Commitment</h3>
+        ${rich(I.scheduling.apPolicy)}
+      </div>
+      <div class="info-card">
+        <h2>👥 Counseling Contacts</h2>
+        <div class="counselor-grid">
+          ${I.counselors.map(c=>`<div class="counselor-card">
+            <h3>${esc(c.name)}</h3>
+            <p>${esc(c.caseload)}</p>
+            ${c.phone?`<p>📞 ${esc(c.phone)}</p>`:''}
+            ${c.email?`<p><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p>`:''}
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════
+   COURSE DATA
+═══════════════════════════════════════════════════ */
+const COURSES = [
+  {
+    "id": "imp1",
+    "dept": "social-science",
+    "name": "World History, Cultures & Geography CP",
+    "code": "20001/20002",
+    "grade": "10",
+    "credits": "10",
+    "ag": "a",
+    "type": "cp",
+    "prereq": "None",
+    "desc": "The focus of this course is modern history. Major emphasis of study will be placed on the rise of democratic ideals in the western world, the Industrial Revolution, imperialism, World War I, the rise of totalitarianism, World War II, and the post-World War II world. In these areas of study, students will analyze the causes, consequences, and their impact on today's world."
+  },
+  {
+    "id": "imp2",
+    "name": "AP World History",
+    "dept": "social-science",
+    "grade": "10",
+    "credits": "10",
+    "ag": "a",
+    "type": "ap",
+    "code": "20908/20909",
+    "prereq": "None",
+    "desc": "AP World History is designed to be the equivalent of a two-semester introductory college or university world history course. In AP World History students investigate significant events, individuals, developments, and processes in six historical periods from approximately 8000 B.C.E. to the present. Students develop and use the same skills, practices, and methods employed by historians: analyzing primary and secondary sources; making historical comparisons; utilizing reasoning about contextualization, causation, and continuity and change over time; and developing historical arguments. The course provides five themes that students explore throughout the course in order to make connections among historical developments in different times and places: interaction between humans and the environment; development and interaction of cultures; state building, expansion, and conflict; creation, expansion, and interaction of economic systems; and development and transformation of social structures."
+  },
+  {
+    "id": "imp3",
+    "name": "United States History CP",
+    "dept": "social-science",
+    "grade": "11",
+    "credits": "10",
+    "ag": "a",
+    "type": "cp",
+    "code": "20007/20008",
+    "prereq": "None",
+    "desc": "The content of this course emphasizes a chronological study of American History focusing on the relationship of past to present with the primary emphasis on the history of America in the 20th century. While history is the key social science discipline in this course, the concepts of geography, economics, sociology and government are also stressed."
+  },
+  {
+    "id": "imp4",
+    "name": "United States History EL CP",
+    "dept": "social-science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "a",
+    "type": "eld",
+    "code": "20009/20010",
+    "prereq": "None",
+    "desc": "This course is designed for English Language Learners and its curriculum mirrors that of the regular United States History course."
+  },
+  {
+    "id": "imp5",
+    "name": "AP United States History",
+    "dept": "social-science",
+    "grade": "11",
+    "credits": "10",
+    "ag": "a",
+    "type": "ap",
+    "code": "20902/20903",
+    "prereq": "B or above in World History preferred",
+    "desc": "AP History is a chronological survey course covering the period from Colonial America to contemporary America. The AP program is designed to provide the student with the analytical skills and factual knowledge to deal critically with the problems and issues in U.S. History. The course prepares students for college courses by making demands equivalent to those made by a full year introductory college course. Students will learn to assess historical materials – their relevance to a given interpretive problem, their reliability, and their importance, and to weigh the evidence and interpretations presented in historical scholarship. The course prepares students for the AP exam and students are strongly encouraged to take the exam. Summer work may be a requirement of this course."
+  },
+  {
+    "id": "imp6",
+    "name": "American Government CP",
+    "dept": "social-science",
+    "grade": "12",
+    "credits": "5",
+    "ag": "a",
+    "type": "cp",
+    "code": "20011",
+    "prereq": "None",
+    "desc": "Students inquire into the decision-making processes that exist in America's governmental institutions on the federal, state and local levels. Emphasis is placed on the process of decision-making in such institutions as the presidency, the Congress, the court system and the bureaucracy. This is a semester course taken in conjunction with Economics CP."
+  },
+  {
+    "id": "imp7",
+    "name": "AP United States Government and Politics",
+    "dept": "social-science",
+    "grade": "12",
+    "credits": "5",
+    "ag": "a",
+    "type": "ap",
+    "code": "20904",
+    "prereq": "B or above in US History preferred",
+    "desc": "This course involves general concepts of the U.S. Constitution. Emphasis is given to the relationship of the citizen to the structure and function of the American constitutional system. It also involves familiarity with the various institutions, groups, and beliefs that constitute U.S. politics. The course prepares students for the AP exam and students are strongly encouraged to take the exam. Summer work may be a requirement of this course."
+  },
+  {
+    "id": "imp8",
+    "name": "Economics CP",
+    "dept": "social-science",
+    "grade": "12",
+    "credits": "5",
+    "ag": "g",
+    "type": "cp",
+    "code": "20013",
+    "prereq": "None",
+    "desc": "Economics is the study of how human beings make decisions regarding use of resources. Emphasis will be on applied economics, including use of money, banking, supply and demand, and the organization of businesses and corporations. The course will also place an emphasis on comparative economic systems. This is a semester course taken in conjunction with American Government CP."
+  },
+  {
+    "id": "imp9",
+    "name": "AP Macroeconomics",
+    "dept": "social-science",
+    "grade": "12",
+    "credits": "5",
+    "ag": "g",
+    "type": "ap",
+    "code": "20905",
+    "prereq": "None",
+    "desc": "This is a rigorous and academically challenging course and we will engage in college-level critical thinking daily. Curriculum covers fundamental economic concepts such as financial markets/institutions, graphing, statistics, and economic decision making. Students prepare for and take the AP exam in May of the school year."
+  },
+  {
+    "id": "imp10",
+    "name": "Psychology CP",
+    "dept": "social-science",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20100/20101",
+    "prereq": "None",
+    "desc": "Psychology is the study of human behavior. This UC-approved college prep elective will cover topics such as the biological basis of behavior, perception, altered states of consciousness, learning, memory, social psychology and how we interact with others, personality, stress management, psychological disorders and abnormal psychology and treatment and therapy."
+  },
+  {
+    "id": "imp11",
+    "name": "Argument and Debate CP",
+    "dept": "social-science",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "21228/21229",
+    "prereq": "None",
+    "desc": "Argument and Debate CP is listed in the course offerings as an interdisciplinary elective with a-g area g approval. Students develop argumentation, debate, and critical thinking skills through structured academic discourse and competitive debate formats.",
+    "inactive": true
+  },
+  {
+    "id": "imp12",
+    "name": "Advanced Argument CP",
+    "dept": "social-science",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "21226/21227",
+    "prereq": "None",
+    "desc": "Advanced Argument CP is an interdisciplinary elective course focused on developing advanced argumentation and critical reasoning skills. Students engage in higher-level analytical writing and debate, building on foundational argument skills to address complex real-world issues.",
+    "inactive": true
+  },
+  {
+    "id": "imp13",
+    "name": "Controversial Issues in American Society CP",
+    "dept": "social-science",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20113/20114",
+    "prereq": "None",
+    "desc": "Controversial Issues in American Society CP is an interdisciplinary elective that examines significant contested topics in American political, social, and cultural life. Students develop critical thinking, research, and argumentation skills by engaging with multiple perspectives on contemporary and historical controversies."
+  },
+  {
+    "id": "imp14",
+    "name": "English 9 CP",
+    "dept": "english",
+    "grade": "9",
+    "credits": "10",
+    "ag": "b",
+    "type": "cp",
+    "code": "21000/21001",
+    "prereq": "None",
+    "desc": "This course will empower students with the knowledge and skill to analyze, evaluate, and elaborate on what they read and discuss. Students will work with a variety of texts and genres including short stories, novels, poetry, and digital media. Students will develop skills in the use of expository, analytical, and creative writing."
+  },
+  {
+    "id": "imp15",
+    "name": "English 10 CP",
+    "dept": "english",
+    "grade": "10",
+    "credits": "10",
+    "ag": "b",
+    "type": "cp",
+    "code": "21004/21005",
+    "prereq": "None",
+    "desc": "Sophomore English is the study of other cultures and people through literature. The purpose of this course is to develop students' ability to read, write, speak, question, research and think effectively. The materials, activities, and requirements of this course will help prepare for college requirements. The literature and activities of this course will deal with many thematic topics, such as courage, love, hate, war, friendships, coming of age, racism, and cultural differences. Students will read, analyze, write about and discuss short stories, poetry, plays, essays and novels."
+  },
+  {
+    "id": "imp16",
+    "name": "English 11 CP",
+    "dept": "english",
+    "grade": "11",
+    "credits": "10",
+    "ag": "b",
+    "type": "cp",
+    "code": "21008/21009",
+    "prereq": "None",
+    "desc": "This course focuses on reading, writing, speaking and listening skills as well as critical thinking and cooperative learning. It is designed to parallel what students learn in their United States History courses by introducing them to American literature. The materials and assignments presented are intended to immerse students in the selected works to prepare them for a successful high school career and beyond. The various assignments and assessments are designed to help students move into, through and beyond the chosen literature to gain a better understanding of the works as well as make connections to their own lives. The selected pieces focus on the importance of reading and understanding the literature written by Americans of different races, gender and religion. The themes are built around the central questions of American identity—freedom, equality, diversity, opportunity, the allure of the 'American Dream,' and the tension between material success and democracy."
+  },
+  {
+    "id": "imp17",
+    "name": "AP English Language & Composition",
+    "dept": "english",
+    "grade": "11",
+    "credits": "10",
+    "ag": "b",
+    "type": "ap",
+    "code": "21900/21901",
+    "prereq": "None",
+    "desc": "This college-level course is designed to engage students in becoming skilled readers in prose written in a variety of time periods, disciplines, and rhetorical contexts and in becoming skilled writers who compose for a variety of purposes. Both will make students aware of the writer's purposes, audience expectations, subjects, and argumentative styles at a professional level. The intense concentration on language use should enhance the students' sophistication and ability to analyze and compose mature, stylistic prose. Students may earn college credit by successfully passing this course and the AP College Board Exam. The course prepares students for the AP exam and students are strongly encouraged to take the exam. Summer work may be a requirement of this course."
+  },
+  {
+    "id": "imp18",
+    "name": "Expository Reading/Writing CP",
+    "dept": "english",
+    "grade": "12",
+    "credits": "10",
+    "ag": "b",
+    "type": "cp",
+    "code": "21024/21025",
+    "prereq": "None",
+    "desc": "ERWC is based on a course developed by the California State University system to help high school students develop the high level literacy they need to succeed in college and beyond. Students explore contemporary issues through a variety of expository texts and practice literacy activities to strengthen reading and writing skills."
+  },
+  {
+    "id": "imp19",
+    "name": "Film as Literature CP",
+    "dept": "english",
+    "grade": "12",
+    "credits": "10",
+    "ag": "b",
+    "type": "cp",
+    "code": "21026/21027",
+    "prereq": "None",
+    "desc": "Film as Literature is a senior level college preparation English course, where film is used as the major text. Novels, short stories, poems, and articles are still analyzed and used to gain a greater understanding of the ideas and vocabulary used within the film. We will analyze the ways in which filmmakers create meaning and resonance followed by a close analysis of the ways in which authors do the same within literature. This yearlong course will be divided into thematic units. The thematic unit will be the arena in which the students will engage with both technical and stylistic choices of the storytellers. Students will demonstrate their understanding and critical thinking skills through written response, discussion, and major culminating projects."
+  },
+  {
+    "id": "imp20",
+    "name": "AP English Literature and Composition",
+    "dept": "english",
+    "grade": "12",
+    "credits": "10",
+    "ag": "b",
+    "type": "ap",
+    "code": "21902/21903",
+    "prereq": "None",
+    "desc": "Advanced Placement English Literature and Composition is a senior English class for students interested in reading and analyzing literature in-depth. Students will read novels, plays and poetry from the 16th to the 21st century. Writing assignments will vary from short in-class writing to formal essays. This class will sharpen students' interpretive skills as well as prepare them for college level work. Due to the intellectual rigor of the course, students must be prepared to work hard and participate in all aspects of the class. The course prepares students for the AP exam and students are strongly encouraged to take the exam. Summer work may be a requirement of this course."
+  },
+  {
+    "id": "imp21",
+    "name": "ELD 1",
+    "dept": "english",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "eld",
+    "code": "21100/21101",
+    "prereq": "None",
+    "desc": "In Designated ELD 1, based on the language needs of students learning English, teachers support students in the acquisition of the English language using the CA ELD standards as a framework for their instruction. Students in ELD I work on the language skills needed to progress through the emerging stage of language acquisition. Through the application of ELD instructional strategies, students develop skills necessary to make gains towards proficiency of the four language domains through a variety of performance-based tasks. Instruction is given at the emerging level of English.",
+    "inactive": true
+  },
+  {
+    "id": "imp22",
+    "name": "ELA 1",
+    "dept": "english",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "eld",
+    "code": "21102/21103",
+    "prereq": "None",
+    "desc": "In Integrated ELA 1, based on the language needs of students learning English, teachers support students in the acquisition of the English language using the Common Core English State Standards (grade 9/10) as a framework for their instruction. Students in ELD I work on the language skills needed to progress through the emerging stage of language acquisition. Through the application of ELD instructional strategies, students develop skills necessary to make gains towards proficiency of the four language domains through a variety of performance-based tasks. Instruction is given at the emerging level of English.",
+    "inactive": true
+  },
+  {
+    "id": "imp23",
+    "name": "ELD 2",
+    "dept": "english",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "eld",
+    "code": "21106/21107",
+    "prereq": "None",
+    "desc": "In Designated ELD 2, based on the language needs of students learning English, teachers support students in the acquisition of the English language using the CA ELD standards as a framework for their instruction. Students in ELD 2 work on the language skills needed to progress into the expanding stage of language acquisition. Through the application of ELD instructional strategies, students develop skills necessary to make gains towards proficiency of the four language domains through a variety of performance-based tasks. Instruction is given at the expanding level of English."
+  },
+  {
+    "id": "imp24",
+    "name": "ELA 2",
+    "dept": "english",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "eld",
+    "code": "21108/21109",
+    "prereq": "None",
+    "desc": "In Integrated ELA 2, based on the language needs of students learning English, teachers support students in the acquisition of the English language using the Common Core English State Standards (grade 9/10) as a framework for their instruction. Students in ELD 2 work on the language skills needed to progress into the expanding stage of language acquisition. Through the application of ELD instructional strategies, students develop skills necessary to make gains towards proficiency of the four language domains through a variety of performance-based tasks. Instruction is given at the expanding level of English."
+  },
+  {
+    "id": "imp25",
+    "name": "ELD 3",
+    "dept": "english",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "eld",
+    "code": "21110/21111",
+    "prereq": "None",
+    "desc": "In Designated ELD 3, based on the language needs of students learning English, teachers support students in the acquisition of the English language using the CA ELD standards as a framework for their instruction. Students in ELD 3 work on the language skills needed to progress from the expanding stage into the bridging state of language acquisition. Through the application of ELD instructional strategies, students develop skills necessary to make gains towards proficiency of the four language domains through a variety of performance-based tasks. Instruction moves from the expanding to bridging level of English."
+  },
+  {
+    "id": "imp26",
+    "name": "ELA 3 CP",
+    "dept": "english",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "b",
+    "type": "eld",
+    "code": "21112/21113",
+    "prereq": "None",
+    "desc": "In Integrated ELA 3, based on the language needs of students learning English, teachers support students in the acquisition of the English language using the Common Core English State Standards (grade 9/10) as a framework for their instruction. Students in ELD 3 work on the language skills needed to progress from the expanding stage into the bridging state of language acquisition. Through the application of ELD instructional strategies, students develop skills necessary to make gains towards proficiency of the four language domains through a variety of performance-based tasks. Instruction moves from the expanding to bridging level of English."
+  },
+  {
+    "id": "imp27",
+    "name": "Math for Newcomers",
+    "dept": "mathematics",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "eld",
+    "code": "22014/22015",
+    "prereq": "EL 9-10",
+    "desc": "This course is intended for students who are at the beginning level of their path to learn English. The course provides additional support to students in foundational math concepts. Topics will include arithmetic with real numbers, number sense, and introductory concepts of Math Course 1.",
+    "inactive": true
+  },
+  {
+    "id": "imp28",
+    "name": "Math Course 1 CP",
+    "dept": "mathematics",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22000/22001",
+    "prereq": "None",
+    "desc": "Math Course 1 is an integrated curriculum modeled on the international math pathway and is the first course in the JUHSD's three year college prep math sequence. Math Course 1 will primarily focus on five main topics: Number and Quantity, Algebra, Functions, Geometry, and Statistics with probability."
+  },
+  {
+    "id": "imp29",
+    "name": "Math Course 2 CP",
+    "dept": "mathematics",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22002/22003",
+    "prereq": "Pass at least one semester with a D- or better",
+    "desc": "Math Course 2 is an integrated curriculum modeled on the international math pathway and is the second course in the JUHSD's three year college prep math sequence. Math Course 2 will primarily focus on three main topics: Quadratic functions and equations, Geometry and probability."
+  },
+  {
+    "id": "imp30",
+    "name": "Math Course 3 CP",
+    "dept": "mathematics",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22108/22109",
+    "prereq": "Pass MC2 with C- or better",
+    "desc": "Math Course 3 is an integrated curriculum modeled on the international math pathway and is the third course in the JUHSD's three year college prep math sequence, is A-G approved and aligned to meet Common Core content standards and mathematical practices. Topics covered include exponential and trigonometric functions, probability and statistics etc. Students will continue to work with the 8 mathematical practices."
+  },
+  {
+    "id": "imp31",
+    "name": "Statistics CP",
+    "dept": "mathematics",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22100/22101",
+    "prereq": "MC3 C- or better both semesters",
+    "desc": "This course is an introduction to the study of probability and statistics with a focus on the analysis, interpretation and presentation of data. Students will study and understand the relationship of, and difference between coloration and causality. Mastery of this academic content will provide students with a solid foundation in statistical analysis and facility in processing statistical information."
+  },
+  {
+    "id": "imp32",
+    "name": "Trigonometry/Precalculus CP",
+    "dept": "mathematics",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22102/22103",
+    "prereq": "MC3 C- or better both semesters",
+    "desc": "Precalculus covers college level Algebra and Trigonometry and is designed to prepare students for the study of Calculus. It focuses on understanding, solving and graphing trigonometric functions, their inverses and identities. Algebra topics include work with exponential and logarithmic functions, sequences and series, vectors, parametric equations, polar coordinates, and the exploration limits."
+  },
+  {
+    "id": "imp33",
+    "name": "Intro to Calculus CP",
+    "dept": "mathematics",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22906/22907",
+    "prereq": "Pass Trig/Precalculus with C- or better both semesters",
+    "desc": "This course introduces calculus using analytic geometry functions. Topics include limits and continuity, derivatives, optimization, related rates, graphing and other applications of derivatives, definite and indefinite integrals, and numerical integration."
+  },
+  {
+    "id": "imp34",
+    "name": "AP Calculus AB",
+    "dept": "mathematics",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "ap",
+    "code": "22902/22903",
+    "prereq": "Enrollment in Intro To Calculus and pass Precalculus with C- or better both semesters",
+    "desc": "AP Calculus is a course that extends the knowledge learned in our Calculus course. We will cover additional topics not covered in the Calculus course including the Value Theorems, Accumulation, and Differential Equations. We will also look at Calculus as applied to Piecewise, Implicit and Inverse Functions. Students who successfully complete the course and take the AP exam may receive credit for the first semester of college calculus. This is a full year course (1 semester Intro to Calculus + 1 semester of AP Calculus AB)."
+  },
+  {
+    "id": "imp35",
+    "name": "Data Science CP",
+    "dept": "mathematics",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "c",
+    "type": "cp",
+    "code": "22106/22107",
+    "prereq": "None",
+    "desc": "This curriculum will introduce you to the main ideas in data science: Correlation/causation, Modeling with data, data analysis, making and evaluating data-based arguments, and the power of data in society. Students will learn to be data explorers in project-based units. You will continuously work on a portfolio of your data science work which will include graphics, written reflections, quantitative analysis– all using free tools such as Google Sheets, CODAP, and Colab (uses Python)."
+  },
+  {
+    "id": "imp36",
+    "name": "Biology CP",
+    "dept": "science",
+    "grade": "9",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "code": "23100/23101",
+    "prereq": "None",
+    "desc": "Biology is the first science course covering the Next Generation Science Standards for the Living Earth. It fulfills the lab science requirement for a 4 year university. We will use an inquiry-based method to explore Ecology, Energy, Cells, Genetics, and Evolution."
+  },
+  {
+    "id": "imp37",
+    "name": "Biology EL CP",
+    "dept": "science",
+    "grade": "9",
+    "credits": "10",
+    "ag": "d",
+    "type": "eld",
+    "code": "23102/23103",
+    "prereq": "ELPAC Scores",
+    "desc": "This course is intended for Students Learning English (ELL). The curriculum mirrors that of Biology with the teacher providing verbal and written scaffolding for language support."
+  },
+  {
+    "id": "imp38",
+    "name": "Chemistry CP",
+    "dept": "science",
+    "grade": "10-11",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "code": "23004/23005",
+    "prereq": "Passing grade in Biology",
+    "desc": "Chemistry is a college-preparatory course designed for students who have successfully completed Biology. This course is based on the Next Generation Science Standards for Chemistry in the Earth System which will include the study of atomic and molecular structure, chemical bonds, conservation of matter, stoichiometry, gas laws and solutions chemistry."
+  },
+  {
+    "id": "imp39",
+    "name": "Environmental Science CP",
+    "dept": "science",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "code": "23122/23123",
+    "prereq": "Biology (recommended)",
+    "desc": "Environmental Science is a course that is designed to introduce students to major ecological concepts and the environmental problems that affect the world in which we live. We will take a problem-solving approach as we work to understand issues such as endangered species, sustainability, air and water pollution, climate change, and waste management. This class will promote awareness and understanding of practical everyday problems that affect our lives. It also will relate important environmental issues to the lives of students and their families."
+  },
+  {
+    "id": "imp40",
+    "name": "Physics CP",
+    "dept": "science",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "code": "23006/23007",
+    "prereq": "None",
+    "desc": "Physics is a college-preparatory course designed for students who have completed Biology and Chemistry. This course is based on the California Science Content Standards which will include the study of motion, forces, momentum, energy, heat, thermodynamics, waves, electricity and magnetism."
+  },
+  {
+    "id": "imp41",
+    "name": "Physiology CP",
+    "dept": "science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "code": "23104/23105",
+    "prereq": "Completion of Biology and Chemistry with a C or higher",
+    "desc": "Physiology is a college-preparatory course designed for students who have successfully completed Biology and Chemistry with a C or higher. It meets the CSU/UC A-G requirement. This course covers the anatomy and physiology of the human body. An emphasis on structure, function and homeostasis is kept throughout the course as we study cells, tissues and each body system."
+  },
+  {
+    "id": "imp42",
+    "name": "Advanced Biology CP",
+    "dept": "science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "code": "23908/23909",
+    "prereq": "Completion of Biology and Chemistry with a C or higher",
+    "desc": "This class is required for all students planning to take AP Biology. The curriculum for AP Biology is simply too large to be accommodated in one semester. The pre AP biology course will introduce students to the use of statistics in science, the scientific writing process as well as a review of inorganic and organic chemistry before going deeper into cell biology, cell energy and communication, ending with the cell cycle."
+  },
+  {
+    "id": "imp43",
+    "name": "AP Biology",
+    "dept": "science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "ap",
+    "code": "23902/23903",
+    "prereq": "Completion of Biology and Chemistry with a C or higher",
+    "desc": "AP Biology is a college-preparatory course that is designed to give students the opportunity to complete college level studies in Biology while still in high school. Successful completion and scoring on the AP Exam may earn a student college credit. The course prepares students for the AP exam and students are strongly encouraged to take the exam. Summer work may be a requirement of this course. This is a full year course (1 semester Advanced Biology + 1 semester of AP Biology)."
+  },
+  {
+    "id": "imp44",
+    "name": "AP Chemistry",
+    "dept": "science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "ap",
+    "code": "23900/23901",
+    "prereq": "C- or better in both biology and chemistry; C- or better or concurrent enrollment in Math Course 3",
+    "desc": "AP Chemistry is a college-level course for students who want to explore chemistry in greater depth. Through hands-on labs, problem-solving, and real-world applications, students study chemical reactions, energy, equilibrium, and acids and bases. The course builds critical thinking and scientific reasoning skills while preparing students for the AP exam and future STEM studies."
+  },
+  {
+    "id": "imp45",
+    "name": "AP Physics 1",
+    "dept": "science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "ap",
+    "code": "23910/23911",
+    "prereq": "Completion of MC1 and MC2 and concurrently taking MC3",
+    "desc": "This course is designed to apply physics concepts to construct models for motion, forces, and energy by testing and applying our understanding of the world. Understandings are supported through an algebra based approach."
+  },
+  {
+    "id": "imp46",
+    "name": "AP Environmental Science",
+    "dept": "science",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "ap",
+    "code": "23906/23907",
+    "prereq": "Two years of high school laboratory science, including life science and physical science, along with at least completion of MC1",
+    "desc": "The goal of the course is to provide students with the scientific principles, concepts, and methodologies required to understand the interrelationships of the natural world, to identify and analyze environmental problems both natural and human-made, to evaluate the relative risks associated with these problems, and to examine solutions for resolving or preventing them. Environmental science embraces a wide variety of topics from different areas such as biology and chemistry."
+  },
+  {
+    "id": "imp47",
+    "dept": "cte",
+    "name": "Engineering Technology 1b: Engineering Sustainability CP",
+    "code": "23649/26350",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "d",
+    "type": "cp",
+    "prereq": "Math Course 1 with C or higher",
+    "desc": "In the Engineering Sustainability class, students explore options and design solutions to support our society's transition toward sustainable energy resources. Students will evaluate the benefits and costs of using electricity to power our society, including for electric cars, trucks, and scooters; home heating and cooling; and power. Students will be encouraged to engage in implementing proven solutions to community problems. Laboratory work will support students in testing, observation, analysis, prediction, and problem-solving."
+  },
+  {
+    "id": "imp48",
+    "name": "Filipino Language 1 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24112/24113",
+    "prereq": "None",
+    "desc": "This course involves an introduction to the Filipino language as a tool for communication in simple social situations. Emphases are on developing the four language skills: Speaking, Listening, Reading and Writing. However, the course will focus on Speaking and Listening skills as foundation in the beginner's program. The course will pay close attention to the sounds of the Filipino language, including intonation and stress, as well as vocabulary and simple grammatical structures."
+  },
+  {
+    "id": "imp49",
+    "name": "Filipino Language 2 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24114/24115",
+    "prereq": "Passing grade C- in previous Filipino class (recommended)",
+    "desc": "This class is a continuation of Filipino 1. Emphases are on developing the four language skills: Speaking, Listening, Reading, and Writing. The course will focus on speaking and listening as foundational skills. The course will pay close attention to the sounds of the Filipino (Tagalog) language, including intonation and stress, as well as vocabulary and grammatical structures of the elementary level."
+  },
+  {
+    "id": "imp50",
+    "name": "Filipino Language 3 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24116/24117",
+    "prereq": "Passing grade C- in previous Filipino class (recommended)",
+    "desc": "Higher Level in Tagalog is an advanced course designed to strengthen students' communicative proficiency through real-world scenarios, cultural analysis, and authentic language use. Students develop speaking, listening, reading, and writing skills while exploring Filipino values, identity, and social context embedded in language. Emphasis is placed on advanced grammar, polite and appropriate communication, and analytical thinking through collaborative and performance-based activities."
+  },
+  {
+    "id": "imp51",
+    "name": "Spanish 1 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24100/24101",
+    "prereq": "None",
+    "desc": "Spanish 1 introduces students to the four basic language skills: listening comprehension, speaking, reading, and writing, within a cultural context. Course assignments include a variety of activities such as creating dialogues, poems and cultural projects in Spanish. Evaluation is based on daily participation, homework completion, tests, quizzes, projects and presentations."
+  },
+  {
+    "id": "imp52",
+    "name": "Spanish 2 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24102/24103",
+    "prereq": "Passing grade C- in previous Spanish class (recommended)",
+    "desc": "This is an intermediate language course. It is designed to build on the communication skills learned in Spanish 1. Students continue to develop vocabulary skills and use increasingly complex language structures in listening, speaking, reading, and writing activities. The course continues to explore the cultures and history of Spanish-speaking countries. Evaluation is based on daily participation, homework completion, tests, quizzes, projects and presentations."
+  },
+  {
+    "id": "imp53",
+    "name": "Spanish 3 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24104/24105",
+    "prereq": "Passing grade C- in previous Spanish class (recommended)",
+    "desc": "This course is designed to expand the student's vocabulary as well as providing further practice in academic reading and writing in Spanish. Special emphasis is placed on grammar practice and reinforcement of concepts introduced in Spanish 2. This course provides the student an opportunity to take a third year of an advanced language course (favored by the CSU/UC system) or as a bridge to continuing on to AP Spanish."
+  },
+  {
+    "id": "imp54",
+    "name": "Spanish 4 CP",
+    "dept": "lote",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24106/24107",
+    "prereq": "Passing grade C- in Spanish 3 CP or Spanish for Spanish Speakers 2 CP (recommended)",
+    "desc": "Spanish 4 will align with AP themes. Each thematic unit will explore essential questions through a variety of authentic texts, including videos, audio, articles, blogs, comics, interviews and literature written by and for native Spanish speakers. Students will understand the main idea and supporting details of spoken language that incorporates familiar vocabulary and structures and respond appropriately. Students will understand selected written materials on various topics. Students will apply knowledge of Spanish pronunciation and intonation patterns in various situations. Students will respond to statements or questions in Spanish; write compositions and conversations on selected topics, which incorporate description, detail and accurate grammatical structures. Students will explain how aspects of the Spanish-speaking culture differ from their own and discuss the influence of the Spanish-speaking culture in the global community.",
+    "inactive": true
+  },
+  {
+    "id": "imp55",
+    "name": "Spanish for Spanish Speakers 1 CP",
+    "dept": "lote",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24108/24109",
+    "prereq": "Passing grade C- in previous Spanish class (recommended)",
+    "desc": "Spanish for Spanish Speakers is designed specifically for speakers of Spanish who already have some degree of language proficiency. The purpose of this course is to enable students whose heritage language is Spanish to develop, maintain, and enhance proficiency in Spanish by providing them the opportunity to listen, speak, read, and write in a variety of contexts and for a variety of audiences. Spanish for Spanish Speakers will allow students to explore the cultures of the Hispanic World including their own. It will also provide students with the opportunity to read and write in Spanish for academic purposes."
+  },
+  {
+    "id": "imp56",
+    "name": "Spanish for Spanish Speakers 2 CP",
+    "dept": "lote",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "cp",
+    "code": "24110/24111",
+    "prereq": "Passing grade C- in previous Spanish class (recommended)",
+    "desc": "This course develops and expands upon the skills learned in Spanish for Spanish Speakers 1, aiming for higher levels of fluency and literacy. The course focuses on the development of advanced communicative competence in all modes of communication, as well as on understanding Hispanic cultures and issues of identity. Students will continue to develop awareness and understanding of Hispanic cultures, including language variation, customs, geography, history, and current events. Students will continue to improve their writing skills, using Spanish in increasingly complex ways to express thoughts on social and academic themes."
+  },
+  {
+    "id": "imp57",
+    "name": "AP Spanish Language and Culture",
+    "dept": "lote",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "e",
+    "type": "ap",
+    "code": "2900/24901",
+    "prereq": "Passing grade C- in previous Spanish class (recommended)",
+    "desc": "AP Spanish Language and Culture is equivalent to an intermediate level college course in Spanish. Students cultivate their understanding of Spanish language and culture by applying interpersonal, interpretive, and presentational modes of communication in real-life situations as they explore concepts related to family and communities, personal and public identities, beauty and aesthetics, science and technology, contemporary life, and global challenges. The course prepares students to take the AP exam in May. Summer work may be a requirement of this course."
+  },
+  {
+    "id": "imp58",
+    "name": "AP Studio Art: Drawing",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "ap",
+    "code": "25900/25901",
+    "prereq": "Passing grade (C or better) in prerequisite classes",
+    "desc": "The AP Studio Art is an advanced course to the visual arts that focuses on the development of college level portfolios. This course is designed for students who are seriously interested in the practical experience of art. Students will submit a portfolio to the College Board consisting of 10 individual pieces of art as well as their documented process of these works. In class, students will conceptualize, research, create and critique artwork. Students are expected to have a strong background in at least one visual art form. This is a full year course (1 semester Visual Art + 1 semester of AP Art)."
+  },
+  {
+    "id": "imp59",
+    "name": "AP Studio Art: 2D Design",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "ap",
+    "code": "25902/25903",
+    "prereq": "Passing grade (C or better) in prerequisite classes",
+    "desc": "The AP Studio Art is an advanced course to the visual arts that focuses on the development of college level portfolios. This course is designed for students who are seriously interested in the practical experience of art. Students will submit a portfolio to the College Board consisting of 10 individual pieces of art as well as their documented process of these works. In class, students will conceptualize, research, create and critique artwork. Students are expected to have a strong background in at least one visual art form. This is a full year course (1 semester Visual Art + 1 semester of AP Art)."
+  },
+  {
+    "id": "imp60",
+    "name": "AP Studio Art: 3D Design",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "ap",
+    "code": "25904/25905",
+    "prereq": "Passing grade (C or better) in prerequisite classes",
+    "desc": "The AP Studio Art is an advanced course to the visual arts that focuses on the development of college level portfolios. This course is designed for students who are seriously interested in the practical experience of art. Students will submit a portfolio to the College Board consisting of 10 individual pieces of art as well as their documented process of these works. In class, students will conceptualize, research, create and critique artwork. Students are expected to have a strong background in at least one visual art form. This is a full year course (1 semester Visual Art + 1 semester of AP Art)."
+  },
+  {
+    "id": "imp61",
+    "name": "Art 1 CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25000/25001",
+    "prereq": "None",
+    "desc": "Art 1 is an introductory visual arts course. There is an emphasis on the Elements of Art, 2D art making (drawing, painting), and visual literacy. Students will learn how to conceptualize, create, self-assess, and critique artwork. Students will build and develop observation skills and technical art making skills. Students will learn about historical and contemporary artists and apply what they have learned to their own artistic process."
+  },
+  {
+    "id": "imp62",
+    "name": "Art 2 CP",
+    "dept": "vpa",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25002/25003",
+    "prereq": "Passing grade C or better in Art 1 CP",
+    "desc": "Art 2 is an intermediate 2D visual arts course. This course provides students with experience in how to conceptualize, create and critique art while building upon foundation technical skills and knowledge learned in Art 1. Students learn about and apply the elements and principles of design to create artwork with a variety of professional media."
+  },
+  {
+    "id": "imp63",
+    "name": "Art 3 CP",
+    "dept": "vpa",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "28406/28407",
+    "prereq": "Passing grade C or better in Art 2 CP",
+    "desc": "Art 3 is an advanced 2D studio art course where students will explore professional materials to express personal, social, and technical perspectives producing complex and meaningful works in drawing, painting, collage, and printmaking. Students who take this course were ideally successful and passionate students in Art 1 and 2, looking to deepen their art skills and begin building a portfolio. This would be an ideal class for a student interested in taking AP Studio Art their senior year or pursuing a career in Art. Students can take this course co-currently with AP Studio Art to support their portfolio."
+  },
+  {
+    "id": "imp64",
+    "name": "Ceramics 1 CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25006/25007",
+    "prereq": "None",
+    "desc": "Introductory class on the basics of ceramic arts. Students will create slabs, sculptures, and reliefs among other projects."
+  },
+  {
+    "id": "imp65",
+    "name": "Ceramics 2 CP",
+    "dept": "vpa",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25008/25009",
+    "prereq": "Passing grade C or better in Ceramics 1 CP",
+    "desc": "Second year students are presumed to have multiple clay-making skills. Students meet with the teacher to set up projects using a set construction method that interests them. A series of projects are arranged for semester work. Special attention is given to detail work, glazing and thematic pieces. The potter's wheel is made available for an introduction to wheel throwing of pottery. Advanced glazing techniques are used."
+  },
+  {
+    "id": "imp66",
+    "name": "Concert Band CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25200/25201",
+    "prereq": "None",
+    "desc": "This Performing Arts course is an introduction to learning and playing a musical instrument. Students will have their choice of which instrument they wish to explore. A limited number of school instruments are available and no previous band experience is needed. Beginning technique and learning to read musical notation will allow students to begin their musical journey. Inside the class playing opportunities and some extra credit extra curricular opportunities are available to students who wish to perform with the directors permission."
+  },
+  {
+    "id": "imp67",
+    "dept": "cte",
+    "name": "Dance 1: Composition CP",
+    "code": "25216/25217",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "prereq": "None",
+    "desc": "This is an introductory dance (Performing Arts/CTE) course for students who have little to no background or training in dance. Students can develop an awareness of correct body alignment, increase physical coordination and flexibility, balance and agility when performing simple to complex movement phrases. Students can develop a refined appreciation for different dance forms and their history including ballet, jazz, theater dance, modern, hip hop, recreational dance workout, West African, Afro Cuban and Brazilian dance, and Salsa. This course will explore various life and career skills necessary, including developing music and video editing skills, and promotes creative thought and critical thinking. This course is part of the Arts, Media, and Entertainment Pathway for Performing Arts."
+  },
+  {
+    "id": "imp68",
+    "dept": "cte",
+    "name": "Dance 2: Production CP",
+    "code": "25218/25219",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "prereq": "Passing grade in Dance 1: Composition CP",
+    "desc": "This is an intermediate level Performing Arts (CTE) course designed as a continuation of dance education that will allow students a deeper understanding of dance, along with developing intermediate to advanced technical accuracy, performance experience, choreographic prowess, and career skills. Students can refine their appreciation for ballet, jazz, theater dance, modern, hip hop, recreational dance workout, West African, Afro Cuban and Brazilian dance, and Salsa. This course will explore various life and career skills necessary, including developing music and video editing skills, and promotes creative thought and critical thinking. This course is part of the Arts, Media, and Entertainment Pathway for Performing Arts."
+  },
+  {
+    "id": "imp69",
+    "dept": "cte",
+    "name": "Digital Art 1 CP",
+    "code": "26220/26221",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "prereq": "None",
+    "desc": "Digital Art 1 is a course that explores the role and influence of new technologies on the basic concepts, principles, and elements of contemporary digital media. Students understand the key technological skills required to design, edit, and produce artwork for electronic and printed presentation. Students explore digital art across various industry sectors and content areas through hands-on project based assignments that nurture talents and skills. This class focuses on photo manipulation and graphic design."
+  },
+  {
+    "id": "imp70",
+    "dept": "cte",
+    "name": "Digital Art 2 CP",
+    "code": "26228/26229",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "prereq": "Passing grade in Digital Art 1 CP",
+    "desc": "Digital Art 2 is an advanced course that explores the role and influence of new technologies on the basic concepts, principles, and elements of contemporary digital media. Students understand the key technological skills required to design, edit, and produce artwork for electronic and printed presentation. Students explore digital art across various industry sectors and content areas through hands-on project based assignments that nurture talents and skills. This class focuses on video production, from pre to post production."
+  },
+  {
+    "id": "imp71",
+    "name": "Fashion Design CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25248/25249",
+    "prereq": "None",
+    "desc": "Fashion Design is an introductory course. Students will learn hand and machine sewing basics. Students will learn how to read and create sewing patterns. Students will learn the basics of fashion illustration and visual communication through fashion. Students will learn about a variety of textiles/fabrics, and gain inspiration from fashion history as well as contemporary trends."
+  },
+  {
+    "id": "imp72",
+    "name": "Fashion Design 2 CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "28410/28411",
+    "prereq": "Passing grade C or better in Fashion Design 1",
+    "desc": "Fashion 2 expands on the basics of Fashion 1; students will learn how to sew a variety of useful seams, alter clothes, read patterns, and draw their own patterns."
+  },
+  {
+    "id": "imp73",
+    "name": "Guitar 1 CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25208/25209",
+    "prereq": "None",
+    "desc": "This is an elective course offering beginning instruction for the guitar. You will learn open chords, power chords, moveable chords, accompaniment techniques and a variety of playing techniques and styles including both the pickstyle and fingerstyle approaches to the guitar. The course also includes music fundamentals, theory, songs, performance, listening, composing, improvising, analyzing, and learning how to read standard music notation and tablature. This course complies with the National Standards for Music Education."
+  },
+  {
+    "id": "imp74",
+    "name": "Guitar 2 CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25210/25211",
+    "prereq": "None",
+    "desc": "This is an elective course offering beginning instruction for the guitar. You will learn open chords, power chords, moveable chords, accompaniment techniques and a variety of playing techniques and styles including both the pickstyle and fingerstyle approaches to the guitar. The course also includes music fundamentals, theory, songs, performance, listening, composing, improvising, analyzing, and learning how to read standard music notation and tablature. This course complies with the National Standards for Music Education."
+  },
+  {
+    "id": "imp75",
+    "name": "Jewelry Design CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25246/25247",
+    "prereq": "None",
+    "desc": "Jewelry Design is an introductory course. Students will learn the basics of jewelry making, how to use a variety of materials, and create wearable art."
+  },
+  {
+    "id": "imp76",
+    "name": "Mural Design CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25252/25253",
+    "prereq": "None",
+    "desc": "Mural Design is an introductory course into painting large images on walls and the impact this has on a location and community. Students will learn painting and composition techniques and how to transfer images to a vertical surface. Students will also learn to work collaboratively as a team to achieve the greatest results."
+  },
+  {
+    "id": "imp77",
+    "name": "Piano 1 CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "28406/28407",
+    "prereq": "None",
+    "desc": "Learn how to read and write basic music notes and beats. Gain confidence in performing. Can also learn mallet instruments, like xylophone."
+  },
+  {
+    "id": "imp78",
+    "name": "Sculpture CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25010/25011",
+    "prereq": "None",
+    "desc": "Sculpture is an introductory course to 3D visual arts that is more varied than just ceramic clay. Students learn how to conceptualize the 3D space around them to create artworks. Heavily encouraged in this class is the student's own critical thinking of their art designs. This is a hands-on class that requires students to be prepared for a diverse range of materials and the dedication to try manipulating these in a variety of ways."
+  },
+  {
+    "id": "imp79",
+    "name": "Symphonic Band CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25202/25203",
+    "prereq": "Passing grade in Level 1: Concert Band CP",
+    "desc": "Symphonic Band is an advanced course in music with an emphasis in wind and percussion instruments. Students must be able to play their instruments with a high degree of skill, and teacher recommendation is required for enrollment in this class. The elements and principles of music are initiated in a series of experiences which explore aesthetic perception, creative expression, heritage (historical and cultural), aesthetic valuing, theory, analysis, form and design. The development of performance skills will emphasize individual technical development, ensemble precision, and the study of standard band literature. Special emphasis will be placed on public performance."
+  },
+  {
+    "id": "imp80",
+    "name": "Vocal Music CP",
+    "dept": "vpa",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25204/25205",
+    "prereq": "None",
+    "desc": "Vocal Music CP is an introductory course into music and vocal performance. Students will learn to understand written music and how this translates to vocal performance. Students will also be asked to perform songs to peers."
+  },
+  {
+    "id": "imp81",
+    "name": "Visual Art CP",
+    "dept": "vpa",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "f",
+    "type": "cp",
+    "code": "25908/25909",
+    "prereq": "None",
+    "desc": "This course leads into AP Studio Art (either Drawing, 2D or 3D). Because this course leads into AP Studio Art, it is expected that you maintain a high level of engagement and studio work as if you were in a college level course. If this course is failed, the student and teacher will discuss options with their counselor. Upon finishing this semester, students should be halfway through their 10 required individual pieces for the College Board portfolio submission."
+  },
+  {
+    "id": "imp82",
+    "name": "Culinary Arts I: Foods & Nutrition",
+    "dept": "cte",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "26104A/26105B",
+    "prereq": "None",
+    "desc": "This course is a Level I Culinary class within the Food Science, Food Service and Hospitality Career Pathway. Students will master classic preparation techniques for a variety of dishes, while learning the importance of making educated decisions regarding nutrition. First semester course content includes: career readiness, food safety and sanitation, kitchen equipment, knife skills, recipe reading, and food science/nutrition. Second semester includes: dietary guidelines, meal planning, grocery budgeting, baking basics, and U.S. and world food supply and exploration. Concepts culminate in weekly cooking labs during which students prepare a variety of balanced meals including healthy proteins, whole grains, healthy oils, vegetables, and fruits."
+  },
+  {
+    "id": "imp83",
+    "name": "Culinary Arts II: Foodservice and Hospitality",
+    "dept": "cte",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "26108/26109",
+    "prereq": "Passing grade in Culinary I: Foods & Nutrition",
+    "desc": "This course is a Level II Culinary class within the Food Science, Food Service and Hospitality Career Pathway. Course content is guided by hospitality industry standards as well as more advanced culinary concepts and techniques pertaining to the front and the back of the house – a high level of professionalism is expected. Emphasized food preparation concepts include: safety and sanitation, dry vs. moist cooking techniques, seasonings and flavorings, stocks, sauces, soups and appetizers, desserts, proteins, and vegetables. Service concepts include: proper dining etiquette and table service and culminate in hands-on catering experiences and formal dining service for a variety of school events. Students will earn Skyline college credit through Dual Enrollment Course - Restaurant and Banquet Operations. Students will leave this second year pathway course with a professional resume portfolio."
+  },
+  {
+    "id": "imp84",
+    "name": "Engineering Technology 1a: Engineering Design CP",
+    "dept": "cte",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "26218/26219",
+    "prereq": "None",
+    "desc": "The Engineering Design class explores how engineering technology is used to solve manufacturing design problems, allowing for the production of precise, repeatable products that meet clients' specifications. Computer-aided design is used to control manufacturing equipment and communicate design ideas with clients and engineers. Students will design and manufacture products using laser cutters, 3D printers, vinyl cutters, and CNC milling machines. Additionally, students will learn how engineers use computer programming to control mechanical machines, such as robots, and other manufacturing and industrial equipment."
+  },
+  {
+    "id": "imp85",
+    "name": "Engineering Technology 2: Engineering Electronics CP",
+    "dept": "cte",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "ELEC 111.1/ELEC 111.2",
+    "prereq": "Passing grade (C or higher) in Engineering Technology 1a: Engineering Design or Engineering Technology 1b: Engineering Sustainability",
+    "desc": "The Engineering Electronics course is the capstone class for the Engineering Technology pathway. Students will explore the fundamentals of electronics, including circuit modeling in software, breadboard prototyping, and soldering components onto printed circuit boards."
+  },
+  {
+    "id": "imp86",
+    "dept": "cte",
+    "name": "Gateway to Health",
+    "code": "EMC 425.1/EMC 425.2",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "prereq": "None",
+    "desc": "Introduction of skills, attributes and basic knowledge required for entry into various health care professions. Includes basic assessment, CPR, and math calculations used in health care. Emphasis on providing a foundation for future health career classes."
+  },
+  {
+    "id": "imp87",
+    "name": "EMT Essentials",
+    "dept": "cte",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "26374/26375",
+    "prereq": "Passing grade in Gateway to Health Careers",
+    "desc": "The EMT Preparatory Course aims to equip students with foundational EMT knowledge and practical skills necessary for success in the EMT course at Skyline College. By instilling a strong understanding of emergency medical services and fundamental EMT practices, this course serves as a crucial bridge between the Gateway to Health Careers program and EMT certification."
+  },
+  {
+    "id": "imp88",
+    "name": "CTE Workbased Learning",
+    "dept": "cte",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "WORK 670.1/WORK 670.2",
+    "prereq": "None",
+    "desc": "CTE Workbased Learning is a course that connects classroom learning to real-world career experience. Students engage in work-based learning activities aligned with their Career Technical Education pathway, developing professional skills and gaining practical experience in their field of study."
+  },
+  {
+    "id": "imp89",
+    "name": "Physical Education 9",
+    "dept": "pe",
+    "grade": "9",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "27000/27001",
+    "prereq": "None",
+    "desc": "This is an introduction to high school Physical Education which is aligned with the Physical Education Model Content Standards for Physical Education for California Schools. The content articulates the knowledge, skills and confidence that students need to maintain meaningful physical activity through their lifetime. The content areas taught in High School Course 1 are: Effects of physical activity upon dynamic health, Mechanics of body movement, Aquatics, Individual and dual sports, and Rhythms and dance."
+  },
+  {
+    "id": "imp90",
+    "name": "Physical Education 10",
+    "dept": "pe",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "27002/27003",
+    "prereq": "Passing grade of D- in PE 9",
+    "desc": "This course is a development to high school Physical Education course 1, it is also aligned with the Physical Education Model Content Standards for Physical Education for California Schools. The content articulates the knowledge, skills and confidence that students need to maintain meaningful physical activity through their lifetime. The content areas taught in High School Course 2 are: Effects of physical activity upon dynamic health, Mechanics of body movement, Aquatics (some sites), Team Sports, Combatives, and Gymnastics."
+  },
+  {
+    "id": "imp91",
+    "name": "Physical Education 10: Yoga and Fitness",
+    "dept": "pe",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "27206/27207",
+    "prereq": "Passing grade of D- in PE 9",
+    "desc": "This course is a development to high school Physical Education course 1 with a focus on yoga. The content articulates the knowledge, skills and confidence that students need to maintain meaningful physical activity through their lifetime. The content areas taught are: Yoga, Effects of physical activity upon dynamic health, Mechanics of body movement, Team Sports, Combatives, and Gymnastics."
+  },
+  {
+    "id": "imp92",
+    "name": "Health Education",
+    "dept": "pe",
+    "grade": "9",
+    "credits": "5",
+    "ag": "",
+    "type": "cp",
+    "code": "27200",
+    "prereq": "None",
+    "desc": "Health Education combines scientifically accurate, real-world health content with the skills necessary to achieve optimum health and wellness. These skills include analyzing health influences, accessing valid health information, interpersonal communication, decision making, goal setting, practicing health enhancing behaviors, and health promotion. The curriculum draws content from the State of California Content Standards in these topics: Nutrition & Physical Activity; Growth, Development, & Sexual Health; Injury Prevention & Safety; Alcohol, Tobacco, & Other Drugs; Mental, Emotional & Social Health; Personal & Community Health."
+  },
+  {
+    "id": "imp93",
+    "name": "Health Education EL",
+    "dept": "pe",
+    "grade": "9",
+    "credits": "5",
+    "ag": "",
+    "type": "eld",
+    "code": "27205",
+    "prereq": "None",
+    "desc": "This course is intended for Students Learning English (ELL). The curriculum mirrors that of Health with the teacher providing verbal and written scaffolding for language support.",
+    "inactive": true
+  },
+  {
+    "id": "imp94",
+    "name": "Weight Training",
+    "dept": "pe",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "28410/28411",
+    "prereq": "None",
+    "desc": "In this course students will learn to challenge themselves physically and mentally, by creating and surpassing personal goals. This course is designed to help students acquire the knowledge, skills, attitudes, and confidence of, maintaining a physical and healthy lifestyle. Students will learn multiple lifting techniques and engage in challenging workouts, designed to help each student become bigger, faster and stronger. By the end of the semester each student will have the knowledge and the skill to create and perform their own workout regiment, covering Fundamentals of Squats, Bench, and Deadlifts, Injury Recovery, Goal Setting, Research on Supplements, and Workout Design."
+  },
+  {
+    "id": "imp95",
+    "name": "Team Sports: Anatomy in Motion CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "27208/27209",
+    "prereq": "None",
+    "desc": "This course curriculum is a continuation in the development of motor skills, fitness concepts, and personal, and social responsibility as it relates to a high level of lifelong daily fitness. Students can develop an appreciation in dual and team sports, yoga, strength training, and interval and circuit training. Students formulate plans to increase muscular endurance and flexibility, balance, coordination, and agility. Students can develop strategies for setting and reaching goals, while learning how to positively change behavior for higher quality of life, increased metabolism and energy, and health management."
+  },
+  {
+    "id": "imp96",
+    "name": "Yoga: Anatomy in Motion CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "28418/28419",
+    "prereq": "None",
+    "desc": "The Fitness through Yoga curriculum is a continuation in the development of motor skills, fitness concepts, and personal and social responsibility as it relates to a high level of lifelong fitness. Students can develop an awareness of correct body alignment, increase muscular strength and endurance and flexibility, balance, coordination and agility through a variety of yoga routines and pilates exercises and apply concepts of anatomy and biomechanics when designing their own yoga routines and a health and fitness plan. Students can analyze and implement beneficial lifestyle choices and yoga techniques to assist in managing a variety of physical, mental, and emotional conditions. Students can design strategies for setting and reaching short term and long term goals, while drawing conclusions about how to positively change behavior for higher quality of physical, mental and emotional life."
+  },
+  {
+    "id": "imp97",
+    "name": "AP African American Studies",
+    "dept": "electives",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "ap",
+    "code": "28414/28415",
+    "prereq": "Ethnic Studies",
+    "desc": "Discover the richness and diversity of African American history and culture in this exciting interdisciplinary course. From exploring the vibrant kingdoms of early Africa to understanding the challenges and triumphs of the present day, this class takes you on a journey through time and across continents. You'll engage with a variety of sources like literature, art, music, and data, while building valuable skills in historical analysis, storytelling, and critical thinking. Dive deep into the stories of Black communities in the United States and their connections to Africa and the wider African diaspora. This course is perfect for students who love history, culture, and discovering how the past shapes our world today. The course demands are equivalent to a college-level introductory course and prepare students for the AP exam, which students are expected to take."
+  },
+  {
+    "id": "imp98",
+    "name": "AP Psychology",
+    "dept": "electives",
+    "grade": "10-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "ap",
+    "code": "20906/20907",
+    "prereq": "None",
+    "desc": "The AP Psychology course introduces students to the systematic and scientific study of human behavior and mental processes. While considering the studies that have shaped the field, students explore and apply psychological theories, key concepts, and phenomena associated with major units of study, including biological bases of behavior, cognition, development, learning, social psychology, personality, and mental and physical health. Throughout the course, students apply psychological concepts and employ psychological research methods and data interpretation to evaluate claims, consider evidence, and effectively communicate ideas."
+  },
+  {
+    "id": "imp99",
+    "name": "Creative Problem Solving CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "22104/22105",
+    "prereq": "None",
+    "desc": "This is not a typical math class where you learn procedures from a textbook. In this course we will explore engaging puzzles and interesting math problems. We will actually do mathematics and not just mimic what the teacher does. Sometimes in math we find problems we are not able to solve easily—or even solve at all! And that's okay. We will work together to develop ideas and approaches to understanding and solving problems. Some strategies we will explore are drawing pictures, learning to work backwards, looking for patterns, and determining ways to organize and present problems. As mathematicians do in the real world, we will learn to work collaboratively and persevere."
+  },
+  {
+    "id": "imp100",
+    "name": "Ethnic Studies CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20129/20130",
+    "prereq": "None",
+    "desc": "Ethnic Studies centers the stories, experiences, and knowledge of People of Color through challenging and dismantling systems of oppression. It is a course that cultivates communities that are committed to wellness, liberation, and solidarity."
+  },
+  {
+    "id": "imp101",
+    "name": "Examining Diversity Through Media CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "21232/21233",
+    "prereq": "None",
+    "desc": "In this course, students will be provided with the opportunity to study how issues associated with diversity are represented in media- each unit will ask students to explore how media continues to shape beliefs around race, class, ethnicity, gender, and national origin. Through a study of content such as Disney, sports advertising, and social media, students will become proficient in analyzing various types of media including texts, music, images, advertisements, television, and film. The approach to the various media will be interpretive, analytical, comparative, and critical from a cultural, social, and historical point of view. Through reading, writing, and oral reflection on the material, students will demonstrate an understanding of the construction of meaning through media and how they reflect and create culture, via unique and collective expression."
+  },
+  {
+    "id": "imp102",
+    "name": "Financial Literacy CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20127/20128",
+    "prereq": "None",
+    "desc": "Financial Literacy is designed to help students make informed decisions about real world financial issues. This course will give students the tools and resources needed to make wise financial decisions. Students will analyze their personal financial decisions, evaluate the costs and benefits of their decisions, recognize their rights and responsibilities as consumers, and apply the knowledge learned to financial situations encountered later in life. Students will design personal and household budgets and simulate the use of checking and saving accounts. They will be able to demonstrate a solid understanding of investment, debt, and credit management, as well as apartment rental/lease agreements, practices and policies. Students will gain a solid understanding of car, home and health insurance policies and practices while learning to be a savvy consumer and price shop. There will be a focus on learning the different types of income and payroll taxes, and students will practice how to properly complete and successfully file IRS form 1040EZ and State of California income taxes."
+  },
+  {
+    "id": "imp103",
+    "name": "Ghost Stories in Literature and Film CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "21230/21231",
+    "prereq": "None",
+    "desc": "Through the lenses of the novel, short fiction, nonfiction, and film, this course explores the widely varied realms of ghost fiction ranging from archetypal haunted houses, ghosts of generations past, to modern thrillers. These texts and films will explore how fear, belief, and deeper philosophies of life and death manifest in stories about ghosts from all around the world. In this spooky course, we seek answers to questions such as: When are ghosts more than shadowy spirits of the departed? Are ghosts merely mirrors of our subconscious emotions, such as guilt, terror, and frustration? In evaluating the implications of ghost stories, students will explore how gender, race, and religion intersect in time and history. The course will require students to develop their formal writing and analytical skills, but also foster opportunities to create and explore their own interpretations of ghost stories."
+  },
+  {
+    "id": "imp104",
+    "name": "Graphic Novels and Identity CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "21238/21239",
+    "prereq": "None",
+    "desc": "This course explores the distinct features that make 'comics' a dynamic literary medium, and through analysis of sequential storytelling techniques, students will discover the language with which pop culture and personal narratives are told using words and images. Specific emphasis will be focused on how comics reflect the conflicts and growth of society, ranging from politics and wars to power fantasies and ethnic identity. By analyzing works such as Persepolis and American Born Chinese, students will critically interpret and reflect on the way comics explore widely-diverse identities and experiences. The primary objectives of this course are for students to develop and practice analytical writing skills, and to foster a continuing appreciation for graphic narratives of any genre."
+  },
+  {
+    "id": "imp105",
+    "name": "History of Sports CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20125/20126",
+    "prereq": "None",
+    "desc": "This class will cover the history of various sports of student interest and would cover other significant events attached to them such as Mohammad Ali and his battle with the government, the Munich Olympics, Olympic boycotts, integration of sports including baseball and the social impact of those events."
+  },
+  {
+    "id": "imp106",
+    "name": "American History Through Film CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20123/20124",
+    "prereq": "None",
+    "desc": "This elective course examines the ways in which the major themes and issues in modern American history have been expressed in the iconic films from the 20th century. As they build on their knowledge of American history from 11th grade, students will explore the significance of films as primary sources: What do the films reveal about the period in which they were produced? How do the movies reflect the major social issues, conflicts or changes of the time? How did popular films inform or influence the country in the 20th century? By watching, discussing, and writing about American films, students will examine how motion pictures reflect and influence American culture and society. In other words, students will learn how to 'read' American films as cultural texts that support a deeper understanding of 20th century American history."
+  },
+  {
+    "id": "imp107",
+    "name": "Social Justice Movements CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "20121/20122",
+    "prereq": "None",
+    "desc": "Social Justice Movements CP is an interdisciplinary elective that examines historical and contemporary movements for social change in the United States and around the world. Students develop critical thinking, research, and analytical skills as they explore the causes, strategies, and outcomes of significant social justice movements across different eras and communities.",
+    "inactive": true
+  },
+  {
+    "id": "imp108",
+    "name": "Advanced Journalism: Edit Design Management (Yearbook) CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "21206/21207",
+    "prereq": "None",
+    "desc": "Yearbook will focus on project-based learning with the overall objective for the students to develop a yearbook publication. Students will develop their skills in graphic design, writing and build the understanding of the economics involved with creating and marketing a published item. Be a part of a class that creates a life long lasting product that will bring back the unique and fun memories of people's high school experience and build the skills to prepare you for a wide variety of future jobs!"
+  },
+  {
+    "id": "imp109",
+    "name": "College and Career Exploration CP",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "g",
+    "type": "cp",
+    "code": "26341",
+    "prereq": "None",
+    "desc": "College and Career Exploration CP is an interdisciplinary elective designed to help students explore post-secondary pathways and career options. Students develop the skills, knowledge, and resources needed to make informed decisions about their future education and career goals.",
+    "inactive": true
+  },
+  {
+    "id": "imp110",
+    "name": "Student Government (Leadership)",
+    "dept": "electives",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "20108/20109",
+    "prereq": "Student application process for admittance, Teacher approval",
+    "desc": "Student Government/Leadership is a one year project-based course aimed at increasing students' leadership capabilities. Through the planning and execution of numerous events for the school, students will discover how to best effect change in their communities. Students will read extensively about the nature of leadership and its different styles. Additionally, students will frequently write critically, reflectively, persuasively and speak about the real world issues that arise from the planning of school wide and class events and or fundraisers. Students will learn the following leadership skills: project planning and implementation, problem solving, public speaking, Communication, Personal & Social Development, Civic & Service Learning, Government, Business & Finance, and Technology & Digital Citizenship."
+  },
+  {
+    "id": "imp111",
+    "name": "Peer Tutor",
+    "dept": "electives",
+    "grade": "12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "28433/28434",
+    "prereq": "Counselor Approval, AB 1012 Form, contract with teacher signed",
+    "desc": "Peer Tutors are an active member of Jefferson High School by creating a sense of school belonging in the classroom in a course in which they have demonstrated academic success."
+  },
+  {
+    "id": "imp112",
+    "name": "Teacher Assistant",
+    "dept": "electives",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "28000/28001",
+    "prereq": "Counselor Approval AB1012 Form",
+    "desc": "This course is available in all disciplines and can be repeated for credit. Specific responsibilities are outlined by the individual teacher/counselor."
+  },
+  {
+    "id": "imp113",
+    "name": "Office Assistant",
+    "dept": "electives",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "",
+    "type": "cp",
+    "code": "28004/28005",
+    "prereq": "Counselor Approval AB1012 Form",
+    "desc": "In the Clerical Offices, the following skills are developed: telephone communication techniques, filing, assisting students and parents at the counter and occasional practice with office machines. This experience is extremely valuable for students interested in working in a business environment."
+  },
+  {
+    "id": "imp114",
+    "name": "Language Arts Seminar 1",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29000/29001",
+    "prereq": "Based on IEP",
+    "desc": "In this course we are using the district mandated Edge Curriculum. EDGE is a core reading intervention program designed for students reading below grade level. It prepares students for success on exit exams and moves them to graduation. The emphasis is on enabling oral and academic English Language Development. It focuses on vocabulary and reading strategies. Students are placed in different levels based on initial scores for the placement test. Fundamental Level is based on reading scores for Grades 1-3."
+  },
+  {
+    "id": "imp115",
+    "name": "Language Arts Seminar 2",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29002/29003",
+    "prereq": "Based on IEP",
+    "desc": "In this course we are using the district mandated Edge Curriculum. EDGE is a core reading intervention program designed for students reading below grade level. It prepares students for success on exit exams and moves them to graduation. Level A is the next level after the basic Fundamentals Levels. Students are placed in different levels based on initial scores for the placement test. Level A is based on reading scores for grades 3-5."
+  },
+  {
+    "id": "imp116",
+    "name": "Language Arts Seminar 3",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29004/29005",
+    "prereq": "Based on IEP",
+    "desc": "In this course we are using the district mandated Edge Curriculum. EDGE is a core reading intervention program designed for students reading below grade level. It prepares students for success on exit exams and moves them to graduation. Level B is the next level after Level A. Students are placed in different levels based on initial scores for the placement test. Level B is based on reading scores for grades 6-8."
+  },
+  {
+    "id": "imp117",
+    "name": "Special Education Math Course 1",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29010/29011",
+    "prereq": "Based on IEP",
+    "desc": "Special Education Math Course 1 provides specialized academic instruction in foundational mathematics aligned to the Math Course 1 state graduation requirement. The course is designed for Special Education students and addresses specific skill deficits with individualized supports as specified through each student's IEP.",
+    "inactive": true
+  },
+  {
+    "id": "imp118",
+    "name": "Special Education Math 1a",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29059/29060",
+    "prereq": "Based on IEP",
+    "desc": "Special Education Math 1a is a preparation class to help students develop an understanding of mathematical concepts leading to Math Course 1. The course is designed for Special Education students and provides individualized support as specified through each student's IEP to address specific math skill deficits.",
+    "inactive": true
+  },
+  {
+    "id": "imp119",
+    "name": "Special Education Math 1b",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29061/29062",
+    "prereq": "Based on IEP",
+    "desc": "A preparation class to help the student develop an understanding of Mathematical concepts leading to Math Course 1 state graduation requirement. This course covers the common core math standards for pre-algebra. The course and text, in unison, provides the tools and helps underprepared students to build information and develop strategies that can be used to solve problems in number sense, geometry, algebra and more. This course is provided for Special Education students who have grade equivalent scores of Grades 3-6."
+  },
+  {
+    "id": "imp120",
+    "name": "Special Education World History",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29022/29023",
+    "prereq": "Based on IEP",
+    "desc": "This course covers the California Content Standards for high school World History. This course focuses on a fundamental understanding of World History. Students are presented with a chronological approach to the major themes of world history from prehistory to modern times. This course utilizes the PACEMAKER World History text which is written at a fourth grade reading level.",
+    "inactive": true
+  },
+  {
+    "id": "imp121",
+    "name": "Special Education United States History",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29024/29025",
+    "prereq": "Based on IEP",
+    "desc": "This course covers the California Content Standards for High School United States History. This course covers the fundamental principles from the rise of Industrialization to the development of federal civil rights and voting rights. This course utilizes the PACEMAKER United States History text which is written at about a fourth grade reading level. This course is designed for Special Education students only.",
+    "inactive": true
+  },
+  {
+    "id": "imp122",
+    "name": "Special Education Government",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "5",
+    "ag": "",
+    "type": "sp",
+    "code": "29026",
+    "prereq": "Based on IEP",
+    "desc": "This course covers the California Content Standards for 12th grade government. This course will cover the fundamental principles and moral values of American Democracy, the rights and obligations of democratic citizens, the roles and responsibilities of the three branches of the United States Government, landmark U.S. Supreme Court interpretations of the Constitution and its amendments, the varying levels of responsibilities in the varying levels of government, and the different political systems across time. This course will provide a basic knowledge of American Government and Democracy.",
+    "inactive": true
+  },
+  {
+    "id": "imp123",
+    "name": "Special Education Economics",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "5",
+    "ag": "",
+    "type": "sp",
+    "code": "29027",
+    "prereq": "Based on IEP",
+    "desc": "This course covers the California Content Standards for 12th grade economics. This course will cover common economic terms, concepts, and economic reasoning, the elements of America's market economy in a global setting, and the influence of the federal government on the American economy. This course will provide a basic knowledge of the principles of economics.",
+    "inactive": true
+  },
+  {
+    "id": "imp124",
+    "name": "Special Education Life Science",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29030/29031",
+    "prereq": "Based on IEP",
+    "desc": "Special Education Life Science provides specialized academic instruction in life science content aligned to California Content Standards. The course is designed for Special Education students and provides individualized supports as specified through each student's IEP to address specific science skill deficits.",
+    "inactive": true
+  },
+  {
+    "id": "imp125",
+    "name": "Special Education Physical Science",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29032/29033",
+    "prereq": "Based on IEP",
+    "desc": "Special Education Physical Science provides specialized academic instruction in physical science content aligned to California Content Standards. The course is designed for Special Education students and provides individualized supports as specified through each student's IEP to address specific science skill deficits.",
+    "inactive": true
+  },
+  {
+    "id": "imp126",
+    "name": "Special Education Health",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "5",
+    "ag": "",
+    "type": "sp",
+    "code": "29222",
+    "prereq": "Based on IEP",
+    "desc": "This course is designed to inform students to make healthy choices and develop skills for healthy living. The topics which will be covered include: Skeletal, Muscular, Nervous, Endocrine, Circulatory, Immune, and Respiratory Systems; Disease and Disorders; Safety and Injury Prevention; Nutrition and Fitness; Mental and Emotional Health; Drug and Medicines; Growth, Development, and Sex Ed; Healthy Relationships; and Personal Hygiene.",
+    "inactive": true
+  },
+  {
+    "id": "imp127",
+    "name": "Study Skills",
+    "dept": "special-ed",
+    "grade": "9-10",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29223/29224",
+    "prereq": "Based on IEP",
+    "desc": "In this course, students are introduced to basic college and career skills; including executive functioning skills such as planning, note taking, study techniques, and self-advocacy. By completing an application investigating student understanding of their learning styles and learning differences, students are better able to seek help and resources for success. Students are also given time to work on homework, receive assistance, and study for their core classes."
+  },
+  {
+    "id": "imp128",
+    "name": "Tutorial",
+    "dept": "special-ed",
+    "grade": "11-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29225/29226",
+    "prereq": "Based on IEP",
+    "desc": "Tutorial class prepares students for transitioning out of high school into higher education or the workforce, as well as provides time to work on homework and study for curriculum classes. Tutorial class also explores career interests and the training/education required and preferred, as well as opportunities and resources for post-secondary education and various job skills."
+  },
+  {
+    "id": "imp129",
+    "name": "Social Communication",
+    "dept": "special-ed",
+    "grade": "9-12",
+    "credits": "10",
+    "ag": "",
+    "type": "sp",
+    "code": "29229/29230",
+    "prereq": "Based on IEP",
+    "desc": "Students work with a curriculum that focuses on predicting the intentions and actions of others, understanding non-verbal cues, body language, social rules, learning perspective taking and being able to clearly share feelings and intentions with others. This is a class that will be focusing on social thinking and social communication, as well as leadership skills to further address the following areas: Self–Awareness, Emotions/Coping Strategies, Non Verbal Cues/Body Language, Social Language Concepts, Initiating and Maintaining Conversational Exchanges, Expected and Unexpected Behaviors in the Community, and more."
+  }
+];
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let currentDept  = 'all';
+let currentGrade = 'all';
+let activeTypes  = new Set();
+let searchQuery  = '';
+let activeSidebarId = 'sl-home';
+
+const DEPT_CONFIG = {
+  'social-science': { label:'Social Science',              color:'#dc2626', icon:'🌍' },
+  'english':        { label:'English',                     color:'#ea580c', icon:'📖' },
+  'mathematics':    { label:'Mathematics',                 color:'#d97706', icon:'📐' },
+  'science':        { label:'Science',                     color:'#16a34a', icon:'🔬' },
+  'lote':           { label:'Languages (LOTE)',             color:'#0284c7', icon:'🌐' },
+  'vpa':            { label:'Visual & Performing Arts',    color:'#7c3aed', icon:'🎨' },
+  'cte':            { label:'Career Technical Education',  color:'#be185d', icon:'🛠️' },
+  'pe':             { label:'PE & Health',                 color:'#0f766e', icon:'🏃' },
+  'electives':      { label:'Interdisciplinary Electives', color:'#6366f1', icon:'🔭' },
+  'special-ed':     { label:'Special Education',           color:'#92400e', icon:'🤝' },
+};
+const DEPT_ORDER = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
+
+/* ═══════════════════════════════════════════════════
+   NAV HELPERS
+═══════════════════════════════════════════════════ */
+function toggleNav() {
+  document.body.classList.toggle('nav-open');
+}
+function closeNav() {
+  document.body.classList.remove('nav-open');
+}
+
+function setActiveSidebar(id) {
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('active');
+      activeSidebarId = id;
+    }
+  }
+}
+
+function setBN(id) {
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE NAVIGATION
+═══════════════════════════════════════════════════ */
+function showPage(pageId, slId) {
+  document.querySelectorAll('.info-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('coursesView').classList.add('hidden');
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+  document.getElementById('resultCount').classList.add('hidden');
+  setActiveSidebar(slId || null);
+  closeNav();
+  window.scrollTo(0, 0);
+}
+
+function filterDept(dept, slId) {
+  currentDept = dept;
+  document.querySelectorAll('.info-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('coursesView').classList.remove('hidden');
+  setActiveSidebar(slId || null);
+  closeNav();
+  renderCourses();
+  window.scrollTo(0, 0);
+}
+
+/* ═══════════════════════════════════════════════════
+   FILTERS
+═══════════════════════════════════════════════════ */
+function toggleGrade(el, grade) {
+  document.querySelectorAll('[data-grade]').forEach(c => c.classList.remove('active'));
+  currentGrade = grade;
+  el.classList.add('active');
+  renderCourses();
+}
+function toggleType(el, type) {
+  if (activeTypes.has(type)) { activeTypes.delete(type); el.classList.remove('active'); }
+  else { activeTypes.add(type); el.classList.add('active'); }
+  renderCourses();
+}
+function resetFilters() {
+  currentGrade = 'all';
+  activeTypes.clear();
+  document.querySelectorAll('[data-grade]').forEach(c => c.classList.remove('active'));
+  document.querySelector('[data-grade="all"]').classList.add('active');
+  document.querySelectorAll('[data-type]').forEach(c => c.classList.remove('active'));
+  renderCourses();
+}
+
+/* ═══════════════════════════════════════════════════
+   COURSE FILTER
+═══════════════════════════════════════════════════ */
+function courseMatches(c) {
+  if (c.inactive) return false;
+  if (currentDept !== 'all' && c.dept !== currentDept) return false;
+  if (currentGrade !== 'all') {
+    const parts = c.grade.replace(/ELL /,'').split('-');
+    const lo = parseInt(parts[0]);
+    const hi = parseInt(parts[parts.length - 1]);
+    const gi = parseInt(currentGrade);
+    if (gi < lo || gi > hi) return false;
+  }
+  if (activeTypes.size > 0 && !activeTypes.has(c.type)) return false;
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    const hay = (c.name + ' ' + c.desc + ' ' + c.code + ' ' + (c.prereq||'')).toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+function renderCourses() {
+  const filtered = COURSES.filter(courseMatches);
+  const container = document.getElementById('courseContainer');
+  const noResults = document.getElementById('noResults');
+  const badge     = document.getElementById('resultCount');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    noResults.classList.remove('hidden');
+    badge.textContent = '0';
+    badge.classList.remove('hidden');
+    return;
+  }
+  noResults.classList.add('hidden');
+  badge.textContent = filtered.length + (filtered.length === 1 ? ' course' : ' courses');
+  badge.classList.remove('hidden');
+
+  // Group by dept
+  const groups = {};
+  for (const c of filtered) {
+    if (!groups[c.dept]) groups[c.dept] = [];
+    groups[c.dept].push(c);
+  }
+
+  let html = '';
+  for (const dept of DEPT_ORDER) {
+    if (!groups[dept]) continue;
+    const cfg = DEPT_CONFIG[dept];
+    html += `<div class="section-heading">
+      <span class="section-icon">${cfg.icon}</span>
+      <span class="section-title">${cfg.label}</span>
+      <span class="section-pill">${groups[dept].length}</span>
+    </div><div class="course-grid">`;
+    for (const c of groups[dept]) html += renderCard(c, cfg.color);
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function renderCard(c, color) {
+  const typeBadge =
+    c.type === 'ap'  ? '<span class="badge badge-ap">AP</span>' :
+    c.type === 'eld' ? '<span class="badge badge-eld">ELD/ELA</span>' :
+    c.type === 'sp'  ? '<span class="badge badge-sp">Special Ed</span>' :
+                       '<span class="badge badge-cp">CP</span>';
+
+  const agBadge      = c.ag         ? `<span class="badge badge-ag">a-g: ${c.ag}</span>` : '';
+  const dualBadge    = c.dualEnroll ? `<span class="badge badge-dual">Dual Enroll</span>` : '';
+  const collegeBadge = c.collegeCredit ? `<span class="badge badge-college">College Credit</span>` : '';
+  const yearBadge    = c.fullYear   ? `<span class="badge badge-college">Full-Year</span>` : '';
+
+  const prereqHtml = c.prereq && c.prereq !== 'None'
+    ? `<div class="card-prereq">Prereq: <em>${c.prereq}</em></div>` : '';
+
+  return `<div class="course-card" id="card-${c.id}" onclick="toggleCard('${c.id}')">
+    <div class="card-header" style="border-left-color:${color}">
+      <div class="card-title-row">
+        <div class="card-title">${c.name}</div>
+        <span class="expand-btn">▼</span>
+      </div>
+      <div class="card-badges">
+        ${typeBadge}
+        <span class="badge badge-grade">Gr ${c.grade}</span>
+        <span class="badge badge-credits">${c.credits} cr</span>
+        ${agBadge}${dualBadge}${collegeBadge}${yearBadge}
+      </div>
+      ${prereqHtml}
+    </div>
+    <div class="card-body">
+      <div class="card-desc">${rich(c.desc)}</div>
+      <div class="card-meta">
+        <div class="card-meta-item"><strong>Course ID</strong>${c.code || '—'}</div>
+        <div class="card-meta-item"><strong>Credits</strong>${c.credits}</div>
+        <div class="card-meta-item"><strong>Grade Level</strong>${c.grade}</div>
+        <div class="card-meta-item"><strong>a-g Area</strong>${c.ag ? '"' + c.ag + '"' : 'N/A'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  document.getElementById('card-' + id).classList.toggle('expanded');
+}
+
+/* ═══════════════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════════════ */
+document.getElementById('searchInput').addEventListener('input', function () {
+  searchQuery = this.value.trim();
+  if (searchQuery) {
+    document.querySelectorAll('.info-page').forEach(p => p.classList.remove('active'));
+    document.getElementById('coursesView').classList.remove('hidden');
+    currentDept = 'all';
+    setActiveSidebar(null);
+    setBN('bn-courses');
+  }
+  renderCourses();
+});
+
+/* ═══════════════════════════════════════════════════
+   INIT — populate counts
+═══════════════════════════════════════════════════ */
+renderInfoPages();
+
+(function initCounts() {
+  const activeCourses = COURSES.filter(c => !c.inactive);
+  document.getElementById('cnt-all').textContent = activeCourses.length;
+  for (const dept of DEPT_ORDER) {
+    const el = document.getElementById('cnt-' + dept);
+    if (el) el.textContent = activeCourses.filter(c => c.dept === dept).length;
+  }
+})();
+
+/* ── Apply school identity to data-* elements ── */
+if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
+</script>
+</body>
+</html>
