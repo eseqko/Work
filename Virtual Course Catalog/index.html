@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Counselor Dashboard</title>
+<title>Student Support Services Resource Center Dashboard</title>
 <script src="school-config.js"></script>
 <style>
 :root{
@@ -14,7 +14,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--surface-tint);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-h1{color:var(--brand);font-size:1.8rem;margin-bottom:6px;text-align:center}
+h1{color:var(--brand);font-size:1.5rem;margin-bottom:6px;text-align:center}
 .subtitle{color:#555;font-size:.95rem;margin-bottom:4px;text-align:center}
 .school-line{color:#777;font-size:.82rem;margin-bottom:32px;text-align:center}
 .cards{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;max-width:780px;width:100%}
@@ -30,7 +30,7 @@ footer{margin-top:40px;color:#aaa;font-size:.78rem;text-align:center}
 </head>
 <body>
 
-<h1><span data-school-short>Your School</span> — Counselor Dashboard</h1>
+<h1><span data-school-short>Your School</span> — Student Support Services Resource Center Dashboard</h1>
 <p class="subtitle">Select a tool to edit your school's resources.</p>
 <p class="school-line"><span data-school-year></span></p>
 
@@ -83,7 +83,7 @@ if (window.SchoolConfig) {
     document.documentElement.style.setProperty('--accent', cfg.colors.secondary);
   }
   if (cfg.setupComplete) {
-    document.title = (cfg.shortName || cfg.schoolName) + ' — Counselor Dashboard';
+    document.title = (cfg.shortName || cfg.schoolName) + ' — Student Support Services Resource Center Dashboard';
   }
 }
 </script>
