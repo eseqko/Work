@@ -597,11 +597,14 @@ const TRANSLATIONS = {};
 // ── School data helper ─────────────────────────────────────────────────────
 // Checks localStorage for an editor draft first, then falls back to school-data.js
 function getSD(){
+  const base=(typeof SCHOOL_DATA!=='undefined')?Object.assign({},SCHOOL_DATA):{};
   try{
-    const draft=localStorage.getItem('grizznet_draft');
-    if(draft) return JSON.parse(draft);
+    const raw=localStorage.getItem('grizznet_draft');
+    if(raw){const d=JSON.parse(raw);if(d&&typeof d==='object'){
+      for(const k in d){if(!isBlank(d[k]))base[k]=d[k];}
+    }}
   }catch(e){}
-  return (typeof SCHOOL_DATA!=='undefined')?SCHOOL_DATA:{};
+  return base;
 }
 
 // Read Course Catalog's imported info (grad reqs, counselors, etc.)
