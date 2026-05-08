@@ -26,29 +26,9 @@ h1{color:var(--brand);font-size:1.8rem;margin-bottom:6px;text-align:center}
 .card-arrow{margin-top:auto;font-size:.85rem;color:var(--brand);font-weight:600}
 footer{margin-top:40px;color:#aaa;font-size:.78rem;text-align:center}
 
-/* Auth gate */
-#grizznet-gate{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999}
-.gate-box{background:#fff;border-radius:14px;padding:36px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.25)}
-.gate-box h2{color:var(--brand);margin-bottom:8px;font-size:1.3rem}
-.gate-box p{color:#555;font-size:.9rem;margin-bottom:20px}
-.gate-box input{width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:1rem;margin-bottom:12px;outline:none}
-.gate-box input:focus{border-color:var(--brand)}
-.gate-box button{background:var(--brand);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:1rem;cursor:pointer;width:100%;font-weight:600}
-.gate-box button:hover{background:var(--brand-dark)}
-#gate-err{color:#c00;font-size:.85rem;margin-top:8px;min-height:18px}
 </style>
 </head>
 <body>
-
-<div id="grizznet-gate">
-  <div class="gate-box">
-    <h2 id="gate-heading">Counselor Dashboard</h2>
-    <p id="gate-subtext">Enter your admin password to continue.</p>
-    <input type="password" id="gate-pw" placeholder="Password" onkeydown="if(event.key==='Enter')gnLogin()">
-    <button onclick="gnLogin()">Unlock</button>
-    <div id="gate-err"></div>
-  </div>
-</div>
 
 <h1><span data-school-short>Your School</span> — Counselor Dashboard</h1>
 <p class="subtitle">Select a tool to edit your school's resources.</p>
@@ -108,56 +88,5 @@ if (window.SchoolConfig) {
 }
 </script>
 
-<script>
-(function(){
-  const PW_KEY='grizznet_editor_pw', SK='grizznet_auth';
-
-  async function sha256(s){
-    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-
-  const stored=localStorage.getItem(PW_KEY);
-  const active=sessionStorage.getItem(SK);
-
-  if(!stored){
-    // First-time setup
-    const h=document.getElementById('gate-heading');
-    const p=document.getElementById('gate-subtext');
-    const btn=document.querySelector('.gate-box button');
-    h.textContent='Set Up Admin Password';
-    p.textContent='No password has been set yet. Choose a password for the admin tools.';
-    btn.textContent='Set Password';
-    window.gnLogin=async function(){
-      const pw=document.getElementById('gate-pw').value.trim();
-      const err=document.getElementById('gate-err');
-      if(pw.length<4){err.textContent='Password must be at least 4 characters.';return;}
-      const hash=await sha256(pw);
-      localStorage.setItem(PW_KEY,hash);
-      sessionStorage.setItem(SK,'1');
-      document.getElementById('grizznet-gate').style.display='none';
-    };
-    return;
-  }
-
-  if(active){
-    document.getElementById('grizznet-gate').style.display='none';
-    return;
-  }
-
-  window.gnLogin=async function(){
-    const pw=document.getElementById('gate-pw').value;
-    const err=document.getElementById('gate-err');
-    const hash=await sha256(pw);
-    if(hash===stored){
-      sessionStorage.setItem(SK,'1');
-      document.getElementById('grizznet-gate').style.display='none';
-    } else {
-      err.textContent='Incorrect password.';
-      document.getElementById('gate-pw').value='';
-    }
-  };
-})();
-</script>
 </body>
 </html>

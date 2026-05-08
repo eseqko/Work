@@ -340,81 +340,9 @@ tr:hover td { background: #fafbfc; }
   display: flex; align-items: flex-start; gap: 6px; line-height: 1.55;
 }
 </style>
-<style>
-/* Auth gate (shared with hub-editor / dashboard) */
-#catalog-gate{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-.cg-box{background:#fff;border-radius:14px;padding:36px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.25)}
-.cg-box h2{color:var(--navy);margin-bottom:8px;font-size:1.3rem}
-.cg-box p{color:#555;font-size:.9rem;margin-bottom:20px;line-height:1.45}
-.cg-box input{width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:1rem;margin-bottom:12px;outline:none;font-family:inherit}
-.cg-box input:focus{border-color:var(--navy)}
-.cg-box button{background:var(--navy);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:1rem;cursor:pointer;width:100%;font-weight:600}
-.cg-box button:hover{filter:brightness(1.15)}
-#cg-err{color:#c00;font-size:.85rem;margin-top:8px;min-height:18px}
-.cg-link{display:block;margin-top:10px;font-size:.78rem;color:#666;text-decoration:none}
-.cg-link:hover{color:var(--navy);text-decoration:underline}
-</style>
 </head>
 <body>
 
-<!-- Shared password gate (uses same keys as hub-editor/dashboard) -->
-<div id="catalog-gate" style="display:none">
-  <div class="cg-box">
-    <h2 id="cg-heading">Catalog Editor</h2>
-    <p id="cg-subtext">Enter your admin password to continue.</p>
-    <input type="password" id="cg-pw" placeholder="Password" onkeydown="if(event.key==='Enter')cgLogin()">
-    <button onclick="cgLogin()">Unlock</button>
-    <div id="cg-err"></div>
-    <a class="cg-link" href="index.html">← Back to Dashboard</a>
-  </div>
-</div>
-
-<script>
-(function(){
-  const PW_KEY='grizznet_editor_pw', SK='grizznet_auth';
-  async function sha256(s){
-    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-  const stored=localStorage.getItem(PW_KEY);
-  const active=sessionStorage.getItem(SK);
-  const gate=document.getElementById('catalog-gate');
-
-  if(!stored){
-    // First-time setup — force user to set up at dashboard first
-    gate.style.display='flex';
-    document.getElementById('cg-heading').textContent='Set Up Admin Password';
-    document.getElementById('cg-subtext').textContent='No admin password has been set yet. Please set one up from the Dashboard first.';
-    document.getElementById('cg-pw').style.display='none';
-    document.querySelector('.cg-box button').style.display='none';
-    return;
-  }
-
-  if(active){
-    // Already unlocked
-    gate.style.display='none';
-    return;
-  }
-
-  // Needs login
-  gate.style.display='flex';
-  setTimeout(()=>{const i=document.getElementById('cg-pw');if(i)i.focus();},50);
-
-  window.cgLogin=async function(){
-    const pw=document.getElementById('cg-pw').value;
-    const err=document.getElementById('cg-err');
-    const hash=await sha256(pw);
-    if(hash===stored){
-      sessionStorage.setItem(SK,'1');
-      gate.style.display='none';
-    } else {
-      err.textContent='Incorrect password.';
-      document.getElementById('cg-pw').value='';
-      document.getElementById('cg-pw').focus();
-    }
-  };
-})();
-</script>
 
 <header>
   <div class="hdr-left">

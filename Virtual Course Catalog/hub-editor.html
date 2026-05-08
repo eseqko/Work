@@ -10,21 +10,8 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
 
-/* ── Auth gate ── */
-#gate{position:fixed;inset:0;background:var(--brand);display:flex;align-items:center;justify-content:center;z-index:999}
-.gate-card{background:var(--surface);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
-.gate-card h1{font-size:1.3rem;font-weight:800;color:var(--brand);margin-bottom:6px}
-.gate-card p{font-size:.85rem;color:var(--muted);margin-bottom:22px;line-height:1.5}
-.gate-card label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:var(--text)}
-.gate-card input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.95rem;margin-bottom:14px;outline:none}
-.gate-card input:focus{border-color:var(--brand)}
-.gate-btn{width:100%;background:var(--brand);color:#fff;border:none;border-radius:8px;padding:11px;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:4px}
-.gate-btn:hover{background:#144d2f}
-.gate-err{color:var(--danger);font-size:.82rem;margin-top:8px;display:none}
-.gate-link{display:block;text-align:center;font-size:.78rem;color:var(--muted);margin-top:14px;cursor:pointer;text-decoration:underline}
-
 /* ── App shell ── */
-#app{display:none;flex-direction:column;height:100vh}
+#app{display:flex;flex-direction:column;height:100vh}
 
 /* ── Toolbar ── */
 .toolbar{background:var(--brand);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
@@ -172,17 +159,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 })();
 </script>
 
-<!-- Auth gate -->
-<div id="gate">
-  <div class="gate-card">
-    <h1 id="gate-title">Student Hub Editor</h1>
-    <p id="gate-desc"></p>
-    <div id="gate-form"></div>
-    <div class="gate-err" id="gate-err"></div>
-    <a class="gate-link" id="gate-reset-link" style="display:none" onclick="showResetConfirm()">Forgot password? Reset it</a>
-  </div>
-</div>
-
 <!-- App -->
 <div id="app">
   <div class="toolbar">
@@ -193,7 +169,6 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
     <button class="tbtn" onclick="saveNow()">💾 Save</button>
     <button class="tbtn" onclick="openTranslate()">🌐 Translate</button>
     <button class="tbtn accent" onclick="downloadData()">⬇ Download school-data.js</button>
-    <button class="tbtn" onclick="logout()" style="opacity:.7">Sign out</button>
   </div>
 
   <div class="content-area layout-tabs" id="content-area">
@@ -264,91 +239,8 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 </div>
 
 <script>
-// ── Password / Auth ─────────────────────────────────────────────────────────
-const PW_KEY='grizznet_editor_pw';
-const SESSION_KEY='grizznet_auth';
-
-async function sha256(str){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-function showErr(msg){const e=document.getElementById('gate-err');e.textContent=msg;e.style.display='block';}
-function hideErr(){document.getElementById('gate-err').style.display='none';}
-
-function showSetup(){
-  document.getElementById('gate-title').textContent='Welcome to Student Hub Editor';
-  document.getElementById('gate-desc').textContent='Create a password to protect this editor. You\'ll use it every time you sign in.';
-  document.getElementById('gate-form').innerHTML=`
-    <label>New password</label><input type="password" id="pw1" placeholder="Choose a password"/>
-    <label>Confirm password</label><input type="password" id="pw2" placeholder="Confirm your password"/>
-    <button class="gate-btn" onclick="submitSetup()">Create Password</button>`;
-}
-
-function showLogin(){
-  document.getElementById('gate-title').textContent='Student Hub Editor';
-  document.getElementById('gate-desc').textContent='Enter your password to access the editor.';
-  document.getElementById('gate-form').innerHTML=`
-    <label>Password</label><input type="password" id="pw1" placeholder="Your password" onkeydown="if(event.key==='Enter')submitLogin()"/>
-    <button class="gate-btn" onclick="submitLogin()">Sign In</button>`;
-  document.getElementById('gate-reset-link').style.display='block';
-  setTimeout(()=>{const i=document.getElementById('pw1');if(i)i.focus();},50);
-}
-
-async function submitSetup(){
-  hideErr();
-  const p1=document.getElementById('pw1').value;
-  const p2=document.getElementById('pw2').value;
-  if(!p1){showErr('Please enter a password.');return;}
-  if(p1!==p2){showErr('Passwords do not match.');return;}
-  if(p1.length<4){showErr('Password must be at least 4 characters.');return;}
-  const hash=await sha256(p1);
-  localStorage.setItem(PW_KEY,hash);
-  sessionStorage.setItem(SESSION_KEY,'1');
-  openEditor();
-}
-
-async function submitLogin(){
-  hideErr();
-  const p=document.getElementById('pw1').value;
-  if(!p){showErr('Please enter your password.');return;}
-  const hash=await sha256(p);
-  const stored=localStorage.getItem(PW_KEY);
-  if(hash===stored){
-    sessionStorage.setItem(SESSION_KEY,'1');
-    openEditor();
-  } else {
-    showErr('Incorrect password. Try again.');
-    document.getElementById('pw1').value='';
-    document.getElementById('pw1').focus();
-  }
-}
-
-function showResetConfirm(){
-  if(confirm('This will clear your saved password. You\'ll create a new one. Continue?')){
-    localStorage.removeItem(PW_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
-    document.getElementById('gate-reset-link').style.display='none';
-    showSetup();
-  }
-}
-
-function logout(){
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
-
-// ── Init auth ───────────────────────────────────────────────────────────────
-const hasPw=!!localStorage.getItem(PW_KEY);
-const hasSession=!!sessionStorage.getItem(SESSION_KEY);
-if(hasPw&&hasSession){
-  // Defer to the next tick so all const/function declarations below
-  // (DEFAULTS, loadDraft, buildForm, etc.) are initialized before
-  // openEditor runs. Otherwise loadDraft hits a temporal dead zone on DEFAULTS.
-  setTimeout(openEditor, 0);
-}
-else if(hasPw){ showLogin(); }
-else{ showSetup(); }
+// ── Init ─────────────────────────────────────────────────────────────────────
+setTimeout(openEditor, 0);
 
 // ── Draft data ───────────────────────────────────────────────────────────────
 const DRAFT_KEY='grizznet_draft';
@@ -699,8 +591,6 @@ function refreshPreview(){
 
 // ── Open editor ───────────────────────────────────────────────────────────────
 function openEditor(){
-  document.getElementById('gate').style.display='none';
-  document.getElementById('app').style.display='flex';
   buildForm();
   renderReqTable();
 }
