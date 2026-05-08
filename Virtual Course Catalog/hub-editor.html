@@ -627,6 +627,19 @@ function refreshPreview(){
 function openEditor(){
   buildForm();
   renderReqTable();
+  // Deep-link: #handbook scrolls to and opens the first handbook section
+  if(location.hash==='#handbook'){
+    const groups=document.querySelectorAll('details.section-group');
+    let firstHandbook=null;
+    groups.forEach(g=>{
+      const sum=g.querySelector('summary');
+      if(sum && /Handbook/i.test(sum.textContent)){
+        g.open=true;
+        if(!firstHandbook) firstHandbook=g;
+      }
+    });
+    if(firstHandbook && firstHandbook.scrollIntoView) setTimeout(()=>firstHandbook.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  }
 }
 
 // ── DeepL Translation ─────────────────────────────────────────────────────────
