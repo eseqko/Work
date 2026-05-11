@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jefferson HS Catalog — Editor</title>
+<title>Catalog Editor</title>
 <style>
 :root {
   --navy: #1a3a5c; --gold: #c8a227; --gold-light: #f5e9c0;
@@ -463,7 +463,7 @@ tr:hover td { background: #fafbfc; }
     <div class="info-section-body">
       <div class="table-wrap">
         <table class="gr-table">
-          <thead><tr><th>Area</th><th>Subject</th><th>JUHSD Credits</th><th>Note (optional)</th><th>UC/CSU Req.</th><th style="width:36px;"></th></tr></thead>
+          <thead><tr><th>Area</th><th>Subject</th><th data-credits-header>Credits</th><th>Note (optional)</th><th>UC/CSU Req.</th><th style="width:36px;"></th></tr></thead>
           <tbody id="gradReqBody"></tbody>
         </table>
       </div>
@@ -883,6 +883,10 @@ tr:hover td { background: #fafbfc; }
 if (typeof SchoolConfig !== 'undefined') {
   SchoolConfig.requireSetup();
   SchoolConfig.applyTheme();
+  const _cfg = SchoolConfig.load();
+  if (_cfg.setupComplete) document.title = (_cfg.shortName || _cfg.schoolName) + ' — Catalog Editor';
+  const _ch = document.querySelector('[data-credits-header]');
+  if (_ch && _cfg.shortName) _ch.textContent = _cfg.shortName + ' Credits';
 }
 </script>
 <script>
@@ -919,7 +923,7 @@ const SEED = [
   {id:'en12', dept:'english', name:'ELD 3', code:'21110/21111', grade:'9-12', credits:'10', ag:'', type:'eld', prereq:'ELD 2', desc:'Designated ELD progressing from expanding to bridging stage.'},
   {id:'en13', dept:'english', name:'ELA 3 CP', code:'21112/21113', grade:'9-12', credits:'10', ag:'b', type:'eld', prereq:'ELD 2', desc:'Integrated ELA progressing from expanding to bridging level. Meets a-g area "b".'},
   {id:'ma1', dept:'mathematics', name:'Math for Newcomers',          code:'22014/22015', grade:'9-12',  credits:'10', ag:'',  type:'eld', prereq:'EL 9-10', desc:'For beginning English learners. Covers arithmetic, number sense, and introductory Math Course 1 concepts. Does NOT fulfill CSU/UC math requirement.'},
-  {id:'ma2', dept:'mathematics', name:'Math Course 1 CP',            code:'22000/22001', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'First in JUHSD\'s three-year college prep math sequence. Covers Number & Quantity, Algebra, Functions, Geometry, and Statistics.'},
+  {id:'ma2', dept:'mathematics', name:'Math Course 1 CP',            code:'22000/22001', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'First in the three-year college prep math sequence. Covers Number & Quantity, Algebra, Functions, Geometry, and Statistics.'},
   {id:'ma3', dept:'mathematics', name:'Math Course 2 CP',            code:'22002/22003', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass at least one semester of Math Course 1 with D- or better', desc:'Second in the three-year sequence. Focuses on quadratic functions, geometry, and probability.'},
   {id:'ma4', dept:'mathematics', name:'Math Course 3 CP',            code:'22004/22005', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass MC2 with C- or better', desc:'Third in the sequence. Covers exponential and trigonometric functions, probability, and statistics.'},
   {id:'ma5', dept:'mathematics', name:'Statistics CP',               code:'22100/22101', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'Introduction to probability and statistics: analysis, interpretation, and presentation of data.'},
@@ -1934,7 +1938,7 @@ function createCourseCatalog() {
   grH.editAsText().setForegroundColor('${_cp}');
   grH.setSpacingAfter(10);
 
-  var grRows = [['a-g', 'Subject Area', 'JUHSD Diploma Requirements', 'Notes', 'CSU/UC Eligibility']];
+  var grRows = [['a-g', 'Subject Area', (_sc.shortName||'District')+' Diploma Requirements', 'Notes', 'CSU/UC Eligibility']];
   for (var gr = 0; gr < GRAD_REQS.length; gr++) {
     var r = GRAD_REQS[gr];
     grRows.push([r.area, r.subject, r.juhsd, r.note || '', r.ucCsu]);
@@ -2281,7 +2285,7 @@ function downloadCatalogPDF() {
   sectionHeading('Graduation Requirements');
 
   var gradReqs = infoData.gradReqs || INFO_SEED.gradReqs;
-  var gradHeaders = ['a-g', 'Subject Area', 'JUHSD Diploma', 'CSU/UC Eligibility'];
+  var gradHeaders = ['a-g', 'Subject Area', (_sc.shortName||'District')+' Diploma', 'CSU/UC Eligibility'];
   var gradRows = gradReqs.map(function(r) { return [r.area, r.subject, r.juhsd, r.ucCsu]; });
   gradRows.push(['\u2014', 'TOTAL', 'Min. ' + (infoData.overview ? infoData.overview.diplomaCredits : 225) + ' credits', '']);
   drawTable(gradHeaders, gradRows, [35, CW * 0.35, CW * 0.3, CW * 0.35 - 35]);
