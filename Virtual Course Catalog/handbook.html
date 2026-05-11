@@ -111,7 +111,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 .cover-page,.toc-page{display:none}
 
-@page{size:letter;margin:0.75in}
+@page{size:letter;margin:0.75in 0.75in 1in 0.75in;@bottom-center{content:counter(page);font-family:'DM Sans',sans-serif;font-size:9pt;color:#5C6B82}}
+@page:first{@bottom-center{content:none}}
+@page toc-pg{@bottom-center{content:none}}
 
 @media print{
   .hdr,.side,.tabs,.foot{display:none!important}
@@ -129,12 +131,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   .cover-tag{font-family:'Cal Sans',sans-serif;font-size:13pt;color:#5C6B82;font-style:italic;margin-bottom:60pt;line-height:1.4}
   .cover-year{font-family:'DM Sans',sans-serif;font-size:14pt;font-weight:600;color:#1B3468;letter-spacing:.5pt;text-transform:uppercase}
 
-  .toc-page{display:block!important;page-break-after:always;break-after:page}
+  .toc-page{display:block!important;page-break-after:always;break-after:page;page:toc-pg}
   .toc-title{font-family:'DM Sans',sans-serif;font-size:22pt;font-weight:700;color:#0F2044;border-bottom:3pt solid #C8A64A;padding-bottom:8pt;margin-bottom:18pt}
   .toc-list{font-family:'DM Sans',sans-serif;font-size:11.5pt;line-height:1.7;color:#1A1A1A}
-  .toc-item{display:flex;align-items:baseline;gap:8pt;padding:3pt 0;border-bottom:.5pt dotted #ccc}
+  .toc-item{display:flex;align-items:baseline;gap:6pt;padding:3pt 0;border-bottom:none}
   .toc-icon{flex-shrink:0;font-size:11pt}
-  .toc-text{flex:1}
+  .toc-text{flex:1;overflow:hidden}
+  .toc-label{float:left}
+  .toc-dots{overflow:hidden;white-space:nowrap;color:#999;margin:0 4pt}
+  .toc-dots::before{content:'....................................................................................................................';letter-spacing:2pt}
+  .toc-pg{flex-shrink:0;font-variant-numeric:tabular-nums;min-width:18pt;text-align:right;font-weight:600;color:#0F2044}
 
   .handbook-section{page-break-before:always;break-before:page;page-break-inside:auto;break-inside:auto;margin-bottom:0;padding-top:0;scroll-margin-top:0}
   .sec-title{font-family:'DM Sans',sans-serif;font-size:20pt;color:#0F2044;page-break-after:avoid;break-after:avoid;margin-bottom:4pt}
@@ -373,9 +379,22 @@ function renderCover(){
 
 function renderToc(){
   document.getElementById('toc-list').innerHTML=SECTIONS.map(s=>
-    `<div class="toc-item"><span class="toc-icon">${s.icon}</span><span class="toc-text">${s.title}</span></div>`
+    `<div class="toc-item"><span class="toc-icon">${s.icon}</span><span class="toc-text"><span class="toc-label">${s.title}</span><span class="toc-dots"></span></span><span class="toc-pg" data-toc-sec="${s.id}"></span></div>`
   ).join('');
 }
+
+function calcTocPages(){
+  const printPageH=(11-1.75)*96;
+  let pg=3;
+  SECTIONS.forEach(s=>{
+    const span=document.querySelector(`[data-toc-sec="${s.id}"]`);
+    if(span) span.textContent=pg;
+    const el=document.getElementById('sec-'+s.id);
+    if(el) pg+=Math.max(1,Math.ceil(el.scrollHeight/printPageH));
+  });
+}
+
+window.addEventListener('beforeprint',calcTocPages);
 
 function scrollToSec(id){
   const el=document.getElementById('sec-'+id);
