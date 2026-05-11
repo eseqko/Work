@@ -37,7 +37,7 @@ const SCHOOL_DATA = {
       "10"
     ],
     [
-      "Govenment",
+      "Government",
       "5"
     ],
     [
