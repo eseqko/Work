@@ -109,18 +109,69 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .main>*{animation:fadeIn .22s ease}
 
+.cover-page,.toc-page{display:none}
+
+@page{size:letter;margin:0.75in}
+
 @media print{
   .hdr,.side,.tabs,.foot{display:none!important}
   body::before{display:none!important}
-  .wrap{display:block}
-  .main{max-width:100%;padding:0}
-  .handbook-section{break-inside:avoid;page-break-inside:avoid;margin-bottom:24px}
+  body{background:#fff;color:#000}
+  .wrap{display:block;min-height:auto}
+  .main{max-width:100%;padding:0;animation:none}
+  .main>*{animation:none}
+
+  .cover-page{display:block!important;text-align:center;padding:1.6in 0 0;page-break-after:always;break-after:page}
+  .cover-inner{max-width:5.5in;margin:0 auto}
+  .cover-school{font-family:'DM Sans',sans-serif;font-size:24pt;font-weight:700;color:#0F2044;letter-spacing:.3pt;margin-bottom:6pt}
+  .cover-rule{width:2.8in;height:4pt;background:#C8A64A;margin:18pt auto 24pt;border-radius:2pt}
+  .cover-title{font-family:'DM Sans',sans-serif;font-size:38pt;font-weight:700;color:#0F2044;margin-bottom:14pt;line-height:1.1}
+  .cover-tag{font-family:'Cal Sans',sans-serif;font-size:13pt;color:#5C6B82;font-style:italic;margin-bottom:60pt;line-height:1.4}
+  .cover-year{font-family:'DM Sans',sans-serif;font-size:14pt;font-weight:600;color:#1B3468;letter-spacing:.5pt;text-transform:uppercase}
+
+  .toc-page{display:block!important;page-break-after:always;break-after:page}
+  .toc-title{font-family:'DM Sans',sans-serif;font-size:22pt;font-weight:700;color:#0F2044;border-bottom:3pt solid #C8A64A;padding-bottom:8pt;margin-bottom:18pt}
+  .toc-list{font-family:'DM Sans',sans-serif;font-size:11.5pt;line-height:1.7;color:#1A1A1A}
+  .toc-item{display:flex;align-items:baseline;gap:8pt;padding:3pt 0;border-bottom:.5pt dotted #ccc}
+  .toc-icon{flex-shrink:0;font-size:11pt}
+  .toc-text{flex:1}
+
+  .handbook-section{page-break-before:always;break-before:page;page-break-inside:auto;break-inside:auto;margin-bottom:0;padding-top:0;scroll-margin-top:0}
+  .sec-title{font-family:'DM Sans',sans-serif;font-size:20pt;color:#0F2044;page-break-after:avoid;break-after:avoid;margin-bottom:4pt}
+  .sec-title::after{width:1.5in;height:3pt;background:#C8A64A;margin-top:5pt}
+  .handbook-content{font-size:11pt;line-height:1.55;margin-top:10pt;color:#1A1A1A}
+  .handbook-content h3{font-size:13pt;color:#0F2044;margin-top:14pt;page-break-after:avoid;break-after:avoid}
+  .handbook-content h4{font-size:11.5pt;color:#1B3468;page-break-after:avoid;break-after:avoid}
+  .handbook-content p{font-size:11pt;margin-bottom:8pt}
+  .handbook-content ul,.handbook-content ol{margin:4pt 0 10pt 0;padding-left:1.2em}
+  .handbook-content li{font-size:11pt;margin:2pt 0}
+  .handbook-content a{color:#1B3468;text-decoration:underline}
+  .handbook-content table{font-size:10pt;page-break-inside:avoid;break-inside:avoid;border:1pt solid #888;box-shadow:none;margin:6pt 0 10pt}
+  .handbook-content th{background:#0F2044!important;color:#fff!important;font-size:9pt;padding:5pt 8pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .handbook-content td{font-size:10pt;padding:4pt 8pt;border-bottom:.5pt solid #ccc}
+  .handbook-content tr:nth-child(even) td{background:transparent}
+  .sub-title{font-size:13pt;page-break-after:avoid;break-after:avoid;color:#0F2044;margin-top:14pt}
+  .callout{page-break-inside:avoid;break-inside:avoid;background:#FAF6E8!important;border-left:3pt solid #C8A64A;padding:8pt 12pt;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none}
 }
 </style>
 </head>
 <body>
 <script src="school-config.js"></script>
 <script src="school-data.js"></script>
+
+<div class="cover-page" aria-hidden="true">
+  <div class="cover-inner">
+    <div class="cover-school" id="cover-school">Your School</div>
+    <div class="cover-rule"></div>
+    <div class="cover-title">Student Handbook</div>
+    <div class="cover-tag">Your guide to policies, resources, and expectations.</div>
+    <div class="cover-year" id="cover-year"></div>
+  </div>
+</div>
+<div class="toc-page" aria-hidden="true">
+  <div class="toc-title">Table of Contents</div>
+  <div class="toc-list" id="toc-list"></div>
+</div>
 
 <div id="hdr"></div>
 <div class="tabs" id="tabs"></div>
@@ -245,6 +296,7 @@ function renderHdr(){
     </div>
     <div class="hdr-links">
       <a class="hdr-btn" href="hub.html">← Student Hub</a>
+      <button class="hdr-btn" onclick="window.print()" title="Print or Save as PDF">📄 Save as PDF</button>
     </div>
   </div>`;
 }
@@ -302,6 +354,27 @@ function renderFoot(){
   document.getElementById('foot').innerHTML=`<div class="foot">${name} — Student Handbook</div>`;
 }
 
+function getSchoolYear(){
+  if(window.SchoolConfig){
+    const cfg=SchoolConfig.load();
+    if(cfg.year) return cfg.year;
+  }
+  const now=new Date();
+  const y=now.getMonth()>=5?now.getFullYear():now.getFullYear()-1;
+  return y+'–'+(y+1)+' School Year';
+}
+
+function renderCover(){
+  document.getElementById('cover-school').textContent=getSchoolName();
+  document.getElementById('cover-year').textContent=getSchoolYear();
+}
+
+function renderToc(){
+  document.getElementById('toc-list').innerHTML=SECTIONS.map(s=>
+    `<div class="toc-item"><span class="toc-icon">${s.icon}</span><span class="toc-text">${s.title}</span></div>`
+  ).join('');
+}
+
 function scrollToSec(id){
   const el=document.getElementById('sec-'+id);
   if(el){
@@ -346,6 +419,8 @@ renderSide();
 renderTabs();
 renderMain();
 renderFoot();
+renderCover();
+renderToc();
 initScrollspy();
 </script>
 </body>
