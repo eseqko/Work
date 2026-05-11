@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Jefferson High School – Course Catalog 2026–2027</title>
+<title>Course Catalog</title>
 <style>
 /* ═══════════════════════════════════════════
    TOKENS & RESET
@@ -647,6 +647,7 @@ if (typeof SchoolConfig !== 'undefined') {
   SchoolConfig.applyTheme();
 }
 const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
+if (_sc.setupComplete) document.title = (_sc.shortName || _sc.schoolName) + ' – Course Catalog' + (_sc.schoolYear ? ' ' + _sc.schoolYear : '');
 
 /* ═══════════════════════════════════════════════════
    INFO PAGE DATA  (edit via editor.html → Info Pages tab)

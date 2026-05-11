@@ -658,7 +658,8 @@ function gradRows(){
   if(isBlank(rawRows)){
     const info=getCatalogInfo();
     if(info && Array.isArray(info.gradReqs) && info.gradReqs.length){
-      cols=['Area','Subject','JUHSD Credits','UC/CSU Approved'];
+      const _dn=(typeof SchoolConfig!=='undefined'&&SchoolConfig.load().shortName)||'District';
+      cols=['Area','Subject',_dn+' Credits','UC/CSU Approved'];
       rawRows=info.gradReqs.map(r=>[
         (r.area && r.area!=='\u2014')?r.area.toUpperCase():'—',
         r.subject||'',

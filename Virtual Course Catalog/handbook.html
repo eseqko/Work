@@ -263,7 +263,7 @@ const SECTIONS=[
    keys:[
      {key:'handbookGeneralRules',subtitle:'General Rules'},
      {key:'handbookDressCode',subtitle:'Dress Code'},
-     {key:'handbookCampusAccess',subtitle:'Campus Access'}
+     {key:'handbookCampusAccess',subtitle:'Campus Access Rules'}
    ]},
   {id:'transportation',icon:'🚗',title:'Transportation & Parking',short:'Transport',
    key:'handbookTransportation'},
@@ -320,7 +320,7 @@ function renderTabs(){
 function renderContent(sec){
   const val=sdVal(sec.key,'');
   if(val) return '<div class="handbook-content">'+renderSD(val)+'</div>';
-  return '<div class="callout">📌 <strong>Not filled in yet.</strong> Use the Hub Editor to add content for this section.</div>';
+  return '<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
 }
 
 function renderComposite(sec){
@@ -329,7 +329,7 @@ function renderComposite(sec){
     const val=sdVal(sub.key,'');
     html+='<h3 class="sub-title">'+sub.subtitle+'</h3>';
     if(val) html+='<div class="handbook-content">'+renderSD(val)+'</div>';
-    else html+='<div class="callout">📌 <strong>Not filled in yet.</strong> Use the Hub Editor to add content for "'+sub.subtitle+'".</div>';
+    else html+='<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
   });
   return html;
 }
