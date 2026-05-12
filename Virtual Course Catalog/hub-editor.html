@@ -150,6 +150,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 .embed-copy:hover{background:#144d2f}
 .embed-close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;color:var(--muted);cursor:pointer;padding:4px;line-height:1}
 .embed-close:hover{color:var(--text)}
+.embed-actions{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.embed-actions .embed-copy{justify-content:center;padding:10px 16px;font-size:.84rem;border-radius:8px}
+.embed-size{font-size:.78rem;color:var(--muted);margin-top:12px;text-align:center}
 </style>
 </head>
 <body>
@@ -999,42 +1002,151 @@ async function downloadTranslatedHub(){
   trLog('⬇ Downloaded hub.html with baked translations.','ok');
 }
 
+function buildEmbedHTML(){
+  var sd=Object.assign({},typeof SCHOOL_DATA!=='undefined'?SCHOOL_DATA:{});
+  try{var raw=localStorage.getItem('grizznet_draft');
+    if(raw){var d=JSON.parse(raw);if(d&&typeof d==='object')for(var k in d)if(d[k]&&String(d[k]).trim())sd[k]=d[k];}
+  }catch(e){}
+  var cfg=window.SchoolConfig?SchoolConfig.load():{};
+  var name=cfg.schoolName||cfg.shortName||'Your School';
+  var brand=(cfg.colors&&cfg.colors.primary)||'#0F2044';
+  var accent=(cfg.colors&&cfg.colors.secondary)||'#C8A64A';
+  var brandMid=window.SchoolConfig?SchoolConfig.colorUtils.darken(brand,8):brand;
+  var logo=cfg.logo||'';
+  function v(key){var x=sd[key];return(x!=null&&String(x).trim())?x:'';}
+  function r(x){var s=String(x||'');if(!s)return'';if(/<[a-zA-Z][^>]*>/.test(s))return s;return'<p>'+s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'</p>';}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  var SECS=[
+    {id:'contacts',icon:'📞',title:'Contact Information & Communication',key:'handbookContacts'},
+    {id:'bell-schedule',icon:'🔔',title:'Bell Schedule',key:'handbookBellSchedule'},
+    {id:'attendance',icon:'📋',title:'Attendance Policies & Procedures',key:'handbookAttendance'},
+    {id:'counseling',icon:'🤝',title:'School Counseling Services',key:'handbookCounseling'},
+    {id:'schedule-change',icon:'🔄',title:'Schedule Changes',key:'handbookScheduleChange'},
+    {id:'homework',icon:'📝',title:'Homework & Makeup Procedures',key:'handbookHomework'},
+    {id:'grading',icon:'📊',title:'Grading & Grade Appeals',key:'handbookGrading'},
+    {id:'academic-integrity',icon:'🎓',title:'Academic Integrity',
+     keys:[{key:'handbookAcademicHonesty',subtitle:'Academic Honesty Policy'},{key:'handbookAIPolicy',subtitle:'AI / Technology Use in Academics'}]},
+    {id:'activities',icon:'🎉',title:'Student Activities',key:'handbookActivities'},
+    {id:'athletics',icon:'🏆',title:'Athletics',key:'handbookAthletics'},
+    {id:'health',icon:'🏥',title:'Health & Wellness',key:'handbookHealth'},
+    {id:'technology',icon:'💻',title:'Technology & Internet Use Policy',key:'handbookCellPhone'},
+    {id:'general-rules',icon:'📏',title:'General Rules & Regulations',
+     keys:[{key:'handbookGeneralRules',subtitle:'General Rules'},{key:'handbookDressCode',subtitle:'Dress Code'},{key:'handbookCampusAccess',subtitle:'Campus Access Rules'}]},
+    {id:'transportation',icon:'🚗',title:'Transportation & Parking',key:'handbookTransportation'},
+    {id:'district-policies',icon:'⚖️',title:'District Policies',
+     keys:[{key:'handbookDiscipline',subtitle:'Discipline Procedures'},{key:'handbookDistrictPolicies',subtitle:'Nondiscrimination, Bullying & Harassment'}]},
+    {id:'parents-community',icon:'👨‍👩‍👧',title:'Parents & Community',key:'handbookParentsCommunity'},
+    {id:'community-resources',icon:'🤝',title:'Community Resources',key:'supportCommunity'}
+  ];
+  var toc='',body='';
+  SECS.forEach(function(sec){
+    toc+='<a class="ni" href="#sec-'+sec.id+'"><span class="ni-icon">'+sec.icon+'</span><span>'+sec.title+'</span></a>';
+    body+='<section id="sec-'+sec.id+'" class="handbook-section">';
+    body+='<div class="sec-title"><span class="sec-icon">'+sec.icon+'</span>'+sec.title+'</div>';
+    if(sec.keys){
+      sec.keys.forEach(function(sub){
+        var val=v(sub.key);
+        body+='<h3 class="sub-title">'+sub.subtitle+'</h3>';
+        body+=val?'<div class="handbook-content">'+r(val)+'</div>':'<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
+      });
+    }else{
+      var val=v(sec.key);
+      body+=val?'<div class="handbook-content">'+r(val)+'</div>':'<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
+    }
+    body+='</section>';
+  });
+  var logoTag=logo?'<img src="'+esc(logo)+'" class="hdr-logo" alt="">':'';
+  var css=':root{--brand:'+brand+';--brand-mid:'+brandMid+';--brand-lt:#E2E8F3;--accent:'+accent+';--accent-lt:#F5EDD0;--bg:#FAF7F0;--surface:#FFFEF8;--text:#0F1B2D;--muted:#5C6B82;--border:#D4C9A8;--r:10px}\n'+
+  '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n'+
+  'html{scroll-behavior:smooth}\n'+
+  'body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.65;min-height:100vh;display:flex;flex-direction:column}\n'+
+  '.hdr{background:linear-gradient(180deg,var(--brand),#0A1830);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;border-bottom:2.5px solid var(--accent);box-shadow:0 3px 12px rgba(15,32,68,.25)}\n'+
+  '.hdr-left{display:flex;align-items:center;gap:14px}\n'+
+  '.hdr-logo{height:36px;width:auto;max-width:80px;object-fit:contain;background:rgba(255,255,255,.92);padding:3px;border-radius:5px}\n'+
+  '.hdr-title{font-size:1.1rem;font-weight:700;letter-spacing:.3px}\n'+
+  '.wrap{display:flex;flex:1}\n'+
+  '.side{width:230px;background:linear-gradient(180deg,#FFFDF5,#F8F4E8);border-right:1.5px solid var(--border);padding:14px 0;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;flex-shrink:0}\n'+
+  '.ni{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:.8rem;font-weight:500;color:var(--muted);border-left:3.5px solid transparent;transition:all .2s;text-decoration:none;cursor:pointer}\n'+
+  '.ni:hover,.ni.on{background:var(--brand-lt);color:var(--brand);border-left-color:var(--accent);font-weight:700}\n'+
+  '.ni-icon{font-size:1rem;flex-shrink:0}\n'+
+  '.main{flex:1;padding:30px 32px 60px;max-width:780px;min-width:0}\n'+
+  '.handbook-section{margin-bottom:40px;scroll-margin-top:70px}\n'+
+  '.sec-title{font-size:1.4rem;font-weight:700;color:var(--brand);margin-bottom:2px;letter-spacing:.1px}\n'+
+  '.sec-title::after{content:"";display:block;width:48px;height:3px;background:linear-gradient(135deg,#D4B04A,#E8D48B 45%,#C8A64A 75%,#A68A3A);border-radius:2px;margin-top:6px}\n'+
+  '.sec-icon{margin-right:8px}\n'+
+  '.handbook-content{font-size:.88rem;line-height:1.75;margin-top:14px}\n'+
+  '.handbook-content p{margin-bottom:10px}\n'+
+  '.handbook-content p:last-child{margin-bottom:0}\n'+
+  '.handbook-content ul,.handbook-content ol{padding-left:1.3em;margin:6px 0 10px}\n'+
+  '.handbook-content li{margin:4px 0}\n'+
+  '.handbook-content li::marker{color:var(--accent)}\n'+
+  '.handbook-content strong{font-weight:700;color:var(--brand)}\n'+
+  '.handbook-content a{color:var(--brand-mid);text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:2px}\n'+
+  '.handbook-content table{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem;margin:10px 0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden}\n'+
+  '.handbook-content th{background:var(--brand);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--accent)}\n'+
+  '.handbook-content td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}\n'+
+  '.handbook-content td:last-child,.handbook-content th:last-child{text-align:center}\n'+
+  '.handbook-content tr:last-child td{border-bottom:none}\n'+
+  '.handbook-content tr:nth-child(even) td{background:rgba(200,166,74,.04)}\n'+
+  '.handbook-content h3,.handbook-content h4{color:var(--brand);margin:16px 0 6px}\n'+
+  '.handbook-content h3{font-size:1rem;font-weight:700}\n'+
+  '.handbook-content h4{font-size:.9rem;font-weight:600}\n'+
+  '.sub-title{font-size:1.05rem;font-weight:700;color:var(--brand-mid);margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--border)}\n'+
+  '.sub-title:first-of-type{margin-top:12px;padding-top:0;border-top:none}\n'+
+  '.callout{background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);border-left:4px solid var(--accent);padding:11px 14px;border-radius:0 var(--r) var(--r) 0;margin:14px 0;font-size:.83rem;color:#5A4506}\n'+
+  '.foot{background:var(--brand);border-top:2.5px solid var(--accent);padding:13px 20px;font-size:.8rem;color:rgba(255,255,255,.75);text-align:center;font-style:italic}\n'+
+  '@media(max-width:640px){.side{display:none}.main{padding:16px 14px 40px}.sec-title{font-size:1.2rem}}';
+  var js='document.querySelectorAll(".ni").forEach(function(a){a.addEventListener("click",function(){document.querySelectorAll(".ni").forEach(function(n){n.classList.remove("on")});a.classList.add("on")})});'+
+  'if(typeof IntersectionObserver!=="undefined"){var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;document.querySelectorAll(".ni").forEach(function(n){n.classList.toggle("on",n.getAttribute("href")==="#"+id)})}})},{rootMargin:"-80px 0px -55% 0px",threshold:0});document.querySelectorAll(".handbook-section").forEach(function(s){obs.observe(s)})}';
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n'+
+  '<meta name="viewport" content="width=device-width,initial-scale=1">\n'+
+  '<title>'+esc(name)+' Student Handbook</title>\n'+
+  '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">\n'+
+  '<style>\n'+css+'\n</style>\n</head>\n<body>\n'+
+  '<div class="hdr"><div class="hdr-left">'+logoTag+'<div><div class="hdr-title">'+esc(name)+' Student Handbook</div></div></div></div>\n'+
+  '<div class="wrap"><nav class="side" id="side">'+toc+'</nav><main class="main">'+body+'</main></div>\n'+
+  '<div class="foot">'+esc(name)+' &mdash; Student Handbook</div>\n'+
+  '<scr'+'ipt>'+js+'</scr'+'ipt>\n'+
+  '</body>\n</html>';
+}
+
 function showEmbed(){
   var ov=document.getElementById('embed-overlay');
-  if(ov){ov.classList.add('open');return;}
-  var base=window.location.href.replace(/[^/]*$/,'')+'handbook.html';
-  var embedUrl=base+'?embed=1';
-  var iframeCode='<iframe src="'+embedUrl+'" width="100%" height="800" frameborder="0" style="border:none;width:100%;height:800px"></iframe>';
+  if(ov)ov.remove();
+  var html=buildEmbedHTML();
+  window._embedHTML=html;
+  var kb=Math.round(new Blob([html]).size/1024);
   ov=document.createElement('div');
   ov.id='embed-overlay';
   ov.className='embed-overlay open';
   ov.innerHTML='<div class="embed-box">'+
     '<button class="embed-close" onclick="closeEmbed()">&times;</button>'+
     '<h3>Embed Handbook</h3>'+
-    '<p class="embed-sub">Paste into <strong>Google Sites</strong> &rarr; Insert &rarr; Embed &rarr; <em>Embed code</em></p>'+
-    '<label>Embed Code</label>'+
-    '<textarea class="embed-code" rows="3" readonly id="embed-iframe"></textarea>'+
-    '<div class="embed-row"><button class="embed-copy" onclick="copyEmbed(\'embed-iframe\',this)">Copy Embed Code</button></div>'+
-    '<label>Direct URL</label>'+
-    '<textarea class="embed-code" rows="1" readonly id="embed-url"></textarea>'+
-    '<div class="embed-row"><button class="embed-copy" onclick="copyEmbed(\'embed-url\',this)">Copy URL</button></div>'+
+    '<p class="embed-sub">Self-contained snapshot — all content and styles baked in.<br>Paste into <strong>Google Sites</strong> &rarr; Insert &rarr; Embed &rarr; <em>Embed code</em></p>'+
+    '<div class="embed-actions">'+
+      '<button class="embed-copy" onclick="copyEmbedHTML(this)">📋 Copy HTML to Clipboard</button>'+
+      '<button class="embed-copy" onclick="downloadEmbedHTML()">⬇ Download handbook-embed.html</button>'+
+    '</div>'+
+    '<div class="embed-size">Snapshot: '+kb+' KB &middot; 17 sections</div>'+
   '</div>';
   ov.addEventListener('click',function(e){if(e.target===ov)closeEmbed();});
   document.body.appendChild(ov);
-  document.getElementById('embed-iframe').value=iframeCode;
-  document.getElementById('embed-url').value=embedUrl;
 }
 function closeEmbed(){
   var ov=document.getElementById('embed-overlay');
   if(ov)ov.classList.remove('open');
 }
-function copyEmbed(id,btn){
-  var el=document.getElementById(id);
-  el.select();el.setSelectionRange(0,99999);
-  navigator.clipboard.writeText(el.value).then(function(){
-    var orig=btn.textContent;btn.textContent='✓ Copied!';
-    setTimeout(function(){btn.textContent=orig;},1500);
+function copyEmbedHTML(btn){
+  navigator.clipboard.writeText(window._embedHTML).then(function(){
+    var orig=btn.innerHTML;btn.innerHTML='✓ Copied!';
+    setTimeout(function(){btn.innerHTML=orig;},1800);
   });
+}
+function downloadEmbedHTML(){
+  var blob=new Blob([window._embedHTML],{type:'text/html'});
+  var a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'handbook-embed.html'});
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
 }
 </script>
 </body>
