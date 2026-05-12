@@ -221,6 +221,27 @@ input[type="color"] {
         </div>
       </div>
 
+      <h3>Contact Information</h3>
+      <p style="margin:-6px 0 14px;color:#666;font-size:13px;">Appears on the handbook cover page and other student-facing documents.</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Street Address</label>
+          <input type="text" id="address" placeholder="e.g. 6996 Mission St, Daly City, CA 94014">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Main Office Phone</label>
+          <input type="text" id="phone" placeholder="e.g. (650) 555-1234">
+        </div>
+        <div class="form-group">
+          <label>Website</label>
+          <input type="text" id="website" placeholder="e.g. jhs.juhsd.net">
+        </div>
+      </div>
+
       <h3>School Colors</h3>
       <div class="form-row">
         <div class="color-pair">
@@ -373,6 +394,9 @@ input[type="color"] {
     document.getElementById('mascotEmoji').value = cfg.mascotEmoji || '';
     document.getElementById('motto').value = cfg.motto || '';
     document.getElementById('schoolYear').value = cfg.schoolYear || '';
+    document.getElementById('address').value = cfg.address || '';
+    document.getElementById('phone').value = cfg.phone || '';
+    document.getElementById('website').value = cfg.website || '';
     document.getElementById('colorPrimary').value = cfg.colors.primary;
     document.getElementById('colorPrimaryHex').value = cfg.colors.primary;
     document.getElementById('colorSecondary').value = cfg.colors.secondary;
@@ -391,7 +415,7 @@ input[type="color"] {
   csH.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(csH.value)) { cs.value = csH.value; updatePreview(); } });
 
   /* ── Live preview ── */
-  ['schoolName','shortName','mascot','mascotEmoji','motto','schoolYear'].forEach(id => {
+  ['schoolName','shortName','mascot','mascotEmoji','motto','schoolYear','address','phone','website'].forEach(id => {
     document.getElementById(id).addEventListener('input', updatePreview);
   });
 
@@ -683,6 +707,9 @@ input[type="color"] {
       mascotEmoji: document.getElementById('mascotEmoji').value.trim(),
       motto: document.getElementById('motto').value.trim(),
       schoolYear: document.getElementById('schoolYear').value.trim(),
+      address: document.getElementById('address').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      website: document.getElementById('website').value.trim(),
       colors: {
         primary: cp.value,
         secondary: cs.value
