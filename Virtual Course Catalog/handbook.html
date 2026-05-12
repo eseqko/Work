@@ -115,27 +115,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .embed-mode .side{top:0;height:100vh}
 .embed-mode .tabs{top:0}
 
-.embed-overlay{display:none;position:fixed;inset:0;background:rgba(15,32,68,.45);z-index:200;justify-content:center;align-items:center}
-.embed-overlay.open{display:flex}
-.embed-box{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh-lift);padding:24px 26px 20px;max-width:500px;width:92%;font-family:var(--font-ui);position:relative}
-.embed-box h3{font-family:var(--font-d);color:var(--brand);font-size:1.05rem;margin-bottom:6px}
-.embed-box .embed-sub{font-size:.82rem;color:var(--muted);margin-bottom:14px;line-height:1.4}
-.embed-box label{font-size:.72rem;font-weight:700;color:var(--brand);display:block;margin-bottom:3px;margin-top:14px;text-transform:uppercase;letter-spacing:.4px}
-.embed-code{width:100%;font-family:'SFMono-Regular',Consolas,'Courier New',monospace;font-size:.74rem;padding:10px;border:1.5px solid var(--border);border-radius:6px;background:#F6F3EB;color:var(--text);resize:none;line-height:1.45}
-.embed-code:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,166,74,.15)}
-.embed-row{display:flex;justify-content:flex-end;margin-top:6px}
-.embed-copy{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;background:var(--brand);color:#fff;border:none;border-radius:6px;font-family:var(--font-ui);font-size:.76rem;font-weight:600;cursor:pointer;transition:all .2s}
-.embed-copy:hover{background:var(--brand-mid);box-shadow:var(--sh-card)}
-.embed-close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;color:var(--muted);cursor:pointer;padding:4px;line-height:1}
-.embed-close:hover{color:var(--brand)}
-
 .cover-page,.toc-page{display:none}
 
 @page{size:letter;margin:0.75in 0.75in 1in 0.75in;@bottom-center{content:counter(page);font-family:'DM Sans',sans-serif;font-size:9pt;color:#5C6B82}}
 @page:first{@bottom-center{content:none}}
 
 @media print{
-  .hdr,.side,.tabs,.foot,.embed-overlay{display:none!important}
+  .hdr,.side,.tabs,.foot{display:none!important}
   body::before{display:none!important}
   body{background:#fff;color:#000}
   .wrap{display:block;min-height:auto}
@@ -344,7 +330,6 @@ function renderHdr(){
     </div>
     <div class="hdr-links">
       <a class="hdr-btn" href="hub.html">← Student Hub</a>
-      <button class="hdr-btn" onclick="showEmbed()" title="Get embed code for Google Sites">🔗 Embed</button>
       <button class="hdr-btn" onclick="window.print()" title="Print or Save as PDF">📄 Save as PDF</button>
     </div>
   </div>`;
@@ -532,44 +517,6 @@ function initScrollspy(){
   SECTIONS.forEach(s=>{
     const el=document.getElementById('sec-'+s.id);
     if(el) observer.observe(el);
-  });
-}
-
-function showEmbed(){
-  let ov=document.getElementById('embed-overlay');
-  if(ov){ov.classList.add('open');return;}
-  const base=window.location.href.split('?')[0].split('#')[0];
-  const embedUrl=base+'?embed=1';
-  const iframeCode='<iframe src="'+embedUrl+'" width="100%" height="800" frameborder="0" style="border:none;width:100%;height:800px"></iframe>';
-  ov=document.createElement('div');
-  ov.id='embed-overlay';
-  ov.className='embed-overlay open';
-  ov.innerHTML='<div class="embed-box">'+
-    '<button class="embed-close" onclick="closeEmbed()">&times;</button>'+
-    '<h3>Embed Handbook</h3>'+
-    '<p class="embed-sub">Paste into <strong>Google Sites</strong> &rarr; Insert &rarr; Embed &rarr; <em>Embed code</em></p>'+
-    '<label>Embed Code</label>'+
-    '<textarea class="embed-code" rows="3" readonly id="embed-iframe"></textarea>'+
-    '<div class="embed-row"><button class="embed-copy" onclick="copyEmbed(\'embed-iframe\',this)">Copy Embed Code</button></div>'+
-    '<label>Direct URL</label>'+
-    '<textarea class="embed-code" rows="1" readonly id="embed-url"></textarea>'+
-    '<div class="embed-row"><button class="embed-copy" onclick="copyEmbed(\'embed-url\',this)">Copy URL</button></div>'+
-  '</div>';
-  ov.addEventListener('click',function(e){if(e.target===ov)closeEmbed();});
-  document.body.appendChild(ov);
-  document.getElementById('embed-iframe').value=iframeCode;
-  document.getElementById('embed-url').value=embedUrl;
-}
-function closeEmbed(){
-  var ov=document.getElementById('embed-overlay');
-  if(ov) ov.classList.remove('open');
-}
-function copyEmbed(id,btn){
-  var el=document.getElementById(id);
-  el.select();el.setSelectionRange(0,99999);
-  navigator.clipboard.writeText(el.value).then(function(){
-    var orig=btn.textContent;btn.textContent='✓ Copied!';
-    setTimeout(function(){btn.textContent=orig;},1500);
   });
 }
 
