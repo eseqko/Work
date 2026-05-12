@@ -39,6 +39,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 .hdr{background:linear-gradient(180deg,var(--brand) 0%,#0A1830 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;top:0;z-index:100;
   box-shadow:0 3px 12px rgba(15,32,68,.25),inset 0 -1px 0 var(--accent);
   border-bottom:2.5px solid var(--accent)}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:36px;width:auto;max-width:80px;object-fit:contain;flex-shrink:0;background:rgba(255,255,255,.92);padding:3px;border-radius:5px}
 .hdr-title{font-family:var(--font-d);font-size:1.1rem;font-weight:700;line-height:1.2;letter-spacing:.3px}
 .hdr-tag{font-size:.7rem;opacity:.65;font-weight:400;font-style:italic;font-family:var(--font-b)}
 .lang-wrap{display:flex;gap:5px;flex-shrink:0}
@@ -752,11 +754,15 @@ function renderHdr(){
   }
   document.getElementById('hdr').innerHTML=`
   <div class="hdr">
-    <div><div class="hdr-title">${title}</div><div class="hdr-tag">${l.meta.tag}</div></div>
+    <div class="hdr-left">
+      <img data-school-logo class="hdr-logo" alt="" style="display:none">
+      <div><div class="hdr-title">${title}</div><div class="hdr-tag">${l.meta.tag}</div></div>
+    </div>
     <div class="lang-wrap">
       ${[['en','EN'],['es','ES'],['ar','عربي'],['fil','Filipino']].map(([c,lb])=>`<button class="lb${S.lang===c?' on':''}" onclick="setLang('${c}')">${lb}</button>`).join('')}
     </div>
   </div>`;
+  if(window.SchoolConfig){SchoolConfig.applyIdentity();SchoolConfig.applyWatermark();}
 }
 
 function renderSide(){

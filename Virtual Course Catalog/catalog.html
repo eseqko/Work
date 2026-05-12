@@ -80,6 +80,7 @@ body.nav-open .ham-btn span:nth-child(3) { transform: translateY(-7px) rotate(-4
   display: flex; align-items: center; gap: 10px; flex-shrink: 0;
 }
 .paw { font-size: 24px; line-height: 1; }
+.header-logo { height: 32px; width: auto; max-width: 70px; object-fit: contain; flex-shrink: 0; background: rgba(255,255,255,.92); padding: 2px 4px; border-radius: 4px; }
 .brand-text h1 {
   font-size: 0.95rem; font-weight: 700; line-height: 1.2; white-space: nowrap;
 }
@@ -506,6 +507,7 @@ main {
     <span></span><span></span><span></span>
   </button>
   <div class="header-brand">
+    <img data-school-logo class="header-logo" alt="" style="display:none">
     <span class="paw" data-school-emoji>🐾</span>
     <div class="brand-text">
       <h1 data-school-name>Jefferson High School</h1>
@@ -3052,8 +3054,11 @@ renderInfoPages();
   }
 })();
 
-/* ── Apply school identity to data-* elements ── */
-if (typeof SchoolConfig !== 'undefined') SchoolConfig.applyIdentity();
+/* ── Apply school identity to data-* elements + watermark ── */
+if (typeof SchoolConfig !== 'undefined') {
+  SchoolConfig.applyIdentity();
+  SchoolConfig.applyWatermark();
+}
 </script>
 </body>
 </html>

@@ -242,6 +242,27 @@ input[type="color"] {
         </div>
       </div>
 
+      <h3>School Logo</h3>
+      <p style="margin:-6px 0 14px;color:#666;font-size:13px;">Appears on the handbook cover, page headers, and as a subtle watermark across all pages. Upload an image OR paste a URL.</p>
+      <div class="form-row" style="align-items:flex-start;gap:18px;">
+        <div class="form-group" style="flex:1;">
+          <label>Upload Logo Image</label>
+          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+          <div style="margin-top:6px;color:#888;font-size:12px;">PNG, JPG, SVG, or WebP. Keep under 200KB for best performance.</div>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Or Logo URL</label>
+          <input type="text" id="logoUrl" placeholder="https://example.com/logo.png">
+        </div>
+        <div style="flex:0 0 90px;">
+          <label style="font-weight:600;font-size:13px;color:#444;">Preview</label>
+          <div id="logoPreview" style="margin-top:6px;width:80px;height:80px;border:1.5px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#fafafa;overflow:hidden;">
+            <span style="color:#bbb;font-size:11px;">none</span>
+          </div>
+          <button type="button" id="logoClear" style="margin-top:6px;font-size:12px;color:#a33;background:none;border:none;cursor:pointer;padding:0;display:none;">Clear</button>
+        </div>
+      </div>
+
       <h3>School Colors</h3>
       <div class="form-row">
         <div class="color-pair">
@@ -385,6 +406,8 @@ input[type="color"] {
 (function() {
   'use strict';
 
+  let currentLogo = '';
+
   /* ── Prefill if returning to edit settings ── */
   const cfg = SchoolConfig.load();
   if (cfg.setupComplete) {
@@ -397,6 +420,13 @@ input[type="color"] {
     document.getElementById('address').value = cfg.address || '';
     document.getElementById('phone').value = cfg.phone || '';
     document.getElementById('website').value = cfg.website || '';
+    if (cfg.logo) {
+      currentLogo = cfg.logo;
+      if (/^https?:\/\//i.test(cfg.logo)) {
+        document.getElementById('logoUrl').value = cfg.logo;
+      }
+      updateLogoPreview();
+    }
     document.getElementById('colorPrimary').value = cfg.colors.primary;
     document.getElementById('colorPrimaryHex').value = cfg.colors.primary;
     document.getElementById('colorSecondary').value = cfg.colors.secondary;
@@ -417,6 +447,51 @@ input[type="color"] {
   /* ── Live preview ── */
   ['schoolName','shortName','mascot','mascotEmoji','motto','schoolYear','address','phone','website'].forEach(id => {
     document.getElementById(id).addEventListener('input', updatePreview);
+  });
+
+  /* ── Logo handlers ── */
+  function updateLogoPreview() {
+    const box = document.getElementById('logoPreview');
+    const clearBtn = document.getElementById('logoClear');
+    if (currentLogo) {
+      box.innerHTML = '<img src="' + currentLogo.replace(/"/g,'&quot;') + '" style="max-width:100%;max-height:100%;object-fit:contain;" alt="">';
+      clearBtn.style.display = '';
+    } else {
+      box.innerHTML = '<span style="color:#bbb;font-size:11px;">none</span>';
+      clearBtn.style.display = 'none';
+    }
+  }
+  document.getElementById('logoFile').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+      alert('Image is larger than 500KB. Please use a smaller file or paste a URL instead.');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      currentLogo = reader.result;
+      document.getElementById('logoUrl').value = '';
+      updateLogoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('logoUrl').addEventListener('input', (e) => {
+    const v = e.target.value.trim();
+    if (v) {
+      currentLogo = v;
+      document.getElementById('logoFile').value = '';
+    } else if (!document.getElementById('logoFile').files.length) {
+      currentLogo = '';
+    }
+    updateLogoPreview();
+  });
+  document.getElementById('logoClear').addEventListener('click', () => {
+    currentLogo = '';
+    document.getElementById('logoFile').value = '';
+    document.getElementById('logoUrl').value = '';
+    updateLogoPreview();
   });
 
   function updatePreview() {
@@ -710,6 +785,7 @@ input[type="color"] {
       address: document.getElementById('address').value.trim(),
       phone: document.getElementById('phone').value.trim(),
       website: document.getElementById('website').value.trim(),
+      logo: currentLogo,
       colors: {
         primary: cp.value,
         secondary: cs.value
