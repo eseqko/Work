@@ -1056,14 +1056,36 @@ function buildEmbedHTML(){
     body+='</section>';
   });
   var logoTag=logo?'<img src="'+esc(logo)+'" class="hdr-logo" alt="">':'';
+  var coverWatermark=logo?'<img src="'+esc(logo)+'" class="cover-watermark" alt="">':'';
+  var schoolYear='';
+  if(cfg.year) schoolYear=cfg.year;
+  else{var now=new Date();var y=now.getMonth()>=5?now.getFullYear():now.getFullYear()-1;schoolYear=y+'–'+(y+1)+' School Year';}
+  var contactLines='';
+  if(cfg.address||cfg.phone||cfg.website){
+    contactLines='<div class="cc-rule"></div>';
+    if(cfg.address) contactLines+='<div class="cc-line">'+esc(cfg.address)+'</div>';
+    var pw=[];if(cfg.phone)pw.push(esc(cfg.phone));if(cfg.website)pw.push(esc(cfg.website));
+    if(pw.length) contactLines+='<div class="cc-line">'+pw.join(' &nbsp;&middot;&nbsp; ')+'</div>';
+  }
+  var coverHTML='<div class="cover-page" aria-hidden="true">'+coverWatermark+
+    '<div class="cover-inner"><div class="cover-top"><div class="cover-school">'+esc(name)+'</div><div class="cover-rule"></div></div>'+
+    '<div class="cover-mid"><div class="cover-title">Student Handbook</div><div class="cover-tag">Your guide to policies, resources, and expectations.</div></div>'+
+    '<div class="cover-bottom"><div class="cover-year">'+esc(schoolYear)+'</div>'+(contactLines?'<div class="cover-contact">'+contactLines+'</div>':'')+'</div></div></div>\n';
+  var tocHTML='<div class="toc-page" aria-hidden="true"><div class="toc-title">Table of Contents</div><div class="toc-list">';
+  SECS.forEach(function(sec){
+    tocHTML+='<div class="toc-item"><span class="toc-icon">'+sec.icon+'</span><span class="toc-text"><span class="toc-label">'+sec.title+'</span><span class="toc-dots"></span></span><span class="toc-pg" data-toc-sec="'+sec.id+'"></span></div>';
+  });
+  tocHTML+='</div></div>\n';
   var css=':root{--brand:'+brand+';--brand-mid:'+brandMid+';--brand-lt:#E2E8F3;--accent:'+accent+';--accent-lt:#F5EDD0;--bg:#FAF7F0;--surface:#FFFEF8;--text:#0F1B2D;--muted:#5C6B82;--border:#D4C9A8;--r:10px}\n'+
   '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n'+
   'html{scroll-behavior:smooth}\n'+
   'body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.65;min-height:100vh;display:flex;flex-direction:column}\n'+
-  '.hdr{background:linear-gradient(180deg,var(--brand),#0A1830);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;border-bottom:2.5px solid var(--accent);box-shadow:0 3px 12px rgba(15,32,68,.25)}\n'+
+  '.hdr{background:linear-gradient(180deg,var(--brand),#0A1830);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;top:0;z-index:100;border-bottom:2.5px solid var(--accent);box-shadow:0 3px 12px rgba(15,32,68,.25)}\n'+
   '.hdr-left{display:flex;align-items:center;gap:14px}\n'+
   '.hdr-logo{height:36px;width:auto;max-width:80px;object-fit:contain;background:rgba(255,255,255,.92);padding:3px;border-radius:5px}\n'+
   '.hdr-title{font-size:1.1rem;font-weight:700;letter-spacing:.3px}\n'+
+  '.hdr-btn{background:rgba(255,255,255,.08);border:1px solid rgba(200,166,74,.35);color:rgba(255,255,255,.8);border-radius:6px;padding:5px 12px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}\n'+
+  '.hdr-btn:hover{background:rgba(200,166,74,.15);color:#fff;border-color:var(--accent)}\n'+
   '.wrap{display:flex;flex:1}\n'+
   '.side{width:230px;background:linear-gradient(180deg,#FFFDF5,#F8F4E8);border-right:1.5px solid var(--border);padding:14px 0;position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;flex-shrink:0}\n'+
   '.ni{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:.8rem;font-weight:500;color:var(--muted);border-left:3.5px solid transparent;transition:all .2s;text-decoration:none;cursor:pointer}\n'+
@@ -1095,15 +1117,90 @@ function buildEmbedHTML(){
   '.sub-title:first-of-type{margin-top:12px;padding-top:0;border-top:none}\n'+
   '.callout{background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);border-left:4px solid var(--accent);padding:11px 14px;border-radius:0 var(--r) var(--r) 0;margin:14px 0;font-size:.83rem;color:#5A4506}\n'+
   '.foot{background:var(--brand);border-top:2.5px solid var(--accent);padding:13px 20px;font-size:.8rem;color:rgba(255,255,255,.75);text-align:center;font-style:italic}\n'+
-  '@media(max-width:640px){.side{display:none}.main{padding:16px 14px 40px}.sec-title{font-size:1.2rem}}';
-  var js='document.querySelectorAll(".ni").forEach(function(a){a.addEventListener("click",function(){document.querySelectorAll(".ni").forEach(function(n){n.classList.remove("on")});a.classList.add("on")})});'+
+  '.cover-page,.toc-page{display:none}\n'+
+  '@media(max-width:640px){.side{display:none}.main{padding:16px 14px 40px}.sec-title{font-size:1.2rem}.hdr-btn{display:none}}\n'+
+  '@page{size:letter;margin:0.75in 0.75in 1in 0.75in;@bottom-center{content:counter(page);font-family:"DM Sans",sans-serif;font-size:9pt;color:#5C6B82}}\n'+
+  '@page:first{@bottom-center{content:none}}\n'+
+  '@media print{\n'+
+  '.hdr,.side,.foot{display:none!important}\n'+
+  'body{background:#fff;color:#000;display:block}\n'+
+  '.wrap{display:block;min-height:auto}\n'+
+  '.main{max-width:100%;padding:0}\n'+
+  '.cover-page{display:block!important;position:relative;z-index:1;min-height:9in;background:#fff;text-align:center;padding:0.7in 0 0;page-break-after:always;break-after:page;overflow:hidden}\n'+
+  '.cover-inner{position:relative;z-index:2;max-width:5.5in;margin:0 auto;display:flex;flex-direction:column;min-height:8in}\n'+
+  '.cover-top{text-align:center}\n'+
+  '.cover-mid{text-align:center;margin-top:3in}\n'+
+  '.cover-bottom{text-align:center;margin-top:auto}\n'+
+  '.cover-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:5.8in;max-width:5.8in;opacity:.22;z-index:1;pointer-events:none;filter:saturate(1.4) contrast(1.1);-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.cover-school{font-size:24pt;font-weight:700;color:var(--brand);letter-spacing:.3pt;margin-bottom:6pt}\n'+
+  '.cover-rule{width:2.8in;height:4pt;background:var(--accent);margin:18pt auto 0;border-radius:2pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.cover-title{font-size:38pt;font-weight:700;color:var(--brand);margin-bottom:14pt;line-height:1.1}\n'+
+  '.cover-tag{font-size:13pt;color:#5C6B82;font-style:italic;line-height:1.4}\n'+
+  '.cover-year{font-size:14pt;font-weight:600;color:var(--brand-mid);letter-spacing:.5pt;text-transform:uppercase}\n'+
+  '.cover-contact{margin-top:0.2in;font-size:10.5pt;color:#5C6B82;line-height:1.7}\n'+
+  '.cover-contact .cc-line{margin:2pt 0}\n'+
+  '.cover-contact .cc-rule{width:.8in;height:1pt;background:var(--accent);margin:8pt auto 14pt;opacity:.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.toc-page{display:block!important;page-break-after:always;break-after:page}\n'+
+  '.toc-title{font-size:22pt;font-weight:700;color:var(--brand);border-bottom:3pt solid var(--accent);padding-bottom:8pt;margin-bottom:18pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.toc-list{font-size:11.5pt;line-height:1.7;color:#1A1A1A}\n'+
+  '.toc-item{display:flex;align-items:baseline;gap:6pt;padding:3pt 0}\n'+
+  '.toc-icon{flex-shrink:0;font-size:11pt}\n'+
+  '.toc-text{flex:1;overflow:hidden}\n'+
+  '.toc-label{float:left}\n'+
+  '.toc-dots{overflow:hidden;white-space:nowrap;color:#999;margin:0 4pt}\n'+
+  '.toc-dots::before{content:"....................................................................................................................";letter-spacing:2pt}\n'+
+  '.toc-pg{flex-shrink:0;font-variant-numeric:tabular-nums;min-width:18pt;text-align:right;font-weight:600;color:var(--brand)}\n'+
+  '.handbook-section{page-break-before:always;break-before:page;margin-bottom:0;padding-top:0;scroll-margin-top:0}\n'+
+  '.handbook-section:first-child{page-break-before:auto;break-before:auto}\n'+
+  '.sec-title{font-size:20pt;color:var(--brand);page-break-after:avoid;break-after:avoid;margin-bottom:4pt}\n'+
+  '.sec-title::after{width:1.5in;height:3pt;background:var(--accent);margin-top:5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.handbook-content{font-size:11pt;line-height:1.55;margin-top:10pt;color:#1A1A1A}\n'+
+  '.handbook-content h3{font-size:13pt;color:var(--brand);margin-top:14pt;page-break-after:avoid;break-after:avoid}\n'+
+  '.handbook-content h4{font-size:11.5pt;color:var(--brand-mid);page-break-after:avoid;break-after:avoid}\n'+
+  '.handbook-content p{font-size:11pt;margin-bottom:8pt}\n'+
+  '.handbook-content ul,.handbook-content ol{margin:4pt 0 10pt 0;padding-left:1.2em}\n'+
+  '.handbook-content li{font-size:11pt;margin:2pt 0}\n'+
+  '.handbook-content a{color:var(--brand-mid);text-decoration:underline}\n'+
+  '.handbook-content table{font-size:10pt;page-break-inside:avoid;break-inside:avoid;border:1pt solid #888;box-shadow:none;margin:6pt 0 10pt}\n'+
+  '.handbook-content th{background:var(--brand)!important;color:#fff!important;font-size:9pt;padding:5pt 8pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.handbook-content td{font-size:10pt;padding:4pt 8pt;border-bottom:.5pt solid #ccc}\n'+
+  '.handbook-content tr:nth-child(even) td{background:transparent}\n'+
+  '.sub-title{font-size:13pt;page-break-after:avoid;break-after:avoid;color:var(--brand);margin-top:14pt}\n'+
+  '.callout{page-break-inside:avoid;break-inside:avoid;background:#FAF6E8!important;border-left:3pt solid var(--accent);padding:8pt 12pt;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none}\n'+
+  '}';
+  var scrollspyJS='document.querySelectorAll(".ni").forEach(function(a){a.addEventListener("click",function(){document.querySelectorAll(".ni").forEach(function(n){n.classList.remove("on")});a.classList.add("on")})});'+
   'if(typeof IntersectionObserver!=="undefined"){var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;document.querySelectorAll(".ni").forEach(function(n){n.classList.toggle("on",n.getAttribute("href")==="#"+id)})}})},{rootMargin:"-80px 0px -55% 0px",threshold:0});document.querySelectorAll(".handbook-section").forEach(function(s){obs.observe(s)})}';
+  var calcTocJS='function calcTocPages(){'+
+  'var printW=672,printPageH=888;'+
+  'var m=document.createElement("div");m.className="m-print";'+
+  'm.style.cssText="position:absolute;left:-9999px;top:0;width:"+printW+"px;font-family:DM Sans,sans-serif;color:#000;visibility:hidden";'+
+  'var st=document.createElement("style");'+
+  'st.textContent=".m-print *{box-sizing:border-box}.m-print .toc-title{font-size:22pt;font-weight:700;border-bottom:3pt solid #C8A64A;padding-bottom:8pt;margin-bottom:18pt;line-height:1.2}.m-print .toc-list{font-size:11.5pt;line-height:1.7}.m-print .toc-item{display:flex;align-items:baseline;gap:6pt;padding:3pt 0}.m-print .toc-icon{flex-shrink:0;font-size:11pt}.m-print .toc-text{flex:1;overflow:hidden}.m-print .toc-pg{flex-shrink:0;min-width:18pt;text-align:right}.m-print .sec-title{font-size:20pt;margin-bottom:4pt;line-height:1.2}.m-print .sub-title{font-size:13pt;margin-top:14pt}.m-print .handbook-content{font-size:11pt;line-height:1.55;margin-top:10pt}.m-print .handbook-content h3{font-size:13pt;margin-top:14pt}.m-print .handbook-content h4{font-size:11.5pt}.m-print .handbook-content p{font-size:11pt;margin-bottom:8pt}.m-print .handbook-content ul,.m-print .handbook-content ol{margin:4pt 0 10pt 0;padding-left:1.2em}.m-print .handbook-content li{font-size:11pt;margin:2pt 0}.m-print .handbook-content table{font-size:10pt;margin:6pt 0 10pt;width:100%;border-collapse:collapse}.m-print .handbook-content th{font-size:9pt;padding:5pt 8pt}.m-print .handbook-content td{font-size:10pt;padding:4pt 8pt}";'+
+  'document.head.appendChild(st);document.body.appendChild(m);'+
+  'var tocEl=document.querySelector(".toc-page");var tocPages=1;'+
+  'if(tocEl){var tc=tocEl.cloneNode(true);tc.style.cssText="display:block;width:"+printW+"px";m.appendChild(tc);'+
+  'var measured=Math.max(1,Math.ceil(m.scrollHeight/printPageH));'+
+  'var secs=document.querySelectorAll(".handbook-section");'+
+  'var heuristic=Math.max(1,Math.ceil(secs.length/13));'+
+  'tocPages=Math.max(measured,heuristic);m.innerHTML=""}'+
+  'var pg=1+tocPages+1;'+
+  'document.querySelectorAll(".handbook-section").forEach(function(el){'+
+  'var id=el.id.replace("sec-","");'+
+  'var span=document.querySelector("[data-toc-sec=\\""+id+"\\"]");'+
+  'if(span)span.textContent=pg;'+
+  'var clone=el.cloneNode(true);clone.style.cssText="width:"+printW+"px;position:static;padding:0;margin:0;display:block";'+
+  'm.innerHTML="";m.appendChild(clone);'+
+  'pg+=Math.max(1,Math.ceil(m.scrollHeight/printPageH))});'+
+  'document.body.removeChild(m);document.head.removeChild(st)}'+
+  'window.addEventListener("beforeprint",calcTocPages);';
+  var js=scrollspyJS+calcTocJS;
   return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n'+
   '<meta name="viewport" content="width=device-width,initial-scale=1">\n'+
   '<title>'+esc(name)+' Student Handbook</title>\n'+
   '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">\n'+
   '<style>\n'+css+'\n</style>\n</head>\n<body>\n'+
-  '<div class="hdr"><div class="hdr-left">'+logoTag+'<div><div class="hdr-title">'+esc(name)+' Student Handbook</div></div></div></div>\n'+
+  coverHTML+tocHTML+
+  '<div class="hdr"><div class="hdr-left">'+logoTag+'<div><div class="hdr-title">'+esc(name)+' Student Handbook</div></div></div><div><button class="hdr-btn" onclick="window.print()">📄 Save as PDF</button></div></div>\n'+
   '<div class="wrap"><nav class="side" id="side">'+toc+'</nav><main class="main">'+body+'</main></div>\n'+
   '<div class="foot">'+esc(name)+' &mdash; Student Handbook</div>\n'+
   '<scr'+'ipt>'+js+'</scr'+'ipt>\n'+
