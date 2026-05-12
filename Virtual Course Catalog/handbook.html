@@ -124,14 +124,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   .main>*{animation:none}
 
   .cover-page{display:block!important;position:relative;z-index:1;min-height:9in;background:#fff;text-align:center;padding:0.7in 0 0;page-break-after:always;break-after:page;overflow:hidden}
-  .cover-inner{position:relative;z-index:2;max-width:5.5in;margin:0 auto}
+  .cover-inner{position:relative;z-index:2;max-width:5.5in;margin:0 auto;display:flex;flex-direction:column;min-height:8in}
+  .cover-top{text-align:center}
+  .cover-mid{text-align:center;margin-top:3in}
+  .cover-bottom{text-align:center;margin-top:auto}
   .cover-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:5.8in;max-width:5.8in;opacity:.22;z-index:1;pointer-events:none;filter:saturate(1.4) contrast(1.1);-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .cover-school{font-family:'DM Sans',sans-serif;font-size:24pt;font-weight:700;color:#0F2044;letter-spacing:.3pt;margin-bottom:6pt}
-  .cover-rule{width:2.8in;height:4pt;background:#C8A64A;margin:18pt auto 24pt;border-radius:2pt}
+  .cover-rule{width:2.8in;height:4pt;background:#C8A64A;margin:18pt auto 0;border-radius:2pt}
   .cover-title{font-family:'DM Sans',sans-serif;font-size:38pt;font-weight:700;color:#0F2044;margin-bottom:14pt;line-height:1.1}
-  .cover-tag{font-family:'Cal Sans',sans-serif;font-size:13pt;color:#5C6B82;font-style:italic;margin-bottom:60pt;line-height:1.4}
+  .cover-tag{font-family:'Cal Sans',sans-serif;font-size:13pt;color:#5C6B82;font-style:italic;line-height:1.4}
   .cover-year{font-family:'DM Sans',sans-serif;font-size:14pt;font-weight:600;color:#1B3468;letter-spacing:.5pt;text-transform:uppercase}
-  .cover-contact{margin-top:1.5in;font-family:'DM Sans',sans-serif;font-size:10.5pt;color:#5C6B82;line-height:1.7}
+  .cover-contact{margin-top:0.2in;font-family:'DM Sans',sans-serif;font-size:10.5pt;color:#5C6B82;line-height:1.7}
   .cover-contact .cc-line{margin:2pt 0}
   .cover-contact .cc-rule{width:.8in;height:1pt;background:#C8A64A;margin:8pt auto 14pt;opacity:.5}
 
@@ -173,12 +176,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 <div class="cover-page" aria-hidden="true">
   <img data-school-logo class="cover-watermark" alt="" style="display:none">
   <div class="cover-inner">
-    <div class="cover-school" id="cover-school">Your School</div>
-    <div class="cover-rule"></div>
-    <div class="cover-title">Student Handbook</div>
-    <div class="cover-tag">Your guide to policies, resources, and expectations.</div>
-    <div class="cover-year" id="cover-year"></div>
-    <div class="cover-contact" id="cover-contact"></div>
+    <div class="cover-top">
+      <div class="cover-school" id="cover-school">Your School</div>
+      <div class="cover-rule"></div>
+    </div>
+    <div class="cover-mid">
+      <div class="cover-title">Student Handbook</div>
+      <div class="cover-tag">Your guide to policies, resources, and expectations.</div>
+    </div>
+    <div class="cover-bottom">
+      <div class="cover-year" id="cover-year"></div>
+      <div class="cover-contact" id="cover-contact"></div>
+    </div>
   </div>
 </div>
 <div class="toc-page" aria-hidden="true">
