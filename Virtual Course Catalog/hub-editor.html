@@ -136,6 +136,20 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 .tr-btn.accent:hover{background:#d97706}
 .tr-hint{font-size:.75rem;color:var(--muted);margin-top:3px}
 .tr-warn{background:var(--accent-lt);border:1px solid var(--accent);border-radius:8px;padding:9px 12px;font-size:.78rem;color:#78350F;margin-top:10px}
+
+.embed-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;justify-content:center;align-items:center}
+.embed-overlay.open{display:flex}
+.embed-box{background:var(--surface);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.18);padding:24px 26px 20px;max-width:500px;width:92%;position:relative}
+.embed-box h3{color:var(--brand);font-size:1.05rem;margin-bottom:6px}
+.embed-box .embed-sub{font-size:.82rem;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.embed-box label{font-size:.72rem;font-weight:700;color:var(--brand);display:block;margin-bottom:3px;margin-top:14px;text-transform:uppercase;letter-spacing:.4px}
+.embed-code{width:100%;font-family:'SFMono-Regular',Consolas,'Courier New',monospace;font-size:.74rem;padding:10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);resize:none;line-height:1.45}
+.embed-code:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+.embed-row{display:flex;justify-content:flex-end;margin-top:6px}
+.embed-copy{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:.76rem;font-weight:600;cursor:pointer;transition:background .2s}
+.embed-copy:hover{background:#144d2f}
+.embed-close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;color:var(--muted);cursor:pointer;padding:4px;line-height:1}
+.embed-close:hover{color:var(--text)}
 </style>
 </head>
 <body>
@@ -167,6 +181,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
     <a class="tbtn" href="index.html" style="text-decoration:none">← Dashboard</a>
     <a class="tbtn" href="editor.html" style="text-decoration:none">📖 Catalog Editor</a>
     <a class="tbtn" href="handbook.html" target="_blank" style="text-decoration:none">📋 Preview Handbook</a>
+    <button class="tbtn" onclick="showEmbed()">🔗 Embed Handbook</button>
     <button class="tbtn" id="layout-btn" onclick="toggleLayout()">⇄ Side by Side</button>
     <button class="tbtn" onclick="saveNow()">💾 Save</button>
     <button class="tbtn" onclick="openTranslate()">🌐 Translate</button>
@@ -982,6 +997,44 @@ async function downloadTranslatedHub(){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   trLog('⬇ Downloaded hub.html with baked translations.','ok');
+}
+
+function showEmbed(){
+  var ov=document.getElementById('embed-overlay');
+  if(ov){ov.classList.add('open');return;}
+  var base=window.location.href.replace(/[^/]*$/,'')+'handbook.html';
+  var embedUrl=base+'?embed=1';
+  var iframeCode='<iframe src="'+embedUrl+'" width="100%" height="800" frameborder="0" style="border:none;width:100%;height:800px"></iframe>';
+  ov=document.createElement('div');
+  ov.id='embed-overlay';
+  ov.className='embed-overlay open';
+  ov.innerHTML='<div class="embed-box">'+
+    '<button class="embed-close" onclick="closeEmbed()">&times;</button>'+
+    '<h3>Embed Handbook</h3>'+
+    '<p class="embed-sub">Paste into <strong>Google Sites</strong> &rarr; Insert &rarr; Embed &rarr; <em>Embed code</em></p>'+
+    '<label>Embed Code</label>'+
+    '<textarea class="embed-code" rows="3" readonly id="embed-iframe"></textarea>'+
+    '<div class="embed-row"><button class="embed-copy" onclick="copyEmbed(\'embed-iframe\',this)">Copy Embed Code</button></div>'+
+    '<label>Direct URL</label>'+
+    '<textarea class="embed-code" rows="1" readonly id="embed-url"></textarea>'+
+    '<div class="embed-row"><button class="embed-copy" onclick="copyEmbed(\'embed-url\',this)">Copy URL</button></div>'+
+  '</div>';
+  ov.addEventListener('click',function(e){if(e.target===ov)closeEmbed();});
+  document.body.appendChild(ov);
+  document.getElementById('embed-iframe').value=iframeCode;
+  document.getElementById('embed-url').value=embedUrl;
+}
+function closeEmbed(){
+  var ov=document.getElementById('embed-overlay');
+  if(ov)ov.classList.remove('open');
+}
+function copyEmbed(id,btn){
+  var el=document.getElementById(id);
+  el.select();el.setSelectionRange(0,99999);
+  navigator.clipboard.writeText(el.value).then(function(){
+    var orig=btn.textContent;btn.textContent='✓ Copied!';
+    setTimeout(function(){btn.textContent=orig;},1500);
+  });
 }
 </script>
 </body>
