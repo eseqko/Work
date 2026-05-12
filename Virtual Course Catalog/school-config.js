@@ -14,6 +14,9 @@
     mascotEmoji: '',
     motto: '',
     schoolYear: new Date().getFullYear() + '–' + (new Date().getFullYear() + 1),
+    address: '',
+    phone: '',
+    website: '',
     colors: { primary: '#1a3a5c', secondary: '#c8a227' },
     setupComplete: false
   };
@@ -135,6 +138,15 @@
       });
       document.querySelectorAll('[data-school-motto]').forEach(el => {
         el.textContent = cfg.motto;
+      });
+      document.querySelectorAll('[data-school-address]').forEach(el => {
+        el.textContent = cfg.address || '';
+      });
+      document.querySelectorAll('[data-school-phone]').forEach(el => {
+        el.textContent = cfg.phone || '';
+      });
+      document.querySelectorAll('[data-school-website]').forEach(el => {
+        el.textContent = cfg.website || '';
       });
     },
 

@@ -129,6 +129,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   .cover-title{font-family:'DM Sans',sans-serif;font-size:38pt;font-weight:700;color:#0F2044;margin-bottom:14pt;line-height:1.1}
   .cover-tag{font-family:'Cal Sans',sans-serif;font-size:13pt;color:#5C6B82;font-style:italic;margin-bottom:60pt;line-height:1.4}
   .cover-year{font-family:'DM Sans',sans-serif;font-size:14pt;font-weight:600;color:#1B3468;letter-spacing:.5pt;text-transform:uppercase}
+  .cover-contact{margin-top:1.5in;font-family:'DM Sans',sans-serif;font-size:10.5pt;color:#5C6B82;line-height:1.7}
+  .cover-contact .cc-line{margin:2pt 0}
+  .cover-contact .cc-rule{width:.8in;height:1pt;background:#C8A64A;margin:8pt auto 14pt;opacity:.5}
 
   .toc-page{display:block!important;page-break-after:always;break-after:page}
   .toc-title{font-family:'DM Sans',sans-serif;font-size:22pt;font-weight:700;color:#0F2044;border-bottom:3pt solid #C8A64A;padding-bottom:8pt;margin-bottom:18pt}
@@ -172,6 +175,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
     <div class="cover-title">Student Handbook</div>
     <div class="cover-tag">Your guide to policies, resources, and expectations.</div>
     <div class="cover-year" id="cover-year"></div>
+    <div class="cover-contact" id="cover-contact"></div>
   </div>
 </div>
 <div class="toc-page" aria-hidden="true">
@@ -375,6 +379,18 @@ function getSchoolYear(){
 function renderCover(){
   document.getElementById('cover-school').textContent=getSchoolName();
   document.getElementById('cover-year').textContent=getSchoolYear();
+  const cfg=(window.SchoolConfig?SchoolConfig.load():{});
+  const lines=[];
+  if(cfg.address) lines.push(`<div class="cc-line">${cfg.address}</div>`);
+  const pwParts=[];
+  if(cfg.phone) pwParts.push(cfg.phone);
+  if(cfg.website) pwParts.push(cfg.website);
+  if(pwParts.length) lines.push(`<div class="cc-line">${pwParts.join(' &nbsp;·&nbsp; ')}</div>`);
+  const el=document.getElementById('cover-contact');
+  if(el){
+    if(lines.length) el.innerHTML='<div class="cc-rule"></div>'+lines.join('');
+    else el.innerHTML='';
+  }
 }
 
 function renderToc(){
