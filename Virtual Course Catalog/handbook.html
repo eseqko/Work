@@ -33,6 +33,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   box-shadow:0 3px 12px rgba(15,32,68,.25),inset 0 -1px 0 var(--accent);
   border-bottom:2.5px solid var(--accent)}
 .hdr-left{display:flex;align-items:center;gap:14px}
+.hdr-logo{height:36px;width:auto;max-width:80px;object-fit:contain;flex-shrink:0;background:rgba(255,255,255,.92);padding:3px;border-radius:5px}
 .hdr-title{font-family:var(--font-d);font-size:1.1rem;font-weight:700;line-height:1.2;letter-spacing:.3px}
 .hdr-tag{font-size:.7rem;opacity:.65;font-weight:400;font-style:italic;font-family:var(--font-b)}
 .hdr-links{display:flex;gap:8px;flex-shrink:0}
@@ -122,8 +123,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   .main{max-width:100%;padding:0;animation:none}
   .main>*{animation:none}
 
-  .cover-page{display:block!important;text-align:center;padding:1.6in 0 0;page-break-after:always;break-after:page}
+  .cover-page{display:block!important;text-align:center;padding:1.2in 0 0;page-break-after:always;break-after:page}
   .cover-inner{max-width:5.5in;margin:0 auto}
+  .cover-logo{display:block;max-width:1.4in;max-height:1.4in;margin:0 auto 22pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .cover-school{font-family:'DM Sans',sans-serif;font-size:24pt;font-weight:700;color:#0F2044;letter-spacing:.3pt;margin-bottom:6pt}
   .cover-rule{width:2.8in;height:4pt;background:#C8A64A;margin:18pt auto 24pt;border-radius:2pt}
   .cover-title{font-family:'DM Sans',sans-serif;font-size:38pt;font-weight:700;color:#0F2044;margin-bottom:14pt;line-height:1.1}
@@ -170,6 +172,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 <div class="cover-page" aria-hidden="true">
   <div class="cover-inner">
+    <img data-school-logo class="cover-logo" alt="" style="display:none">
     <div class="cover-school" id="cover-school">Your School</div>
     <div class="cover-rule"></div>
     <div class="cover-title">Student Handbook</div>
@@ -303,6 +306,7 @@ function renderHdr(){
   document.getElementById('hdr').innerHTML=`
   <div class="hdr">
     <div class="hdr-left">
+      <img data-school-logo class="hdr-logo" alt="" style="display:none">
       <div><div class="hdr-title">${name} Student Handbook</div>
       <div class="hdr-tag">Your guide to policies, resources, and expectations.</div></div>
     </div>
@@ -311,6 +315,7 @@ function renderHdr(){
       <button class="hdr-btn" onclick="window.print()" title="Print or Save as PDF">📄 Save as PDF</button>
     </div>
   </div>`;
+  if(window.SchoolConfig) SchoolConfig.applyIdentity();
 }
 
 function renderSide(){

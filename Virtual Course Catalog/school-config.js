@@ -17,6 +17,7 @@
     address: '',
     phone: '',
     website: '',
+    logo: '',
     colors: { primary: '#1a3a5c', secondary: '#c8a227' },
     setupComplete: false
   };
@@ -148,12 +149,54 @@
       document.querySelectorAll('[data-school-website]').forEach(el => {
         el.textContent = cfg.website || '';
       });
+      document.querySelectorAll('[data-school-logo]').forEach(el => {
+        if (cfg.logo) {
+          el.setAttribute('src', cfg.logo);
+          el.style.display = '';
+        } else {
+          el.removeAttribute('src');
+          el.style.display = 'none';
+        }
+      });
     },
 
-    /** Full initialization: apply theme + identity. */
+    /** Inject a subtle uniform watermark using the school logo. */
+    applyWatermark() {
+      const cfg = this.load();
+      const ID = 'sc-watermark';
+      const STID = 'sc-watermark-style';
+      const existing = document.getElementById(ID);
+      if (existing) existing.remove();
+      if (!cfg.logo) return;
+      if (!document.getElementById(STID)) {
+        const s = document.createElement('style');
+        s.id = STID;
+        s.textContent =
+          '#' + ID + '{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:55vw;max-width:520px;opacity:.04;pointer-events:none;z-index:0;filter:grayscale(100%) contrast(.85)}' +
+          '#' + ID + ' img{width:100%;height:auto;display:block}' +
+          '@media print{#' + ID + '{opacity:.06;-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+        document.head.appendChild(s);
+      }
+      const attach = () => {
+        if (document.getElementById(ID)) return;
+        const wm = document.createElement('div');
+        wm.id = ID;
+        wm.setAttribute('aria-hidden', 'true');
+        const img = document.createElement('img');
+        img.src = cfg.logo;
+        img.alt = '';
+        wm.appendChild(img);
+        document.body.appendChild(wm);
+      };
+      if (document.body) attach();
+      else document.addEventListener('DOMContentLoaded', attach, { once: true });
+    },
+
+    /** Full initialization: apply theme + identity + watermark. */
     init() {
       this.applyTheme();
       this.applyIdentity();
+      this.applyWatermark();
     },
 
     /** Expose color utilities for setup preview. */
