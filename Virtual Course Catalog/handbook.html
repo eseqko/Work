@@ -389,7 +389,15 @@ function calcTocPages(){
   const m=document.createElement('div');
   m.style.cssText='position:absolute;left:-9999px;top:0;width:'+printW+'px;font-family:DM Sans,sans-serif;font-size:11pt;line-height:1.55;visibility:hidden';
   document.body.appendChild(m);
-  let pg=3;
+  const tocEl=document.querySelector('.toc-page');
+  if(tocEl){
+    const tc=tocEl.cloneNode(true);
+    tc.style.cssText='display:block;width:'+printW+'px;position:static;padding:0;margin:0';
+    m.appendChild(tc);
+  }
+  const tocPages=Math.max(1,Math.ceil(m.scrollHeight/printPageH));
+  m.innerHTML='';
+  let pg=1+tocPages+1;
   SECTIONS.forEach(s=>{
     const span=document.querySelector(`[data-toc-sec="${s.id}"]`);
     if(span) span.textContent=pg;
