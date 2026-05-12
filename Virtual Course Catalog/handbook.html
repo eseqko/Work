@@ -387,16 +387,42 @@ function calcTocPages(){
   const printW=672;
   const printPageH=888;
   const m=document.createElement('div');
-  m.style.cssText='position:absolute;left:-9999px;top:0;width:'+printW+'px;font-family:DM Sans,sans-serif;font-size:11pt;line-height:1.55;visibility:hidden';
+  m.className='m-print';
+  m.style.cssText='position:absolute;left:-9999px;top:0;width:'+printW+'px;font-family:"DM Sans",sans-serif;color:#000;visibility:hidden';
+  const st=document.createElement('style');
+  st.textContent=`.m-print *{box-sizing:border-box}
+.m-print .toc-title{font-family:'DM Sans',sans-serif;font-size:22pt;font-weight:700;color:#0F2044;border-bottom:3pt solid #C8A64A;padding-bottom:8pt;margin-bottom:18pt;line-height:1.2}
+.m-print .toc-list{font-family:'DM Sans',sans-serif;font-size:11.5pt;line-height:1.7;color:#1A1A1A}
+.m-print .toc-item{display:flex;align-items:baseline;gap:6pt;padding:3pt 0}
+.m-print .toc-icon{flex-shrink:0;font-size:11pt}
+.m-print .toc-text{flex:1;overflow:hidden}
+.m-print .toc-pg{flex-shrink:0;min-width:18pt;text-align:right}
+.m-print .sec-title{font-family:'DM Sans',sans-serif;font-size:20pt;color:#0F2044;margin-bottom:4pt;line-height:1.2}
+.m-print .sub-title{font-size:13pt;color:#0F2044;margin-top:14pt}
+.m-print .handbook-content{font-size:11pt;line-height:1.55;margin-top:10pt}
+.m-print .handbook-content h3{font-size:13pt;margin-top:14pt}
+.m-print .handbook-content h4{font-size:11.5pt}
+.m-print .handbook-content p{font-size:11pt;margin-bottom:8pt}
+.m-print .handbook-content ul,.m-print .handbook-content ol{margin:4pt 0 10pt 0;padding-left:1.2em}
+.m-print .handbook-content li{font-size:11pt;margin:2pt 0}
+.m-print .handbook-content table{font-size:10pt;margin:6pt 0 10pt;width:100%;border-collapse:collapse}
+.m-print .handbook-content th{font-size:9pt;padding:5pt 8pt}
+.m-print .handbook-content td{font-size:10pt;padding:4pt 8pt}`;
+  document.head.appendChild(st);
   document.body.appendChild(m);
   const tocEl=document.querySelector('.toc-page');
+  let tocPages=1;
   if(tocEl){
     const tc=tocEl.cloneNode(true);
-    tc.style.cssText='display:block;width:'+printW+'px;position:static;padding:0;margin:0';
+    tc.style.cssText='display:block;width:'+printW+'px';
     m.appendChild(tc);
+    const measured=Math.max(1,Math.ceil(m.scrollHeight/printPageH));
+    // Empirical floor: ~13 TOC items fit per page in actual print rendering
+    // (emoji icons + 1.7 line-height make rows taller than CSS math predicts)
+    const heuristic=Math.max(1,Math.ceil(SECTIONS.length/13));
+    tocPages=Math.max(measured,heuristic);
+    m.innerHTML='';
   }
-  const tocPages=Math.max(1,Math.ceil(m.scrollHeight/printPageH));
-  m.innerHTML='';
   let pg=1+tocPages+1;
   SECTIONS.forEach(s=>{
     const span=document.querySelector(`[data-toc-sec="${s.id}"]`);
@@ -404,13 +430,14 @@ function calcTocPages(){
     const el=document.getElementById('sec-'+s.id);
     if(el){
       const clone=el.cloneNode(true);
-      clone.style.cssText='width:'+printW+'px;position:static;padding:0;margin:0';
+      clone.style.cssText='width:'+printW+'px;position:static;padding:0;margin:0;display:block';
       m.innerHTML='';
       m.appendChild(clone);
       pg+=Math.max(1,Math.ceil(m.scrollHeight/printPageH));
     }
   });
   document.body.removeChild(m);
+  document.head.removeChild(st);
 }
 
 window.addEventListener('beforeprint',calcTocPages);
