@@ -552,8 +552,8 @@ tr:hover td { background: #fafbfc; }
     </div>
     <div class="info-section-body">
       <div class="info-row">
-        <div><div class="info-label">Fall Semester Change Deadline</div><input class="info-input" id="sch-deadlineFall" oninput="saveInfoField()"></div>
-        <div><div class="info-label">Spring Semester Change Deadline</div><input class="info-input" id="sch-deadlineSpring" oninput="saveInfoField()"></div>
+        <div><div class="info-label">Fall Quarter Change Deadline</div><input class="info-input" id="sch-deadlineFall" oninput="saveInfoField()"></div>
+        <div><div class="info-label">Spring Quarter Change Deadline</div><input class="info-input" id="sch-deadlineSpring" oninput="saveInfoField()"></div>
       </div>
       <div style="margin-bottom:12px;">
         <div class="info-label">Allowed Reasons for Schedule Changes</div>
@@ -692,7 +692,7 @@ tr:hover td { background: #fafbfc; }
           <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:4px;">
             <div class="check-row"><input type="checkbox" id="fCollege"><label for="fCollege">College Credit Eligible (AP exam)</label></div>
             <div class="check-row"><input type="checkbox" id="fDual"><label for="fDual">Dual Enrollment with College</label></div>
-            <div class="check-row"><input type="checkbox" id="fFullYear"><label for="fFullYear">Full-Year Course (2 semesters)</label></div>
+            <div class="check-row"><input type="checkbox" id="fFullYear"><label for="fFullYear">Full-Year Course (4 quarters)</label></div>
             <div class="check-row"><input type="checkbox" id="fInactive"><label for="fInactive" style="color:var(--warn);">Inactive (not offered this year)</label></div>
           </div>
         </div>
@@ -924,11 +924,11 @@ const SEED = [
   {id:'en13', dept:'english', name:'ELA 3 CP', code:'21112/21113', grade:'9-12', credits:'10', ag:'b', type:'eld', prereq:'ELD 2', desc:'Integrated ELA progressing from expanding to bridging level. Meets a-g area "b".'},
   {id:'ma1', dept:'mathematics', name:'Math for Newcomers',          code:'22014/22015', grade:'9-12',  credits:'10', ag:'',  type:'eld', prereq:'EL 9-10', desc:'For beginning English learners. Covers arithmetic, number sense, and introductory Math Course 1 concepts. Does NOT fulfill CSU/UC math requirement.'},
   {id:'ma2', dept:'mathematics', name:'Math Course 1 CP',            code:'22000/22001', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'First in the three-year college prep math sequence. Covers Number & Quantity, Algebra, Functions, Geometry, and Statistics.'},
-  {id:'ma3', dept:'mathematics', name:'Math Course 2 CP',            code:'22002/22003', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass at least one semester of Math Course 1 with D- or better', desc:'Second in the three-year sequence. Focuses on quadratic functions, geometry, and probability.'},
+  {id:'ma3', dept:'mathematics', name:'Math Course 2 CP',            code:'22002/22003', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass at least one quarter of Math Course 1 with D- or better', desc:'Second in the three-year sequence. Focuses on quadratic functions, geometry, and probability.'},
   {id:'ma4', dept:'mathematics', name:'Math Course 3 CP',            code:'22004/22005', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'Pass MC2 with C- or better', desc:'Third in the sequence. Covers exponential and trigonometric functions, probability, and statistics.'},
-  {id:'ma5', dept:'mathematics', name:'Statistics CP',               code:'22100/22101', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'Introduction to probability and statistics: analysis, interpretation, and presentation of data.'},
-  {id:'ma6', dept:'mathematics', name:'Trigonometry/Precalculus CP', code:'22102/22103', grade:'10-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both semesters', desc:'College-level Algebra and Trigonometry, preparing students for Calculus.'},
-  {id:'ma7', dept:'mathematics', name:'Intro to Calculus CP',        code:'22906/22907', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'Pass Trig/Precalculus with C- or better both semesters', desc:'Introduces calculus: limits, continuity, derivatives, optimization, and integration.'},
+  {id:'ma5', dept:'mathematics', name:'Statistics CP',               code:'22100/22101', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both quarters', desc:'Introduction to probability and statistics: analysis, interpretation, and presentation of data.'},
+  {id:'ma6', dept:'mathematics', name:'Trigonometry/Precalculus CP', code:'22102/22103', grade:'10-12', credits:'10', ag:'c', type:'cp',  prereq:'MC3 C- or better both quarters', desc:'College-level Algebra and Trigonometry, preparing students for Calculus.'},
+  {id:'ma7', dept:'mathematics', name:'Intro to Calculus CP',        code:'22906/22907', grade:'11-12', credits:'10', ag:'c', type:'cp',  prereq:'Pass Trig/Precalculus with C- or better both quarters', desc:'Introduces calculus: limits, continuity, derivatives, optimization, and integration.'},
   {id:'ma8', dept:'mathematics', name:'AP Calculus AB',              code:'22902/22903', grade:'11-12', credits:'10', ag:'c', type:'ap',  prereq:'Enrollment in Intro to Calculus; Precalculus C- or better', collegeCredit:true, fullYear:true, desc:'Full-year course extending calculus with Value Theorems, Accumulation, and Differential Equations.'},
   {id:'ma9', dept:'mathematics', name:'Data Science CP',             code:'22106/22107', grade:'9-12',  credits:'10', ag:'c', type:'cp',  prereq:'None', desc:'Introduces data science: correlation, modeling, analysis, and data-based arguments using Python tools.'},
   {id:'sc1',  dept:'science', name:'Biology CP',              code:'23100/23101', grade:'9',     credits:'10', ag:'d', type:'cp',  prereq:'None', desc:'NGSS Living Earth. Inquiry-based: Ecology, Energy, Cells, Genetics, and Evolution. Fulfills lab science requirement.'},
@@ -1010,8 +1010,8 @@ const SEED = [
   {id:'sp2',  dept:'special-ed', name:'Language Arts Seminar 2',  code:'29002/29003', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Intermediate special education language arts.'},
   {id:'sp3',  dept:'special-ed', name:'Language Arts Seminar 3',  code:'29004/29005', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Advanced special education language arts.'},
   {id:'sp4',  dept:'special-ed', name:'Math Course 1 (Special Ed)',code:'29010/29011', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education Math Course 1 with additional support.'},
-  {id:'sp5',  dept:'special-ed', name:'Math 1A',                  code:'29059/29060', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'First semester of extended Math Course 1 sequence.'},
-  {id:'sp6',  dept:'special-ed', name:'Math 1B',                  code:'29061/29062', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP; Math 1A', desc:'Second semester of extended Math Course 1 sequence.'},
+  {id:'sp5',  dept:'special-ed', name:'Math 1A',                  code:'29059/29060', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'First quarter of extended Math Course 1 sequence.'},
+  {id:'sp6',  dept:'special-ed', name:'Math 1B',                  code:'29061/29062', grade:'9-12', credits:'10', ag:'', type:'sp', prereq:'IEP; Math 1A', desc:'Second quarter of extended Math Course 1 sequence.'},
   {id:'sp7',  dept:'special-ed', name:'World History (Special Ed)',code:'29022/29023', grade:'10',   credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education World History with individualized support.'},
   {id:'sp8',  dept:'special-ed', name:'US History (Special Ed)',   code:'29024/29025', grade:'11',   credits:'10', ag:'', type:'sp', prereq:'IEP', desc:'Special education US History with individualized support.'},
   {id:'sp9',  dept:'special-ed', name:'American Government/Economics (Special Ed)', code:'29026/29027', grade:'12', credits:'5', ag:'', type:'sp', prereq:'IEP', desc:'Special education Government and Economics.'},
@@ -1427,8 +1427,8 @@ const INFO_SEED = {
     d2:[{years:'3',subject:'English'},{years:'2',subject:'Mathematics (Algebra 1 or higher)'},{years:'2',subject:'natural/physical science (1 year lab)'},{years:'3',subject:'additional English, math, or science'},{years:'2',subject:'social science'},{years:'4',subject:'additional courses'}],
   },
   scheduling: {
-    deadlineFall:'first two weeks of fall semester',
-    deadlineSpring:'first week of spring semester',
+    deadlineFall:'first two weeks of fall quarter',
+    deadlineSpring:'first week of spring quarter',
     allowedReasons:'scheduling errors, summer coursework, inappropriate placement, incomplete prerequisites, or administrative directive',
     conflictSteps:['Student contacts teacher directly.','If unresolved, schedule a parent/teacher/student conference.','If still unresolved, parent appeals to the Vice Principal.','VP meets with all parties to determine next steps.'],
     apPolicy:'All AP students must meet with their AP teacher before enrollment. Students are expected to remain for the full term and are strongly encouraged to take the AP exam in May. Dropping an AP class requires VP approval.',
