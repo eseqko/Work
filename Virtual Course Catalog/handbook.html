@@ -585,7 +585,9 @@ function calcTocPages(){
 .m-print .handbook-content li{font-size:11pt;margin:2pt 0}
 .m-print .handbook-content table{font-size:10pt;margin:6pt 0 10pt;width:100%;border-collapse:collapse}
 .m-print .handbook-content th{font-size:9pt;padding:5pt 8pt}
-.m-print .handbook-content td{font-size:10pt;padding:4pt 8pt}`;
+.m-print .handbook-content td{font-size:10pt;padding:4pt 8pt}
+.m-print .sec-hero,.m-print .sec-tag{display:none!important}
+.m-print .sec-divider{display:none!important}`;
   document.head.appendChild(st);
   document.body.appendChild(m);
   const tocEl=document.querySelector('.toc-page');
@@ -611,7 +613,7 @@ function calcTocPages(){
       clone.style.cssText='width:'+printW+'px;position:static;padding:0;margin:0;display:block';
       m.innerHTML='';
       m.appendChild(clone);
-      pg+=Math.max(1,Math.ceil(m.scrollHeight/printPageH));
+      pg+=1+Math.max(1,Math.ceil(m.scrollHeight/printPageH));
     }
   });
   document.body.removeChild(m);
