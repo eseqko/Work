@@ -59,6 +59,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 .field input,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 11px;font-size:.88rem;font-family:inherit;outline:none;transition:border-color .15s}
 .field input:focus,.field textarea:focus{border-color:var(--brand)}
 .field textarea{resize:vertical;min-height:90px}
+.bell-sched-input{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace!important;font-size:.82rem!important;line-height:1.55;background:#FAFAFA;white-space:pre}
 .field .hint{font-size:.75rem;color:var(--muted);margin-top:3px}
 
 /* Grad requirements table editor */
@@ -276,7 +277,7 @@ const DEFAULTS={
   gradOtherRequirements:'',gradCreditCheck:'',
   aidLocalScholarships:'',
   advocacyBilingualContact:'',
-  handbookContacts:'',handbookBellSchedule:'',handbookCounseling:'',
+  handbookContacts:'',handbookBellSchedule:'',handbookBellScheduleData:[],handbookCounseling:'',
   handbookAttendance:'',handbookCellPhone:'',handbookDressCode:'',
   handbookAcademicHonesty:'',handbookGrading:'',handbookDiscipline:'',
   handbookScheduleChange:'',handbookCampusAccess:'',
@@ -337,6 +338,26 @@ const RICH_KEYS=['gradOtherRequirements','gradCreditCheck',
   'supportCheckIn','supportCommunity',
   'ccgiSignIn','ccgiContactStaff','ccgiSchoolNotes','ccgiDataVoice'];
 
+function bellRowsToText(rows){
+  if(!Array.isArray(rows)||!rows.length) return '';
+  return rows.map(r=>{
+    const parts=[r.period||'',r.time||'',r.room||''];
+    if(r.note) parts.push(r.note);
+    return parts.join(' | ');
+  }).join('\n');
+}
+function bellTextToRows(text){
+  const out=[];
+  String(text||'').split(/\r?\n/).forEach(line=>{
+    const t=line.trim();
+    if(!t) return;
+    const parts=t.split('|').map(s=>s.trim());
+    if(!parts[0]&&!parts[1]&&!parts[2]) return;
+    out.push({period:parts[0]||'',time:parts[1]||'',room:parts[2]||'',note:parts[3]||''});
+  });
+  return out;
+}
+
 function collectForm(){
   const data=JSON.parse(JSON.stringify(DEFAULTS));
   // Plain text/number fields
@@ -351,6 +372,9 @@ function collectForm(){
     if(!html || html==='<br>' || html==='<p></p>' || html==='<div><br></div>') data[k]='';
     else data[k]=html;
   });
+  // Bell schedule structured rows
+  const bellEl=document.getElementById('f_handbookBellScheduleData');
+  if(bellEl) data.handbookBellScheduleData=bellTextToRows(bellEl.value);
   // Grad requirements table — dynamic columns and rows
   const colInputs=document.querySelectorAll('.req-col-header');
   const dataRows=document.querySelectorAll('.req-data-row');
@@ -593,7 +617,11 @@ function buildForm(){
     <div class="section-body">
       <div class="hint" style="margin-bottom:10px;color:#1B5E3B">💡 These fields populate the standalone <strong>Student Handbook</strong> page. Open <a href="handbook.html" target="_blank">handbook.html</a> to preview.</div>
       ${richField('handbookContacts','Contact Information & Communication',d.handbookContacts,'Main office phone, key staff contacts, website, communication channels...')}
-      ${richField('handbookBellSchedule','Bell Schedule',d.handbookBellSchedule,'Period times, minimum days, rally schedules, early release days...')}
+      <div class="field"><label>Bell Schedule — Regular Day (designed timeline)</label>
+        <textarea id="f_handbookBellScheduleData" class="bell-sched-input" oninput="autosave()" rows="9" placeholder="One row per line:\nPeriod | Time | Room | Optional note\n\nExample:\nPeriod 1 | 8:30 – 9:51 | Various\nBrunch | 9:51 – 10:06 | Quad\nPeriod 2 | 10:11 – 11:32 | Various">${bellRowsToText(d.handbookBellScheduleData)}</textarea>
+        <div class="hint">One row per line, fields separated by <code>|</code>. This renders as a clean timeline on the handbook page. Use the rich-text field below for alternate schedules (rally, finals, minimum day, etc.) — both will display.</div>
+      </div>
+      ${richField('handbookBellSchedule','Bell Schedule — Notes & Alternate Schedules',d.handbookBellSchedule,'Rally schedule, finals schedule, minimum days, etc. — anything beyond the regular day.')}
       ${richField('handbookAttendance','Attendance & Tardy Policy',d.handbookAttendance,"Paste or summarize your school's attendance policy...")}
       ${richField('handbookCounseling','School Counseling Services',d.handbookCounseling,'School Counselors, Wellness Counselors, School Social Worker — names, caseloads, how to access services...')}
       ${richField('handbookScheduleChange','How to Request a Schedule Change',d.handbookScheduleChange,'')}
@@ -1017,33 +1045,62 @@ function buildEmbedHTML(){
   function r(x){var s=String(x||'');if(!s)return'';if(/<[a-zA-Z][^>]*>/.test(s))return s;return'<p>'+s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'</p>';}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   var SECS=[
-    {id:'contacts',icon:'📞',title:'Contact Information & Communication',key:'handbookContacts'},
-    {id:'bell-schedule',icon:'🔔',title:'Bell Schedule',key:'handbookBellSchedule'},
-    {id:'attendance',icon:'📋',title:'Attendance Policies & Procedures',key:'handbookAttendance'},
-    {id:'counseling',icon:'🤝',title:'School Counseling Services',key:'handbookCounseling'},
-    {id:'schedule-change',icon:'🔄',title:'Schedule Changes',key:'handbookScheduleChange'},
-    {id:'homework',icon:'📝',title:'Homework & Makeup Procedures',key:'handbookHomework'},
-    {id:'grading',icon:'📊',title:'Grading & Grade Appeals',key:'handbookGrading'},
-    {id:'academic-integrity',icon:'🎓',title:'Academic Integrity',
+    {id:'contacts',icon:'📞',title:'Contact Information & Communication',tagline:'How to reach the people and offices that support your student.',key:'handbookContacts'},
+    {id:'bell-schedule',icon:'🔔',title:'Bell Schedule',tagline:'Period times, passing, and the rhythm of the school day.',key:'handbookBellSchedule'},
+    {id:'attendance',icon:'📋',title:'Attendance Policies & Procedures',tagline:'Why attendance matters, how to excuse absences, and what happens when we worry.',key:'handbookAttendance'},
+    {id:'counseling',icon:'🤝',title:'School Counseling Services',tagline:'Academic, college, and social-emotional support — who does what and how to connect.',key:'handbookCounseling'},
+    {id:'schedule-change',icon:'🔄',title:'Schedule Changes',tagline:'When and how class schedules can be adjusted after the year begins.',key:'handbookScheduleChange'},
+    {id:'homework',icon:'📝',title:'Homework & Makeup Procedures',tagline:'Expectations for daily work and how to recover after an absence.',key:'handbookHomework'},
+    {id:'grading',icon:'📊',title:'Grading & Grade Appeals',tagline:'How grades are determined and the steps to ask for a review.',key:'handbookGrading'},
+    {id:'academic-integrity',icon:'🎓',title:'Academic Integrity',tagline:'Honest work, original thinking, and how we treat artificial intelligence tools.',
      keys:[{key:'handbookAcademicHonesty',subtitle:'Academic Honesty Policy'},{key:'handbookAIPolicy',subtitle:'AI / Technology Use in Academics'}]},
-    {id:'activities',icon:'🎉',title:'Student Activities',key:'handbookActivities'},
-    {id:'athletics',icon:'🏆',title:'Athletics',key:'handbookAthletics'},
-    {id:'health',icon:'🏥',title:'Health & Wellness',key:'handbookHealth'},
-    {id:'technology',icon:'💻',title:'Technology & Internet Use Policy',key:'handbookCellPhone'},
-    {id:'general-rules',icon:'📏',title:'General Rules & Regulations',
+    {id:'activities',icon:'🎉',title:'Student Activities',tagline:'Clubs, leadership, dances, and ways to belong beyond the classroom.',key:'handbookActivities'},
+    {id:'athletics',icon:'🏆',title:'Athletics',tagline:'Eligibility, seasons, and what it takes to compete as a Grizzly.',key:'handbookAthletics'},
+    {id:'health',icon:'🏥',title:'Health & Wellness',tagline:'Medication, illness, mental health, and the people you can turn to.',key:'handbookHealth'},
+    {id:'technology',icon:'💻',title:'Technology & Internet Use Policy',tagline:'Devices, network use, and digital citizenship at school.',key:'handbookCellPhone'},
+    {id:'general-rules',icon:'📏',title:'General Rules & Regulations',tagline:'The shared expectations that keep our campus respectful and safe.',
      keys:[{key:'handbookGeneralRules',subtitle:'General Rules'},{key:'handbookDressCode',subtitle:'Dress Code'},{key:'handbookCampusAccess',subtitle:'Campus Access Rules'}]},
-    {id:'transportation',icon:'🚗',title:'Transportation & Parking',key:'handbookTransportation'},
-    {id:'district-policies',icon:'⚖️',title:'District Policies',
+    {id:'transportation',icon:'🚗',title:'Transportation & Parking',tagline:'Getting to and from school — buses, drop-off, bikes, and parking.',key:'handbookTransportation'},
+    {id:'district-policies',icon:'⚖️',title:'District Policies',tagline:'JUHSD policies on discipline, nondiscrimination, bullying, and harassment.',
      keys:[{key:'handbookDiscipline',subtitle:'Discipline Procedures'},{key:'handbookDistrictPolicies',subtitle:'Nondiscrimination, Bullying & Harassment'}]},
-    {id:'parents-community',icon:'👨‍👩‍👧',title:'Parents & Community',key:'handbookParentsCommunity'},
-    {id:'community-resources',icon:'🤝',title:'Community Resources',key:'supportCommunity'}
+    {id:'parents-community',icon:'👨‍👩‍👧',title:'Parents & Community',tagline:'Ways for families to engage, volunteer, and stay in the loop.',key:'handbookParentsCommunity'},
+    {id:'community-resources',icon:'🤝',title:'Community Resources',tagline:'County and regional partners ready to help when you need more than school can offer.',key:'supportCommunity'}
   ];
+  function bellHTML(){
+    var rows=Array.isArray(sd.handbookBellScheduleData)?sd.handbookBellScheduleData:[];
+    var clean=rows.filter(function(rr){return rr&&(rr.period||rr.time||rr.room);});
+    if(!clean.length) return '';
+    return '<div class="bell-schedule">'+clean.map(function(rr){
+      var html='<div class="bell-row">';
+      html+='<div class="bell-period">'+esc(rr.period||'')+'</div>';
+      html+='<div class="bell-time">'+esc(rr.time||'')+'</div>';
+      html+='<div class="bell-room">'+esc(rr.room||'')+'</div>';
+      if(rr.note) html+='<div class="bell-note">'+esc(rr.note)+'</div>';
+      html+='</div>';
+      return html;
+    }).join('')+'</div>';
+  }
   var toc='',body='';
-  SECS.forEach(function(sec){
+  SECS.forEach(function(sec,i){
+    var num=String(i+1);if(num.length<2)num='0'+num;
     toc+='<a class="ni" href="#sec-'+sec.id+'"><span class="ni-icon">'+sec.icon+'</span><span>'+sec.title+'</span></a>';
     body+='<section id="sec-'+sec.id+'" class="handbook-section">';
-    body+='<div class="sec-title"><span class="sec-icon">'+sec.icon+'</span>'+sec.title+'</div>';
-    if(sec.keys){
+    body+='<div class="sec-divider" aria-hidden="true">';
+    body+='<div class="sec-divider-num">Section '+num+'</div>';
+    body+='<div class="sec-divider-icon">'+sec.icon+'</div>';
+    body+='<div class="sec-divider-title">'+sec.title+'</div>';
+    body+='<div class="sec-divider-rule"></div>';
+    if(sec.tagline) body+='<div class="sec-divider-tag">'+sec.tagline+'</div>';
+    body+='</div>';
+    body+='<div class="sec-hero"><div class="sec-hero-disc">'+sec.icon+'</div><div class="sec-hero-meta"><div class="sec-hero-num">Section '+num+'</div><h2 class="sec-hero-title">'+sec.title+'</h2></div></div>';
+    if(sec.tagline) body+='<div class="sec-tag">'+sec.tagline+'</div>';
+    if(sec.key==='handbookBellSchedule'){
+      var sched=bellHTML();
+      var val=v(sec.key);
+      if(sched) body+=sched;
+      if(val) body+='<div class="handbook-content">'+r(val)+'</div>';
+      if(!sched&&!val) body+='<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
+    }else if(sec.keys){
       sec.keys.forEach(function(sub){
         var val=v(sub.key);
         body+='<h3 class="sub-title">'+sub.subtitle+'</h3>';
@@ -1116,6 +1173,41 @@ function buildEmbedHTML(){
   '.sub-title{font-size:1.05rem;font-weight:700;color:var(--brand-mid);margin:20px 0 4px;padding-top:16px;border-top:1px solid var(--border)}\n'+
   '.sub-title:first-of-type{margin-top:12px;padding-top:0;border-top:none}\n'+
   '.callout{background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);border-left:4px solid var(--accent);padding:11px 14px;border-radius:0 var(--r) var(--r) 0;margin:14px 0;font-size:.83rem;color:#5A4506}\n'+
+  '.sec-divider{display:none}\n'+
+  '.sec-hero{display:flex;align-items:center;gap:18px;margin-bottom:8px;padding-bottom:14px;border-bottom:1px solid var(--border)}\n'+
+  '.sec-hero-disc{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);border:1.5px solid rgba(200,166,74,.2);display:flex;align-items:center;justify-content:center;font-size:1.95rem;flex-shrink:0;box-shadow:inset 0 1px 3px rgba(15,32,68,.05),0 1px 4px rgba(15,32,68,.06)}\n'+
+  '.sec-hero-meta{flex:1;min-width:0}\n'+
+  '.sec-hero-num{font-size:.7rem;font-weight:700;color:#9A7B2E;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:3px}\n'+
+  '.sec-hero-title{font-size:1.5rem;font-weight:700;color:var(--brand);letter-spacing:.1px;line-height:1.2;margin:0}\n'+
+  '.sec-hero-title::after{content:"";display:block;width:64px;height:3px;background:linear-gradient(135deg,#D4B04A,#E8D48B 45%,#C8A64A 75%,#A68A3A);border-radius:2px;margin-top:7px}\n'+
+  '.sec-tag{font-size:.88rem;color:var(--muted);font-style:italic;margin-top:10px;line-height:1.5}\n'+
+  '.bell-schedule{margin:14px 0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(15,32,68,.06);background:#fff}\n'+
+  '.bell-row{display:grid;grid-template-columns:1fr 1.1fr 100px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border)}\n'+
+  '.bell-row:last-child{border-bottom:none}\n'+
+  '.bell-row:nth-child(even){background:rgba(200,166,74,.04)}\n'+
+  '.bell-period{font-size:1rem;font-weight:700;color:var(--brand)}\n'+
+  '.bell-time{font-size:.95rem;color:var(--brand-mid);font-variant-numeric:tabular-nums;letter-spacing:.3px;text-align:center}\n'+
+  '.bell-room{font-size:.78rem;color:var(--muted);text-align:right;text-transform:uppercase;letter-spacing:.7px}\n'+
+  '.bell-note{grid-column:1/-1;font-size:.78rem;color:var(--muted);font-style:italic;margin-top:4px;padding-top:6px;border-top:1px dashed var(--border)}\n'+
+  '.h-pyramid{margin:18px auto;display:flex;flex-direction:column;align-items:center;gap:5px;max-width:540px}\n'+
+  '.h-tier{padding:13px 20px;border-radius:6px;font-size:.88rem;line-height:1.5;box-shadow:0 1px 4px rgba(15,32,68,.06)}\n'+
+  '.h-tier-label{font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:1.6px;display:block;margin-bottom:3px;opacity:.88}\n'+
+  '.h-tier-3{width:56%;background:var(--brand);color:#fff;border:1.5px solid var(--brand-mid)}\n'+
+  '.h-tier-2{width:78%;background:linear-gradient(135deg,#E8D48B,#D4B04A);color:var(--brand);border:1.5px solid #A68A3A}\n'+
+  '.h-tier-1{width:100%;background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);color:var(--brand);border:1.5px solid rgba(200,166,74,.2);border-left:5px solid var(--accent)}\n'+
+  '.h-steps{list-style:none;counter-reset:hstep;padding-left:0;margin:16px 0}\n'+
+  '.h-steps li{position:relative;padding:6px 0 16px 56px;counter-increment:hstep;min-height:48px}\n'+
+  '.h-steps li::before{content:counter(hstep);position:absolute;left:0;top:4px;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#D4B04A,#E8D48B 45%,#C8A64A 75%,#A68A3A);color:var(--brand);font-size:1.08rem;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,32,68,.18),inset 0 1px 2px rgba(255,255,255,.45)}\n'+
+  '.h-steps li:not(:last-child)::after{content:"";position:absolute;left:19.5px;top:48px;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),rgba(200,166,74,.2))}\n'+
+  '.h-step-title{font-weight:700;color:var(--brand);font-size:.96rem;margin-bottom:2px;display:block}\n'+
+  '.h-step-body{font-size:.86rem;color:var(--text);line-height:1.55}\n'+
+  '.h-cta{margin:18px 0;padding:16px 18px;background:linear-gradient(135deg,var(--accent-lt),#FFFCEA);border-left:5px solid var(--accent);border-radius:0 var(--r) var(--r) 0;box-shadow:0 1px 4px rgba(15,32,68,.06)}\n'+
+  '.h-cta-title{font-weight:700;color:var(--brand);font-size:1rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}\n'+
+  '.h-cta-body{font-size:.87rem;color:var(--text);line-height:1.55}\n'+
+  '.h-cta-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}\n'+
+  '.h-cta-btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;text-decoration:none;font-size:.78rem;font-weight:600;padding:7px 14px;border-radius:20px;border:1.5px solid var(--brand-mid);transition:all .15s;letter-spacing:.2px}\n'+
+  '.h-cta-btn:hover{background:var(--brand-mid)}\n'+
+  '.h-cta-btn.outline{background:transparent;color:var(--brand);border-color:var(--accent)}\n'+
   '.foot{background:var(--brand);border-top:2.5px solid var(--accent);padding:13px 20px;font-size:.8rem;color:rgba(255,255,255,.75);text-align:center;font-style:italic}\n'+
   '.cover-page,.toc-page{display:none}\n'+
   '@media(max-width:640px){.side{display:none}.main{padding:16px 14px 40px}.sec-title{font-size:1.2rem}.hdr-btn{display:none}}\n'+
@@ -1167,6 +1259,38 @@ function buildEmbedHTML(){
   '.handbook-content tr:nth-child(even) td{background:transparent}\n'+
   '.sub-title{font-size:13pt;page-break-after:avoid;break-after:avoid;color:var(--brand);margin-top:14pt}\n'+
   '.callout{page-break-inside:avoid;break-inside:avoid;background:#FAF6E8!important;border-left:3pt solid var(--accent);padding:8pt 12pt;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none}\n'+
+  '.sec-divider{display:block!important;page-break-after:always;break-after:page;text-align:center;padding:2.6in 0 0;min-height:9in;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.sec-divider-num{font-size:11pt;font-weight:700;color:#9A7B2E;letter-spacing:2.2pt;text-transform:uppercase;margin-bottom:18pt}\n'+
+  '.sec-divider-icon{font-size:54pt;margin:0 auto 14pt;line-height:1;display:block}\n'+
+  '.sec-divider-title{font-size:30pt;font-weight:700;color:var(--brand);letter-spacing:.4pt;margin:0 auto 18pt;line-height:1.18;max-width:5.5in;padding:0 0.4in}\n'+
+  '.sec-divider-rule{width:2.8in;height:3pt;background:var(--accent);margin:0 auto 22pt;border-radius:2pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.sec-divider-tag{font-size:13pt;color:#5C6B82;font-style:italic;line-height:1.5;max-width:4.5in;margin:0 auto;padding:0 0.4in}\n'+
+  '.sec-hero,.sec-tag{display:none!important}\n'+
+  '.bell-schedule{border:1pt solid #888;border-radius:5pt;margin:10pt 0;page-break-inside:avoid;break-inside:avoid;overflow:hidden}\n'+
+  '.bell-row{display:grid;grid-template-columns:1fr 1.1fr 1in;align-items:center;padding:7pt 12pt;border-bottom:.5pt solid #ccc;page-break-inside:avoid;background:#fff}\n'+
+  '.bell-row:last-child{border-bottom:none}\n'+
+  '.bell-row:nth-child(even){background:#FAF6E8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.bell-period{font-size:11pt;font-weight:700;color:var(--brand)}\n'+
+  '.bell-time{font-size:10.5pt;color:var(--brand-mid);text-align:center;font-variant-numeric:tabular-nums}\n'+
+  '.bell-room{font-size:9pt;color:#5C6B82;text-align:right;text-transform:uppercase;letter-spacing:.5pt}\n'+
+  '.bell-note{grid-column:1/-1;font-size:9pt;color:#5C6B82;font-style:italic;margin-top:3pt;padding-top:4pt;border-top:.3pt dashed #ccc}\n'+
+  '.h-pyramid{max-width:5in;margin:12pt auto;display:flex;flex-direction:column;align-items:center;gap:3pt;page-break-inside:avoid;break-inside:avoid}\n'+
+  '.h-tier{padding:8pt 14pt;border-radius:4pt;font-size:10pt;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.h-tier-3{width:56%;background:var(--brand)!important;color:#fff!important}\n'+
+  '.h-tier-2{width:78%;background:#E8D48B!important;color:var(--brand)!important}\n'+
+  '.h-tier-1{width:100%;background:#FAF6E8!important;color:var(--brand)!important;border-left:3pt solid var(--accent)}\n'+
+  '.h-tier-label{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:1.4pt;display:block;margin-bottom:2pt;opacity:.88}\n'+
+  '.h-steps{list-style:none;padding-left:0;counter-reset:hstep;margin:10pt 0}\n'+
+  '.h-steps li{position:relative;padding:5pt 0 12pt 0.55in;counter-increment:hstep;page-break-inside:avoid;break-inside:avoid}\n'+
+  '.h-steps li::before{content:counter(hstep);position:absolute;left:0;top:3pt;width:30pt;height:30pt;border-radius:50%;background:var(--accent)!important;color:var(--brand)!important;font-size:13pt;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.h-steps li:not(:last-child)::after{content:"";position:absolute;left:15pt;top:36pt;bottom:2pt;width:1.5pt;background:var(--accent);opacity:.4}\n'+
+  '.h-step-title{font-size:11pt;font-weight:700;color:var(--brand);margin-bottom:1pt;display:block}\n'+
+  '.h-step-body{font-size:10pt;color:#1A1A1A;line-height:1.5}\n'+
+  '.h-cta{margin:10pt 0;padding:9pt 12pt;background:#FAF6E8!important;border-left:3pt solid var(--accent);page-break-inside:avoid;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0 4pt 4pt 0}\n'+
+  '.h-cta-title{font-size:11pt;font-weight:700;color:var(--brand);margin-bottom:4pt}\n'+
+  '.h-cta-body{font-size:10pt;line-height:1.5;color:#1A1A1A}\n'+
+  '.h-cta-btn{display:inline-block;padding:3pt 10pt;background:var(--brand)!important;color:#fff!important;font-size:9pt;font-weight:600;border-radius:11pt;text-decoration:none;margin:3pt 4pt 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}\n'+
+  '.h-cta-btn.outline{background:#fff!important;color:var(--brand)!important;border:.8pt solid var(--accent)}\n'+
   '}';
   var scrollspyJS='document.querySelectorAll(".ni").forEach(function(a){a.addEventListener("click",function(){document.querySelectorAll(".ni").forEach(function(n){n.classList.remove("on")});a.classList.add("on")})});'+
   'if(typeof IntersectionObserver!=="undefined"){var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;document.querySelectorAll(".ni").forEach(function(n){n.classList.toggle("on",n.getAttribute("href")==="#"+id)})}})},{rootMargin:"-80px 0px -55% 0px",threshold:0});document.querySelectorAll(".handbook-section").forEach(function(s){obs.observe(s)})}';
