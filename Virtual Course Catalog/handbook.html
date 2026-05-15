@@ -88,6 +88,48 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 
 .gold-rule{border:none;height:1.5px;background:var(--gold-shine);margin:16px 0;opacity:.5}
 
+.sec-divider{display:none}
+.sec-hero{display:flex;align-items:center;gap:18px;margin-bottom:8px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.sec-hero-disc{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);border:1.5px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-size:1.95rem;flex-shrink:0;box-shadow:inset 0 1px 3px rgba(15,32,68,.05),0 1px 4px rgba(15,32,68,.06)}
+.sec-hero-meta{flex:1;min-width:0}
+.sec-hero-num{font-family:var(--font-d);font-size:.7rem;font-weight:700;color:var(--accent-dk);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:3px}
+.sec-hero-title{font-family:var(--font-d);font-size:1.5rem;font-weight:700;color:var(--brand);letter-spacing:.1px;line-height:1.2}
+.sec-hero-title::after{content:'';display:block;width:64px;height:3px;background:var(--gold-shine);border-radius:2px;margin-top:7px}
+.sec-tag{font-family:var(--font-b);font-size:.88rem;color:var(--muted);font-style:italic;margin-top:10px;line-height:1.5}
+
+.bell-schedule{margin:14px 0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--sh-card);background:#fff}
+.bell-row{display:grid;grid-template-columns:1fr 1.1fr 100px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+.bell-row:last-child{border-bottom:none}
+.bell-row:nth-child(even){background:rgba(200,166,74,.04)}
+.bell-row:hover{background:rgba(200,166,74,.08)}
+.bell-period{font-family:var(--font-d);font-size:1rem;font-weight:700;color:var(--brand)}
+.bell-time{font-family:var(--font-d);font-size:.95rem;color:var(--brand-mid);font-variant-numeric:tabular-nums;letter-spacing:.3px;text-align:center}
+.bell-room{font-family:var(--font-d);font-size:.78rem;color:var(--muted);text-align:right;text-transform:uppercase;letter-spacing:.7px}
+.bell-note{grid-column:1/-1;font-size:.78rem;color:var(--muted);font-style:italic;margin-top:4px;padding-top:6px;border-top:1px dashed var(--border)}
+
+.h-pyramid{margin:18px auto;display:flex;flex-direction:column;align-items:center;gap:5px;max-width:540px}
+.h-tier{padding:13px 20px;border-radius:6px;font-family:var(--font-d);font-size:.88rem;line-height:1.5;box-shadow:var(--sh-card)}
+.h-tier-label{font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:1.6px;display:block;margin-bottom:3px;opacity:.88}
+.h-tier-3{width:56%;background:var(--brand);color:#fff;border:1.5px solid var(--brand-mid)}
+.h-tier-2{width:78%;background:linear-gradient(135deg,#E8D48B,#D4B04A);color:var(--brand);border:1.5px solid #A68A3A}
+.h-tier-1{width:100%;background:linear-gradient(135deg,var(--accent-lt),#FFF8E1);color:var(--brand);border:1.5px solid var(--border-gold);border-left:5px solid var(--accent)}
+
+.h-steps{list-style:none;counter-reset:hstep;padding-left:0;margin:16px 0}
+.h-steps li{position:relative;padding:6px 0 16px 56px;counter-increment:hstep;min-height:48px}
+.h-steps li::before{content:counter(hstep);position:absolute;left:0;top:4px;width:40px;height:40px;border-radius:50%;background:var(--gold-shine);color:var(--brand);font-family:var(--font-d);font-size:1.08rem;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,32,68,.18),inset 0 1px 2px rgba(255,255,255,.45)}
+.h-steps li:not(:last-child)::after{content:'';position:absolute;left:19.5px;top:48px;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),var(--border-gold))}
+.h-step-title{font-family:var(--font-d);font-weight:700;color:var(--brand);font-size:.96rem;margin-bottom:2px;display:block}
+.h-step-body{font-family:var(--font-b);font-size:.86rem;color:var(--text);line-height:1.55}
+
+.h-cta{margin:18px 0;padding:16px 18px;background:linear-gradient(135deg,var(--accent-lt),#FFFCEA);border-left:5px solid var(--accent);border-radius:0 var(--r) var(--r) 0;box-shadow:var(--sh-card)}
+.h-cta-title{font-family:var(--font-d);font-weight:700;color:var(--brand);font-size:1rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.h-cta-body{font-family:var(--font-b);font-size:.87rem;color:var(--text);line-height:1.55}
+.h-cta-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.h-cta-btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;text-decoration:none;font-family:var(--font-d);font-size:.78rem;font-weight:600;padding:7px 14px;border-radius:20px;border:1.5px solid var(--brand-mid);transition:all .15s;letter-spacing:.2px}
+.h-cta-btn:hover{background:var(--brand-mid);transform:translateY(-1px);box-shadow:var(--sh-card)}
+.h-cta-btn.outline{background:transparent;color:var(--brand);border-color:var(--accent)}
+.h-cta-btn.outline:hover{background:var(--accent-lt)}
+
 .foot{background:var(--brand);border-top:2.5px solid var(--accent);padding:13px 20px;font-size:.8rem;color:rgba(255,255,255,.75);text-align:center;font-family:var(--font-b);font-style:italic;
   box-shadow:inset 0 2px 8px rgba(0,0,0,.15)}
 
@@ -171,6 +213,44 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   .handbook-content tr:nth-child(even) td{background:transparent}
   .sub-title{font-size:13pt;page-break-after:avoid;break-after:avoid;color:#0F2044;margin-top:14pt}
   .callout{page-break-inside:avoid;break-inside:avoid;background:#FAF6E8!important;border-left:3pt solid #C8A64A;padding:8pt 12pt;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none}
+
+  .sec-divider{display:block!important;page-break-after:always;break-after:page;text-align:center;padding:2.6in 0 0;min-height:9in;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sec-divider-num{font-family:'DM Sans',sans-serif;font-size:11pt;font-weight:700;color:#9A7B2E;letter-spacing:2.2pt;text-transform:uppercase;margin-bottom:18pt}
+  .sec-divider-icon{font-size:54pt;margin:0 auto 14pt;line-height:1;display:block}
+  .sec-divider-title{font-family:'DM Sans',sans-serif;font-size:30pt;font-weight:700;color:#0F2044;letter-spacing:.4pt;margin:0 auto 18pt;line-height:1.18;max-width:5.5in;padding:0 0.4in}
+  .sec-divider-rule{width:2.8in;height:3pt;background:#C8A64A;margin:0 auto 22pt;border-radius:2pt}
+  .sec-divider-tag{font-family:'Cal Sans',sans-serif;font-size:13pt;color:#5C6B82;font-style:italic;line-height:1.5;max-width:4.5in;margin:0 auto;padding:0 0.4in}
+  .sec-hero,.sec-tag{display:none!important}
+
+  .bell-schedule{border:1pt solid #888;border-radius:5pt;margin:10pt 0;page-break-inside:avoid;break-inside:avoid;overflow:hidden}
+  .bell-row{display:grid;grid-template-columns:1fr 1.1fr 1in;align-items:center;padding:7pt 12pt;border-bottom:.5pt solid #ccc;page-break-inside:avoid;background:#fff}
+  .bell-row:last-child{border-bottom:none}
+  .bell-row:nth-child(even){background:#FAF6E8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bell-period{font-size:11pt;font-weight:700;color:#0F2044}
+  .bell-time{font-size:10.5pt;color:#1B3468;text-align:center;font-variant-numeric:tabular-nums}
+  .bell-room{font-size:9pt;color:#5C6B82;text-align:right;text-transform:uppercase;letter-spacing:.5pt}
+  .bell-note{grid-column:1/-1;font-size:9pt;color:#5C6B82;font-style:italic;margin-top:3pt;padding-top:4pt;border-top:.3pt dashed #ccc}
+
+  .h-pyramid{max-width:5in;margin:12pt auto;display:flex;flex-direction:column;align-items:center;gap:3pt;page-break-inside:avoid;break-inside:avoid}
+  .h-tier{padding:8pt 14pt;border-radius:4pt;font-size:10pt;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .h-tier-3{width:56%;background:#0F2044!important;color:#fff!important}
+  .h-tier-2{width:78%;background:#E8D48B!important;color:#0F2044!important}
+  .h-tier-1{width:100%;background:#FAF6E8!important;color:#0F2044!important;border-left:3pt solid #C8A64A}
+  .h-tier-label{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:1.4pt;display:block;margin-bottom:2pt;opacity:.88}
+
+  .h-steps{list-style:none;padding-left:0;counter-reset:hstep;margin:10pt 0}
+  .h-steps li{position:relative;padding:5pt 0 12pt 0.55in;counter-increment:hstep;page-break-inside:avoid;break-inside:avoid}
+  .h-steps li::before{content:counter(hstep);position:absolute;left:0;top:3pt;width:30pt;height:30pt;border-radius:50%;background:#C8A64A!important;color:#0F2044!important;font-size:13pt;font-weight:700;display:flex;align-items:center;justify-content:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .h-steps li:not(:last-child)::after{content:'';position:absolute;left:15pt;top:36pt;bottom:2pt;width:1.5pt;background:#C8A64A;opacity:.4}
+  .h-step-title{font-size:11pt;font-weight:700;color:#0F2044;margin-bottom:1pt;display:block}
+  .h-step-body{font-size:10pt;color:#1A1A1A;line-height:1.5}
+
+  .h-cta{margin:10pt 0;padding:9pt 12pt;background:#FAF6E8!important;border-left:3pt solid #C8A64A;page-break-inside:avoid;break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:0 4pt 4pt 0}
+  .h-cta-title{font-size:11pt;font-weight:700;color:#0F2044;margin-bottom:4pt}
+  .h-cta-body{font-size:10pt;line-height:1.5;color:#1A1A1A}
+  .h-cta-actions{margin-top:5pt}
+  .h-cta-btn{display:inline-block;padding:3pt 10pt;background:#0F2044!important;color:#fff!important;font-size:9pt;font-weight:600;border-radius:11pt;text-decoration:none;margin:3pt 4pt 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .h-cta-btn.outline{background:#fff!important;color:#0F2044!important;border:.8pt solid #C8A64A}
 }
 </style>
 </head>
@@ -264,48 +344,65 @@ function renderSD(v){
 
 const SECTIONS=[
   {id:'contacts',icon:'📞',title:'Contact Information & Communication',short:'Contacts',
+   tagline:'How to reach the people and offices that support your student.',
    key:'handbookContacts'},
   {id:'bell-schedule',icon:'🔔',title:'Bell Schedule',short:'Schedule',
+   tagline:'Period times, passing, and the rhythm of the school day.',
    key:'handbookBellSchedule'},
   {id:'attendance',icon:'📋',title:'Attendance Policies & Procedures',short:'Attendance',
+   tagline:'Why attendance matters, how to excuse absences, and what happens when we worry.',
    key:'handbookAttendance'},
   {id:'counseling',icon:'🤝',title:'School Counseling Services',short:'Counseling',
+   tagline:'Academic, college, and social-emotional support — who does what and how to connect.',
    key:'handbookCounseling'},
   {id:'schedule-change',icon:'🔄',title:'Schedule Changes',short:'Sched. Changes',
+   tagline:'When and how class schedules can be adjusted after the year begins.',
    key:'handbookScheduleChange'},
   {id:'homework',icon:'📝',title:'Homework & Makeup Procedures',short:'Homework',
+   tagline:'Expectations for daily work and how to recover after an absence.',
    key:'handbookHomework'},
   {id:'grading',icon:'📊',title:'Grading & Grade Appeals',short:'Grading',
+   tagline:'How grades are determined and the steps to ask for a review.',
    key:'handbookGrading'},
   {id:'academic-integrity',icon:'🎓',title:'Academic Integrity',short:'Integrity',
+   tagline:'Honest work, original thinking, and how we treat artificial intelligence tools.',
    keys:[
      {key:'handbookAcademicHonesty',subtitle:'Academic Honesty Policy'},
      {key:'handbookAIPolicy',subtitle:'AI / Technology Use in Academics'}
    ]},
   {id:'activities',icon:'🎉',title:'Student Activities',short:'Activities',
+   tagline:'Clubs, leadership, dances, and ways to belong beyond the classroom.',
    key:'handbookActivities'},
   {id:'athletics',icon:'🏆',title:'Athletics',short:'Athletics',
+   tagline:'Eligibility, seasons, and what it takes to compete as a Grizzly.',
    key:'handbookAthletics'},
   {id:'health',icon:'🏥',title:'Health & Wellness',short:'Health',
+   tagline:'Medication, illness, mental health, and the people you can turn to.',
    key:'handbookHealth'},
   {id:'technology',icon:'💻',title:'Technology & Internet Use Policy',short:'Tech Policy',
+   tagline:'Devices, network use, and digital citizenship at school.',
    key:'handbookCellPhone'},
   {id:'general-rules',icon:'📏',title:'General Rules & Regulations',short:'Rules',
+   tagline:'The shared expectations that keep our campus respectful and safe.',
    keys:[
      {key:'handbookGeneralRules',subtitle:'General Rules'},
      {key:'handbookDressCode',subtitle:'Dress Code'},
      {key:'handbookCampusAccess',subtitle:'Campus Access Rules'}
    ]},
   {id:'transportation',icon:'🚗',title:'Transportation & Parking',short:'Transport',
+   tagline:'Getting to and from school — buses, drop-off, bikes, and parking.',
    key:'handbookTransportation'},
   {id:'district-policies',icon:'⚖️',title:'District Policies',short:'District',
+   tagline:'JUHSD policies on discipline, nondiscrimination, bullying, and harassment.',
    keys:[
      {key:'handbookDiscipline',subtitle:'Discipline Procedures'},
      {key:'handbookDistrictPolicies',subtitle:'Nondiscrimination, Bullying & Harassment'}
    ]},
   {id:'parents-community',icon:'👨‍👩‍👧',title:'Parents & Community',short:'Parents',
+   tagline:'Ways for families to engage, volunteer, and stay in the loop.',
    key:'handbookParentsCommunity'},
   {id:'community-resources',icon:'🤝',title:'Community Resources',short:'Resources',
+   tagline:'County and regional partners ready to help when you need more than school can offer.',
    key:'supportCommunity'}
 ];
 
@@ -352,7 +449,35 @@ function renderTabs(){
   ).join('');
 }
 
+function renderBellSchedule(){
+  const sd=getSD();
+  const rows=Array.isArray(sd.handbookBellScheduleData)?sd.handbookBellScheduleData:[];
+  const clean=rows.filter(r=>r&&(r.period||r.time||r.room));
+  if(!clean.length) return '';
+  return '<div class="bell-schedule">'+clean.map(r=>{
+    const e=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let html='<div class="bell-row">';
+    html+='<div class="bell-period">'+e(r.period)+'</div>';
+    html+='<div class="bell-time">'+e(r.time)+'</div>';
+    html+='<div class="bell-room">'+e(r.room)+'</div>';
+    if(r.note) html+='<div class="bell-note">'+e(r.note)+'</div>';
+    html+='</div>';
+    return html;
+  }).join('')+'</div>';
+}
+
 function renderContent(sec){
+  if(sec.key==='handbookBellSchedule'){
+    const sched=renderBellSchedule();
+    const val=sdVal(sec.key,'');
+    if(sched||val){
+      let html='';
+      if(sched) html+=sched;
+      if(val) html+='<div class="handbook-content">'+renderSD(val)+'</div>';
+      return html;
+    }
+    return '<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
+  }
   const val=sdVal(sec.key,'');
   if(val) return '<div class="handbook-content">'+renderSD(val)+'</div>';
   return '<div class="callout">📌 <strong>Coming soon.</strong> This section is being updated — please check back later.</div>';
@@ -371,9 +496,23 @@ function renderComposite(sec){
 
 function renderMain(){
   let html='';
-  SECTIONS.forEach(sec=>{
+  SECTIONS.forEach((sec,i)=>{
+    const num=String(i+1).padStart(2,'0');
     html+='<section id="sec-'+sec.id+'" class="handbook-section">';
-    html+='<div class="sec-title"><span class="sec-icon">'+sec.icon+'</span>'+sec.title+'</div>';
+    html+='<div class="sec-divider" aria-hidden="true">';
+    html+='<div class="sec-divider-num">Section '+num+'</div>';
+    html+='<div class="sec-divider-icon">'+sec.icon+'</div>';
+    html+='<div class="sec-divider-title">'+sec.title+'</div>';
+    html+='<div class="sec-divider-rule"></div>';
+    if(sec.tagline) html+='<div class="sec-divider-tag">'+sec.tagline+'</div>';
+    html+='</div>';
+    html+='<div class="sec-hero">';
+    html+='<div class="sec-hero-disc">'+sec.icon+'</div>';
+    html+='<div class="sec-hero-meta">';
+    html+='<div class="sec-hero-num">Section '+num+'</div>';
+    html+='<h2 class="sec-hero-title">'+sec.title+'</h2>';
+    html+='</div></div>';
+    if(sec.tagline) html+='<div class="sec-tag">'+sec.tagline+'</div>';
     if(sec.keys){
       html+=renderComposite(sec);
     }else{
