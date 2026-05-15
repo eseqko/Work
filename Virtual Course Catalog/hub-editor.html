@@ -677,7 +677,7 @@ function buildForm(){
         <input type="text" id="f_ccgiDistrictCode" value="${escAttr(d.ccgiDistrictCode||'')}" placeholder="Only if your district still uses a code for sign-in" oninput="autosave()">
       </div>
       ${richField('ccgiContactStaff','CCGI point person at our school',d.ccgiContactStaff,'Name, role, room, email, office hours — e.g. Ms. Rivera, College & Career Counselor, Room 204, rivera@district.org, Tue/Thu lunch')}
-      ${richField('ccgiSchoolNotes','Our school\'s CCGI workflow (optional)',d.ccgiSchoolNotes,'e.g. We run a CCGI lesson in Advisory Week 3 of each semester. All 10th graders complete the interest inventory in the fall. Seniors check their A-G progress monthly.')}
+      ${richField('ccgiSchoolNotes','Our school\'s CCGI workflow (optional)',d.ccgiSchoolNotes,'e.g. We run a CCGI lesson in Advisory Week 3 of each quarter. All 10th graders complete the interest inventory in the fall. Seniors check their A-G progress monthly.')}
       ${richField('ccgiDataVoice','"Your data, your voice" — school-specific framing (optional)',d.ccgiDataVoice,"e.g. At our school, your CCGI data informs your Spring counselor meetings and is used in SST / 504 discussions when appropriate.")}
     </div>
   </details>`;

@@ -775,8 +775,8 @@ Parse ALL courses you can find. If a field is unclear, use your best judgment.`;
 
     const block = schedMatch[1];
     // Extract deadline info
-    const fallMatch = block.match(/within the (first[^,]+fall\s+semester)/i);
-    const springMatch = block.match(/(?:and\s+)?(first[^.]+spring\s+semester)/i);
+    const fallMatch = block.match(/within the (first[^,]+fall\s+(?:semester|quarter))/i);
+    const springMatch = block.match(/(?:and\s+)?(first[^.]+spring\s+(?:semester|quarter))/i);
     const deadlineFall = fallMatch ? fallMatch[1].trim() : '';
     const deadlineSpring = springMatch ? springMatch[1].trim() : '';
     const reasonsMatch = block.match(/based on the following reasons?:\s*([^.]+)/i);
