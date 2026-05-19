@@ -875,7 +875,6 @@ tr:hover td { background: #fafbfc; }
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script src="school-config.js"></script>
 <script src="importer.js"></script>
 <script>
@@ -2136,298 +2135,168 @@ function styleHeader_(row, numCols) {
 }
 
 /* ═══════════════════════════════════════════════════
-   PDF EXPORT (jsPDF)
+   PDF EXPORT (browser print)
 ═══════════════════════════════════════════════════ */
 function downloadCatalogPDF() {
-  if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-    showToast('PDF library still loading — please try again in a moment.', 'warn');
-    return;
-  }
-
   const _sc = (typeof SchoolConfig !== 'undefined') ? SchoolConfig.load() : {};
   const schoolName = _sc.schoolName || 'Your School';
   const schoolYear = _sc.schoolYear || '';
-  const motto      = _sc.motto || '';
-  const mascot     = _sc.mascot || '';
+  const motto = _sc.motto || '';
+  const mascot = _sc.mascot || '';
   const mascotEmoji = _sc.mascotEmoji || '';
-  const primaryHex = (_sc.colors && _sc.colors.primary) || '#1a3a5c';
-  const secondHex  = (_sc.colors && _sc.colors.secondary) || '#c8a227';
+  const pri = (_sc.colors && _sc.colors.primary) || '#1a3a5c';
+  const sec = (_sc.colors && _sc.colors.secondary) || '#c8a227';
+  const logoUrl = _sc.logoUrl || '';
 
-  function hexToRgb(hex) {
-    const h = hex.replace('#', '');
-    return [parseInt(h.substring(0,2),16), parseInt(h.substring(2,4),16), parseInt(h.substring(4,6),16)];
-  }
-  const pri = hexToRgb(primaryHex);
-  const sec = hexToRgb(secondHex);
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  const doc = new jspdf.jsPDF({ unit: 'pt', format: 'letter' });
-  const W = doc.internal.pageSize.getWidth();   // 612
-  const H = doc.internal.pageSize.getHeight();  // 792
-  const ML = 50, MR = 50, MT = 50, MB = 60;
-  const CW = W - ML - MR;                       // content width
-  let y = MT;
-
-  // ── Helpers ────────────────────────────────────────
-  function checkPage(need) {
-    if (y + need > H - MB) { doc.addPage(); y = MT; return true; }
-    return false;
-  }
-
-  function drawText(txt, x, yPos, opts) {
-    opts = opts || {};
-    doc.setFontSize(opts.size || 10);
-    doc.setFont('helvetica', opts.style || 'normal');
-    doc.setTextColor.apply(doc, opts.color || [55, 65, 81]);
-    if (opts.maxWidth) {
-      var lines = doc.splitTextToSize(txt, opts.maxWidth);
-      doc.text(lines, x, yPos);
-      return lines.length * (opts.size || 10) * 1.25;
-    }
-    doc.text(txt, x, yPos, opts.align ? { align: opts.align } : undefined);
-    return (opts.size || 10) * 1.25;
-  }
-
-  function sectionHeading(title) {
-    checkPage(40);
-    y += 10;
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor.apply(doc, pri);
-    doc.text(title, ML, y);
-    y += 4;
-    doc.setDrawColor.apply(doc, sec);
-    doc.setLineWidth(1.5);
-    doc.line(ML, y, W - MR, y);
-    y += 14;
-  }
-
-  function subHeading(title) {
-    checkPage(30);
-    y += 6;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor.apply(doc, pri);
-    doc.text(title, ML, y);
-    y += 14;
-  }
-
-  // Simple table helper
-  function drawTable(headers, rows, colWidths) {
-    var cellPad = 5;
-    var rowH = 18;
-    var fontSize = 8;
-
-    // Header row
-    checkPage(rowH * 2);
-    doc.setFillColor.apply(doc, pri);
-    doc.rect(ML, y - 12, CW, rowH, 'F');
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    var cx = ML;
-    for (var h = 0; h < headers.length; h++) {
-      doc.text(headers[h], cx + cellPad, y);
-      cx += colWidths[h];
-    }
-    y += rowH - 12;
-
-    // Data rows
-    doc.setFont('helvetica', 'normal');
-    for (var r = 0; r < rows.length; r++) {
-      // Estimate row height based on wrapped text
-      doc.setFontSize(fontSize);
-      var maxLines = 1;
-      for (var c = 0; c < rows[r].length; c++) {
-        var cellLines = doc.splitTextToSize(String(rows[r][c] || ''), colWidths[c] - cellPad * 2);
-        if (cellLines.length > maxLines) maxLines = cellLines.length;
-      }
-      var thisRowH = Math.max(rowH, maxLines * fontSize * 1.4 + cellPad * 2);
-
-      checkPage(thisRowH);
-      if (r % 2 === 0) {
-        doc.setFillColor(248, 250, 252);
-        doc.rect(ML, y - 12, CW, thisRowH, 'F');
-      }
-      doc.setTextColor(55, 65, 81);
-      cx = ML;
-      for (var c2 = 0; c2 < rows[r].length; c2++) {
-        var cellText = String(rows[r][c2] || '');
-        var wrapped = doc.splitTextToSize(cellText, colWidths[c2] - cellPad * 2);
-        doc.text(wrapped, cx + cellPad, y);
-        cx += colWidths[c2];
-      }
-      y += thisRowH - 12;
-    }
-    y += 8;
-  }
-
-  // ══════════════════════════════════════════════════
-  //   COVER PAGE
-  // ══════════════════════════════════════════════════
-  y = H * 0.32;
-  drawText(schoolName.toUpperCase(), W / 2, y, { size: 28, style: 'bold', color: pri, align: 'center' });
-  y += 40;
-  drawText('Course Catalog ' + schoolYear, W / 2, y, { size: 18, style: 'italic', color: sec, align: 'center' });
-  if (motto) { y += 30; drawText(motto, W / 2, y, { size: 12, style: 'italic', color: [107,114,128], align: 'center' }); }
-  if (mascot) { y += 30; drawText((mascotEmoji ? mascotEmoji + ' ' : '') + 'Go ' + mascot + '!', W / 2, y, { size: 14, style: 'bold', color: pri, align: 'center' }); }
-
-  // Decorative line
-  y += 40;
-  doc.setDrawColor.apply(doc, sec);
-  doc.setLineWidth(2);
-  doc.line(W * 0.3, y, W * 0.7, y);
-
-  // ══════════════════════════════════════════════════
-  //   GRADUATION REQUIREMENTS
-  // ══════════════════════════════════════════════════
-  doc.addPage();
-  y = MT;
-  sectionHeading('Graduation Requirements');
-
-  var gradReqs = infoData.gradReqs || INFO_SEED.gradReqs;
-  var gradHeaders = ['a-g', 'Subject Area', (_sc.shortName||'District')+' Diploma', 'CSU/UC Eligibility'];
-  var gradRows = gradReqs.map(function(r) { return [r.area, r.subject, r.juhsd, r.ucCsu]; });
-  gradRows.push(['\u2014', 'TOTAL', 'Min. ' + (infoData.overview ? infoData.overview.diplomaCredits : 225) + ' credits', '']);
-  drawTable(gradHeaders, gradRows, [35, CW * 0.35, CW * 0.3, CW * 0.35 - 35]);
-
-  // ══════════════════════════════════════════════════
-  //   a-g CERTIFIED COURSE LIST
-  // ══════════════════════════════════════════════════
-  doc.addPage();
-  y = MT;
-  sectionHeading('CSU/UC "a-g" Certified Course List ' + schoolYear);
-
-  drawText('Weighted (Honors) courses earn A=5, B=4, C=3. Maximum 8 honors points for CSU/UC GPA.', ML, y, { size: 8, style: 'italic', color: [107,114,128], maxWidth: CW });
-  y += 16;
-
-  var agList = infoData.agList || INFO_SEED.agList;
-  var AG_KEYS = ['a','b','c','d','e','f','g'];
-  var areaLabels = { a:'History / Social Science', b:'English', c:'Mathematics', d:'Laboratory Science', e:'Language Other Than English', f:'Visual & Performing Arts', g:'College Preparatory Electives' };
-  for (var ai = 0; ai < AG_KEYS.length; ai++) {
-    var ak = AG_KEYS[ai];
-    var area = agList[ak];
-    if (!area || !area.courses || !area.courses.length) continue;
-
-    subHeading(ak + '. ' + (area.label || areaLabels[ak]) + (area.required ? '  \u2014  ' + area.required : ''));
-
-    var apexNames = agList._apexCourses || [];
-    var courseLines = area.courses.map(function(c) {
-      var isApex = /apex/i.test(c) || apexNames.indexOf(c) >= 0;
-      return isApex ? c + '  [APEX]' : c;
-    });
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(55, 65, 81);
-    for (var cl = 0; cl < courseLines.length; cl++) {
-      checkPage(14);
-      doc.text('\u2022  ' + courseLines[cl], ML + 14, y);
-      y += 12;
-    }
-    y += 6;
-  }
-
-  // ══════════════════════════════════════════════════
-  //   COURSES BY DEPARTMENT
-  // ══════════════════════════════════════════════════
-  var DEPT_ORDER = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
-  var DEPT_LABELS = {
-    'social-science':'Social Science', 'english':'English Language Arts', 'mathematics':'Mathematics',
-    'science':'Science', 'lote':'Languages Other Than English', 'vpa':'Visual & Performing Arts',
-    'cte':'Career Technical Education', 'pe':'Physical Education & Health',
-    'electives':'Interdisciplinary Electives', 'special-ed':'Special Education'
+  const DEPT_ORDER = ['social-science','english','mathematics','science','lote','vpa','cte','pe','electives','special-ed'];
+  const DEPT_LABELS = {
+    'social-science':'Social Science','english':'English Language Arts','mathematics':'Mathematics',
+    'science':'Science','lote':'Languages Other Than English','vpa':'Visual & Performing Arts',
+    'cte':'Career Technical Education','pe':'Physical Education & Health',
+    'electives':'Interdisciplinary Electives','special-ed':'Special Education'
   };
-  var TYPE_FULL = { ap:'AP', cp:'CP', eld:'ELD', sp:'SpEd' };
+  const DEPT_ICONS = {
+    'social-science':'\u{1F30D}','english':'\u{1F4DD}','mathematics':'\u{1F4D0}','science':'\u{1F52C}','lote':'\u{1F310}',
+    'vpa':'\u{1F3A8}','cte':'\u{1F4BC}','pe':'\u{1F3C3}','electives':'\u{1F4DA}','special-ed':'\u{1F49A}'
+  };
+  const TYPE_FULL = {ap:'AP',cp:'CP',eld:'ELD',sp:'SpEd'};
+  const TYPE_CLS = {ap:'ap',cp:'cp',eld:'eld',sp:'sp'};
 
-  for (var di = 0; di < DEPT_ORDER.length; di++) {
-    var dept = DEPT_ORDER[di];
-    var deptCourses = courses.filter(function(c) { return c.dept === dept; });
-    if (!deptCourses.length) continue;
+  let body = '';
 
-    doc.addPage();
-    y = MT;
-    sectionHeading(DEPT_LABELS[dept] || dept);
+  // Cover page
+  body += '<div class="cover-page">';
+  if (logoUrl) body += '<img src="'+esc(logoUrl)+'" class="cover-logo">';
+  body += '<div class="cover-title">'+esc(schoolName)+'</div>';
+  body += '<div class="cover-subtitle">Course Catalog '+esc(schoolYear)+'</div>';
+  body += '<div class="cover-rule"></div>';
+  if (motto) body += '<div class="cover-motto">'+esc(motto)+'</div>';
+  if (mascot) body += '<div class="cover-mascot">'+(mascotEmoji?mascotEmoji+' ':'')+'Go '+esc(mascot)+'!</div>';
+  body += '</div>';
 
-    for (var ci = 0; ci < deptCourses.length; ci++) {
-      var c = deptCourses[ci];
+  // Table of contents
+  body += '<div class="toc-page"><div class="toc-title">Table of Contents</div><div class="toc-list">';
+  body += '<div class="toc-item">Graduation Requirements</div>';
+  body += '<div class="toc-item">a-g Certified Course List</div>';
+  DEPT_ORDER.forEach(d => {
+    const dc = courses.filter(c => c.dept === d && !c.inactive);
+    if (dc.length) body += '<div class="toc-item">'+(DEPT_ICONS[d]||'')+' '+esc(DEPT_LABELS[d])+' <span class="toc-count">('+dc.length+')</span></div>';
+  });
+  body += '<div class="toc-item">Counseling Contacts</div>';
+  body += '</div></div>';
 
-      // Course name
-      checkPage(60);
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 36, 40);
-      doc.text(c.name, ML, y);
-      y += 14;
+  // Graduation requirements
+  const gradReqs = infoData.gradReqs || INFO_SEED.gradReqs;
+  body += '<div class="print-section"><h2 class="section-head">Graduation Requirements</h2>';
+  body += '<table class="print-table"><thead><tr><th>a-g</th><th>Subject Area</th><th>'+esc(_sc.shortName||'District')+' Diploma</th><th>CSU/UC Eligibility</th></tr></thead><tbody>';
+  gradReqs.forEach(r => {
+    body += '<tr><td>'+esc(r.area)+'</td><td>'+esc(r.subject)+'</td><td>'+esc(r.juhsd)+'</td><td>'+esc(r.ucCsu)+'</td></tr>';
+  });
+  const dipCredits = infoData.overview ? infoData.overview.diplomaCredits : 225;
+  body += '<tr class="total-row"><td>—</td><td>TOTAL</td><td>Min. '+esc(dipCredits)+' credits</td><td></td></tr>';
+  body += '</tbody></table></div>';
 
-      // Metadata line
-      var meta = [];
-      if (c.grade) meta.push('Grade ' + c.grade);
-      if (c.credits) meta.push(c.credits + ' Credits');
-      if (c.ag) meta.push('a-g: ' + c.ag.toUpperCase());
-      if (c.type) meta.push(TYPE_FULL[c.type] || c.type.toUpperCase());
-      if (c.code) meta.push('ID: ' + c.code);
-      if (meta.length) {
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(107, 114, 128);
-        doc.text(meta.join('  \u00b7  '), ML, y);
-        y += 12;
-      }
+  // a-g certified list
+  const agList = infoData.agList || INFO_SEED.agList;
+  const AG_KEYS = ['a','b','c','d','e','f','g'];
+  const areaLabels = {a:'History / Social Science',b:'English',c:'Mathematics',d:'Laboratory Science',e:'Language Other Than English',f:'Visual & Performing Arts',g:'College Preparatory Electives'};
+  body += '<div class="print-section"><h2 class="section-head">CSU/UC “a-g” Certified Course List '+esc(schoolYear)+'</h2>';
+  body += '<p class="ag-note">Weighted (Honors) courses earn A=5, B=4, C=3. Maximum 8 honors points for CSU/UC GPA.</p>';
+  AG_KEYS.forEach(ak => {
+    const area = agList[ak];
+    if (!area || !area.courses || !area.courses.length) return;
+    body += '<h3 class="ag-head">'+ak+'. '+(area.label||areaLabels[ak])+(area.required?' — '+esc(area.required):'')+'</h3>';
+    body += '<ul class="ag-list">';
+    area.courses.forEach(c => { body += '<li>'+esc(c)+'</li>'; });
+    body += '</ul>';
+  });
+  body += '</div>';
 
-      // Prerequisite
-      if (c.prereq && c.prereq.toLowerCase() !== 'none' && c.prereq.trim() !== '') {
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
-        doc.setTextColor(55, 65, 81);
-        doc.text('Prerequisite: ' + c.prereq, ML, y);
-        y += 12;
-      }
+  // Courses by department
+  DEPT_ORDER.forEach(dept => {
+    const dc = courses.filter(c => c.dept === dept && !c.inactive);
+    if (!dc.length) return;
+    body += '<div class="print-section dept-section"><h2 class="section-head">'+(DEPT_ICONS[dept]||'')+' '+esc(DEPT_LABELS[dept])+'</h2>';
+    dc.forEach(c => {
+      body += '<div class="course-card">';
+      body += '<div class="course-name">'+esc(c.name);
+      if (c.type) body += ' <span class="type-badge '+TYPE_CLS[c.type]+'">'+TYPE_FULL[c.type]+'</span>';
+      body += '</div>';
+      const meta = [];
+      if (c.grade) meta.push('Grade '+c.grade);
+      if (c.credits) meta.push(c.credits+' Credits');
+      if (c.ag) meta.push('a-g: '+c.ag.toUpperCase());
+      if (c.code) meta.push('ID: '+c.code);
+      if (meta.length) body += '<div class="course-meta">'+esc(meta.join('  ·  '))+'</div>';
+      if (c.prereq && c.prereq.toLowerCase()!=='none' && c.prereq.trim()) body += '<div class="course-prereq">Prerequisite: '+esc(c.prereq)+'</div>';
+      if (c.desc) body += '<div class="course-desc">'+esc(stripHtml(c.desc))+'</div>';
+      body += '</div>';
+    });
+    body += '</div>';
+  });
 
-      // Description
-      if (c.desc) {
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(55, 65, 81);
-        var descLines = doc.splitTextToSize(stripHtml(c.desc), CW - 10);
-        for (var dl = 0; dl < descLines.length; dl++) {
-          checkPage(12);
-          doc.text(descLines[dl], ML + 10, y);
-          y += 11;
-        }
-      }
-      y += 8;
-    }
-  }
-
-  // ══════════════════════════════════════════════════
-  //   COUNSELING CONTACTS
-  // ══════════════════════════════════════════════════
-  doc.addPage();
-  y = MT;
-  sectionHeading('Counseling Contacts');
-
-  var counselors = infoData.counselors || INFO_SEED.counselors;
+  // Counseling contacts
+  const counselors = infoData.counselors || INFO_SEED.counselors;
   if (counselors && counselors.length) {
-    var conHeaders = ['Counselor', 'Caseload', 'Phone', 'Email'];
-    var conRows = counselors.map(function(c) { return [c.name, c.caseload, c.phone || '', c.email || '']; });
-    drawTable(conHeaders, conRows, [CW * 0.22, CW * 0.35, CW * 0.18, CW * 0.25]);
+    body += '<div class="print-section"><h2 class="section-head">Counseling Contacts</h2>';
+    body += '<table class="print-table"><thead><tr><th>Counselor</th><th>Caseload</th><th>Phone</th><th>Email</th></tr></thead><tbody>';
+    counselors.forEach(c => {
+      body += '<tr><td>'+esc(c.name)+'</td><td>'+esc(c.caseload)+'</td><td>'+esc(c.phone||'')+'</td><td>'+esc(c.email||'')+'</td></tr>';
+    });
+    body += '</tbody></table></div>';
   }
 
-  // ── Footer on every page ──
-  var totalPages = doc.internal.getNumberOfPages();
-  for (var p = 1; p <= totalPages; p++) {
-    doc.setPage(p);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(160, 160, 160);
-    doc.text(schoolName + ' \u2014 Course Catalog ' + schoolYear, ML, H - 25);
-    doc.text('Page ' + p + ' of ' + totalPages, W - MR, H - 25, { align: 'right' });
-  }
+  // Build print window
+  const css =
+  '@page{size:letter;margin:0.6in 0.65in 0.7in}'+
+  '*{box-sizing:border-box;margin:0;padding:0}'+
+  'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1e2428;font-size:10pt;line-height:1.5}'+
+  '.cover-page{text-align:center;padding:2.2in 0.5in 0;min-height:9in;page-break-after:always}'+
+  '.cover-logo{max-height:100px;max-width:200px;margin-bottom:28pt;object-fit:contain}'+
+  '.cover-title{font-size:28pt;font-weight:700;color:'+pri+';letter-spacing:0.5pt;margin-bottom:12pt}'+
+  '.cover-subtitle{font-size:16pt;font-style:italic;color:'+sec+';margin-bottom:24pt}'+
+  '.cover-rule{width:3in;height:3pt;background:'+sec+';margin:0 auto 20pt;border-radius:2pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.cover-motto{font-size:11pt;font-style:italic;color:#6b7280;margin-bottom:10pt}'+
+  '.cover-mascot{font-size:13pt;font-weight:700;color:'+pri+'}'+
+  '.toc-page{page-break-after:always;padding-top:0.3in}'+
+  '.toc-title{font-size:20pt;font-weight:700;color:'+pri+';border-bottom:3pt solid '+sec+';padding-bottom:8pt;margin-bottom:16pt}'+
+  '.toc-list{font-size:11pt;line-height:2.2}'+
+  '.toc-item{border-bottom:0.5pt dotted #ccc;padding:2pt 0}'+
+  '.toc-count{color:#6b7280;font-size:9pt}'+
+  '.print-section{page-break-before:always}'+
+  '.section-head{font-size:16pt;font-weight:700;color:'+pri+';border-bottom:2.5pt solid '+sec+';padding-bottom:5pt;margin-bottom:12pt;page-break-after:avoid}'+
+  '.print-table{width:100%;border-collapse:collapse;font-size:9pt;margin:8pt 0 12pt;page-break-inside:avoid}'+
+  '.print-table th{background:'+pri+';color:#fff;text-align:left;padding:6pt 8pt;font-size:8.5pt;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.print-table td{padding:5pt 8pt;border-bottom:0.5pt solid #dde1e7}'+
+  '.print-table tr:nth-child(even) td{background:#f8fafc;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.total-row td{font-weight:700;border-top:1.5pt solid '+pri+'}'+
+  '.ag-note{font-size:8.5pt;font-style:italic;color:#6b7280;margin-bottom:10pt}'+
+  '.ag-head{font-size:11pt;font-weight:700;color:'+pri+';margin:10pt 0 4pt;page-break-after:avoid}'+
+  '.ag-list{padding-left:1.2em;font-size:9pt;margin-bottom:6pt;columns:2;column-gap:24pt}'+
+  '.ag-list li{margin:1pt 0;break-inside:avoid}'+
+  '.dept-section .course-card{margin-bottom:10pt;padding-bottom:8pt;border-bottom:0.5pt solid #eee;page-break-inside:avoid}'+
+  '.course-name{font-size:11pt;font-weight:700;color:#1e2428;margin-bottom:2pt}'+
+  '.type-badge{display:inline-block;font-size:7pt;font-weight:700;color:#fff;padding:1pt 5pt;border-radius:3pt;vertical-align:middle;margin-left:4pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.type-badge.ap{background:#7c3aed}.type-badge.cp{background:#0369a1}.type-badge.eld{background:#065f46}.type-badge.sp{background:#9a3412}'+
+  '.course-meta{font-size:8pt;color:#6b7280;margin-bottom:2pt}'+
+  '.course-prereq{font-size:8.5pt;font-style:italic;color:#374151;margin-bottom:2pt}'+
+  '.course-desc{font-size:8.5pt;color:#374151;line-height:1.45}'+
+  '@media print{.no-print{display:none}}';
 
-  // ── Download ──
-  var filename = schoolName.replace(/[^a-zA-Z0-9]+/g, '_') + '_Course_Catalog_' + schoolYear.replace(/[^0-9\-]/g, '') + '.pdf';
-  doc.save(filename);
-  showToast('PDF downloaded!', 'success');
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(schoolName)+' Course Catalog '+esc(schoolYear)+'</title><style>'+css+'</style></head><body>'+
+  '<div class="no-print" style="background:'+pri+';color:#fff;padding:10px 20px;text-align:center;font-size:14px;font-weight:600;cursor:pointer" onclick="window.print()">'+
+  '\u{1F4D5} Click here or use Ctrl+P / ⌘P to save as PDF</div>'+
+  body+'</body></html>';
+
+  const w = window.open('','_blank');
+  if (!w) { showToast('Pop-up blocked — please allow pop-ups and try again.','warn'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.onafterprint = () => w.close();
+  setTimeout(() => w.print(), 400);
+  showToast('Print dialog opened — choose "Save as PDF"','success');
 }
 
 /* ═══════════════════════════════════════════════════

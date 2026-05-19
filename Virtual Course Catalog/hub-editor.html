@@ -97,7 +97,9 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Ro
 .rich-edit ul,.rich-edit ol{padding-left:1.4em;margin:4px 0}
 .rich-edit p{margin:0 0 6px}
 .rich-edit mark{background:var(--accent-lt);padding:0 2px;border-radius:2px}
-.rich-edit .h-cta{margin:10px 0;padding:12px 14px;background:#FFF8E1;border-left:4px solid #C8A64A;border-radius:0 6px 6px 0}
+.rich-edit .h-cta{margin:10px 0;padding:12px 14px;background:#FFF8E1;border-left:4px solid #C8A64A;border-radius:0 6px 6px 0;position:relative;cursor:default;user-select:none}
+.rich-edit .h-cta::after{content:'✕ delete';position:absolute;top:4px;right:6px;font-size:.65rem;color:#999;background:#fff;border:1px solid #ddd;border-radius:3px;padding:1px 6px;cursor:pointer;opacity:0;transition:opacity .15s;pointer-events:auto}
+.rich-edit .h-cta:hover::after{opacity:1}
 .rich-edit .h-cta-title{font-weight:700;color:var(--brand);font-size:.92rem;margin-bottom:4px}
 .rich-edit .h-cta-body{font-size:.85rem;color:#555;margin-bottom:6px}
 .rich-edit .h-cta-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -376,7 +378,7 @@ function collectForm(){
     const html=el.innerHTML.trim();
     // contenteditable can leave behind <br> or empty <p> when cleared
     if(!html || html==='<br>' || html==='<p></p>' || html==='<div><br></div>') data[k]='';
-    else data[k]=html;
+    else data[k]=html.replace(/\s*contenteditable="false"/g,'');
   });
   // Bell schedule structured rows
   const bellEl=document.getElementById('f_handbookBellScheduleData');
@@ -557,7 +559,7 @@ function rtCta(){
     const outline=btns.length>0;
     btns.push({label,href,outline});
   }
-  let html='<div class="h-cta"><div class="h-cta-title">'+title+'</div>';
+  let html='<div class="h-cta" contenteditable="false"><div class="h-cta-title">'+title+'</div>';
   if(body) html+='<div class="h-cta-body">'+body+'</div>';
   if(btns.length){
     html+='<div class="h-cta-actions">';
@@ -569,6 +571,20 @@ function rtCta(){
   html+='</div><p></p>';
   document.execCommand('insertHTML',false,html);
   autosave();
+}
+function protectCtas(){
+  document.querySelectorAll('.rich-edit .h-cta').forEach(el=>{
+    el.setAttribute('contenteditable','false');
+  });
+  document.querySelectorAll('.rich-edit').forEach(ed=>{
+    ed.addEventListener('click',e=>{
+      const cta=e.target.closest('.h-cta');
+      if(cta && e.target===cta && e.offsetX>cta.offsetWidth-60 && e.offsetY<24){
+        cta.remove();
+        autosave();
+      }
+    });
+  });
 }
 function rtPaste(ev){
   // Strip formatting on paste so the editor doesn't accumulate heavy markup
@@ -762,6 +778,7 @@ function refreshPreview(){
 function openEditor(){
   buildForm();
   renderReqTable();
+  protectCtas();
   // Deep-link: #handbook scrolls to and opens the first handbook section
   if(location.hash==='#handbook'){
     const groups=document.querySelectorAll('details.section-group');
